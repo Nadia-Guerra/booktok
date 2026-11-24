@@ -1,0 +1,32 @@
+# Secretos y configuración local: nunca al repositorio
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# Dependencias y compilados
+node_modules/
+dist/
+build/
+coverage/
+.expo/
+*.apk
+*.aab
+
+# Datos de Docker y de las bases en local
+db/volumenes/
+data/
+
+# Registros y temporales
+*.log
+tmp/
+
+# Sistema operativo y editores
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/
+
+# Guía del curso: no es parte del código del proyecto
+# (quita esta línea si se quiere versionar)
+Guia_Proyecto_Final_Bases_Datos.pdf

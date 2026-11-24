@@ -1,0 +1,24 @@
+# Texto normalizado por git
+* text=auto
+
+# Estos archivos se ejecutan dentro de contenedores Linux: siempre terminan en LF.
+# Con CRLF (el valor por defecto en Windows) los scripts fallan.
+*.sh text eol=lf
+*.sql text eol=lf
+*.cypher text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+
+# Scripts de PowerShell para Windows
+*.ps1 text eol=crlf
+
+# Binarios
+*.pdf binary
+*.png binary
+*.jpg binary
+*.apk binary
