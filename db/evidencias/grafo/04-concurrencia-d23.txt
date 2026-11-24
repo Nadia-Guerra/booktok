@@ -1,4 +1,4 @@
-Prueba de concurrencia de D-23 (2026-11-23 23:00:24)
+Prueba de concurrencia de D-23 (2026-11-24 04:18:51)
 
 PASA   D23-a1   A: con el nodo bloqueado, CG-04 no ve ningun libro de origen (0 filas) y crea la adaptacion con L1 (sin confirmar)
 PASA   D23-a2   B: tras 3 s su bloqueo sigue esperando a que A confirme (peticion completada: False)

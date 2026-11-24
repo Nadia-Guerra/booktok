@@ -1,0 +1,13 @@
+Consultas y coherencia sobre la semilla - 2026-11-24 04:20:06
+
+PASA   relacional   PostgreSQL: O17, O18, O20 y O22 sobre la semilla  (0.9 s, codigo 0)
+PASA   documental   MongoDB: AP-01 a AP-05, AP-21 y AP-23 sobre la semilla  (3.6 s, codigo 0)
+PASA   grafo        Neo4j: CG-01 a CG-10 y CG-21 a CG-23 sobre la semilla  (13.9 s, codigo 0)
+PASA   coherencia   Coherencia entre las tres bases (13 comprobaciones)  (5.3 s, codigo 0)
+
+Total: 26.2 s
+
+Memoria de los contenedores (docker stats):
+  dlbp-neo4j  1010MiB / 1.25GiB  (78.93%)  CPU 4.69%
+  dlbp-mongo  275.7MiB / 512MiB  (53.84%)  CPU 1.07%
+  dlbp-postgres  79.86MiB / 384MiB  (20.80%)  CPU 0.02%

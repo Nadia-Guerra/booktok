@@ -74,10 +74,10 @@ services:
     restart: unless-stopped
     environment:
       NEO4J_AUTH: ${NEO4J_USER:?falta NEO4J_USER en .env}/${NEO4J_PASSWORD:?falta NEO4J_PASSWORD en .env}
-      # D-36: montículo de 512 MB y caché de páginas de 256 MB.
+      # D-36: montículo de 512 MB; caché de páginas de 256 MB, ajustada a 128 MB tras medirla (D-47).
       NEO4J_server_memory_heap_initial__size: 512m
       NEO4J_server_memory_heap_max__size: 512m
-      NEO4J_server_memory_pagecache_size: 256m
+      NEO4J_server_memory_pagecache_size: 128m
       NEO4J_server_jvm_additional: -XX:+ExitOnOutOfMemoryError
     mem_limit: 1280m             # 1,25 GB
     memswap_limit: 1280m

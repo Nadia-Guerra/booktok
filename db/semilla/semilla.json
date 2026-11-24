@@ -1,0 +1,452 @@
+{
+  "usuarios": [
+    { "id": "c1000000-0000-4000-8000-000000000001", "correo": "admin@ejemplo.test", "nombre": "Administrador", "biografia": "Administra el catálogo de Del Libro a la Pantalla.", "rol": "admin", "password_hash": "$2a$10$ZgQX7/O3K1jEyYBWWd4PH.9yYkkwBOJdX.8x7bly2rv6BBm4TSRXW", "creado_en": "2026-10-20T09:00:00Z" },
+    { "id": "c1000000-0000-4000-8000-000000000002", "correo": "ana@ejemplo.test", "nombre": "Ana Lectora", "biografia": "Lee mucha ciencia ficción y compara cada libro con su película.", "rol": "lector", "password_hash": "$2a$10$TX7l44UA2uXOcpFM8112m..q1iW.ZmqCeT8jLN.olO.qoGSM2./lG", "creado_en": "2026-10-21T10:00:00Z" },
+    { "id": "c1000000-0000-4000-8000-000000000003", "correo": "luis@ejemplo.test", "nombre": "Luis Prado", "biografia": "Cinéfilo de fin de semana.", "rol": "lector", "password_hash": "$2a$10$4HavEQcl4brLhmpjyzESCesfek04b1uDhniLGZq456bEloEpY2guO", "creado_en": "2026-10-21T11:00:00Z" },
+    { "id": "c1000000-0000-4000-8000-000000000004", "correo": "marta@ejemplo.test", "nombre": "Marta Solís", "biografia": "Le gustan los clásicos y sus versiones en el cine.", "rol": "lector", "password_hash": "$2a$10$1VlofKlbK2HPMFjbjBhqaOnZepob5c7Qf7ChaoEjQRiJBjOhrqGJm", "creado_en": "2026-10-22T09:30:00Z" },
+    { "id": "c1000000-0000-4000-8000-000000000005", "correo": "pedro@ejemplo.test", "nombre": "Pedro Ibarra", "rol": "lector", "password_hash": "$2a$10$euWENDzbfvTX0lEt3QoKqOIUHhxbNCqXu2sZ.bNPnXWEV/ZWcimSi", "creado_en": "2026-10-22T12:00:00Z" },
+    { "id": "c1000000-0000-4000-8000-000000000006", "correo": "sofia@ejemplo.test", "nombre": "Sofía Navarro", "biografia": "Sigue a otros lectores para descubrir qué ver.", "rol": "lector", "password_hash": "$2a$10$yHwxd8nhP2ZZ4qJTQf5.SeXbX66wg1ObYhcEGBSgPeFRU31oGHWyC", "creado_en": "2026-10-23T08:00:00Z" },
+    { "id": "c1000000-0000-4000-8000-000000000007", "correo": "diego@ejemplo.test", "nombre": "Diego Rivas", "rol": "lector", "password_hash": "$2a$10$BT5sj4uYwXcSDGJBntiK9.OrkRki4X6Uu0n98Y8Tg0zWmSKCCqsH6", "creado_en": "2026-10-23T09:00:00Z" },
+    { "id": "c1000000-0000-4000-8000-000000000008", "correo": "elena@ejemplo.test", "nombre": "Elena Campos", "biografia": "Crítica exigente: pocas obras le parecen buenas.", "rol": "lector", "password_hash": "$2a$10$1FvOVHaJHjn.gkQRGNyGduRLAacqDo.mNwq6R/Z9p13aMVLkOsi2.", "creado_en": "2026-10-24T09:00:00Z" }
+  ],
+
+  "personas": [
+    { "id": "a1000000-0000-4000-8000-000000000001", "nombre": "Frank Herbert", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000001.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000002", "nombre": "Philip K. Dick", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000002.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000003", "nombre": "Andy Weir", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000003.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000004", "nombre": "Ted Chiang", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000004.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000005", "nombre": "Michael Crichton", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000005.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000006", "nombre": "J. R. R. Tolkien" },
+    { "id": "a1000000-0000-4000-8000-000000000007", "nombre": "Jane Austen" },
+    { "id": "a1000000-0000-4000-8000-000000000008", "nombre": "Ian McEwan", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000008.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000009", "nombre": "Agatha Christie" },
+    { "id": "a1000000-0000-4000-8000-000000000010", "nombre": "William Gibson" },
+    { "id": "a1000000-0000-4000-8000-000000000011", "nombre": "Denis Villeneuve", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000011.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000012", "nombre": "Ridley Scott", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000012.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000013", "nombre": "Steven Spielberg", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000013.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000014", "nombre": "Peter Jackson", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000014.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000015", "nombre": "Joe Wright", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000015.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000016", "nombre": "Kenneth Branagh", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000016.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000017", "nombre": "Timothée Chalamet", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000017.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000018", "nombre": "Rebecca Ferguson", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000018.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000019", "nombre": "Harrison Ford", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000019.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000020", "nombre": "Matt Damon", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000020.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000021", "nombre": "Amy Adams", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000021.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000022", "nombre": "Sam Neill", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000022.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000023", "nombre": "Martin Freeman", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000023.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000024", "nombre": "Ian McKellen", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000024.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000025", "nombre": "Elijah Wood", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000025.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000026", "nombre": "Keira Knightley", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000026.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000027", "nombre": "Matthew Macfadyen" },
+    { "id": "a1000000-0000-4000-8000-000000000028", "nombre": "James McAvoy", "foto_url": "https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000028.jpg" },
+    { "id": "a1000000-0000-4000-8000-000000000029", "nombre": "Penélope Cruz" }
+  ],
+
+  "libros": [
+    {
+      "id": "b1000000-0000-4000-8000-000000000001", "titulo": "Dune",
+      "sinopsis": "En el planeta desértico Arrakis, el joven Paul Atreides se ve arrastrado a una lucha por el control de la especia, el recurso más valioso del universo.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/libro-dune.jpg",
+      "generos": ["ciencia ficción", "aventura"], "anio_publicacion_original": 1965,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000001", "isbn": "9780441172719", "paginas": 535, "editorial": "Ace", "idioma": "inglés", "anio": 2005 },
+        { "edicion_id": "e1000000-0000-4000-8000-000000000002", "paginas": 704, "editorial": "Editorial de ejemplo", "idioma": "español", "anio": 1983 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T09:00:00Z", "actualizado_en": "2026-11-01T09:30:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000002", "titulo": "¿Sueñan los androides con ovejas eléctricas?",
+      "sinopsis": "En una Tierra devastada, un cazador de recompensas persigue androides que se hacen pasar por humanos y se pregunta qué nos hace humanos.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/libro-androides.jpg",
+      "generos": ["ciencia ficción", "distopía"], "anio_publicacion_original": 1968,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000003", "isbn": "9780345404473", "paginas": 244, "editorial": "Del Rey", "idioma": "inglés", "anio": 1996 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T09:10:00Z", "actualizado_en": "2026-11-01T09:40:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000003", "titulo": "El marciano",
+      "sinopsis": "Un astronauta queda abandonado en Marte tras una tormenta y debe sobrevivir con ingenio y ciencia hasta que alguien pueda rescatarlo.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/libro-marciano.jpg",
+      "generos": ["ciencia ficción", "aventura"], "anio_publicacion_original": 2011,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000004", "isbn": "9788030123456", "paginas": 369, "editorial": "Editorial de ejemplo", "idioma": "español", "anio": 2014 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T09:20:00Z", "actualizado_en": "2026-11-01T09:50:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000004", "titulo": "Historia de tu vida",
+      "sinopsis": "Una lingüista aprende el idioma de unos visitantes extraterrestres y, con él, una nueva forma de percibir el tiempo.",
+      "generos": ["ciencia ficción", "drama"], "anio_publicacion_original": 1998,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000005", "paginas": 352, "editorial": "Editorial de ejemplo", "idioma": "español", "anio": 2017 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T09:30:00Z", "actualizado_en": "2026-11-01T10:00:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000005", "titulo": "Parque Jurásico",
+      "sinopsis": "Un parque temático de dinosaurios clonados escapa al control de sus creadores y los visitantes deben sobrevivir a la isla.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/libro-parque-jurasico.jpg",
+      "generos": ["ciencia ficción", "aventura", "suspense"], "anio_publicacion_original": 1990,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000006", "isbn": "9780345418975", "paginas": 466, "editorial": "Ballantine", "idioma": "inglés", "anio": 1990 },
+        { "edicion_id": "e1000000-0000-4000-8000-000000000007", "paginas": 480, "editorial": "Editorial de ejemplo", "idioma": "español", "anio": 1993 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T09:40:00Z", "actualizado_en": "2026-11-01T10:10:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000006", "titulo": "El Hobbit",
+      "sinopsis": "Bilbo Bolsón, un hobbit tranquilo, es arrastrado por un mago y trece enanos a recuperar un tesoro custodiado por un dragón.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/libro-hobbit.jpg",
+      "generos": ["fantasía", "aventura"], "anio_publicacion_original": 1937,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000008", "isbn": "9780618082513", "paginas": 300, "editorial": "Houghton Mifflin", "idioma": "inglés", "anio": 2001 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T09:50:00Z", "actualizado_en": "2026-11-01T10:20:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000007", "titulo": "La Comunidad del Anillo",
+      "sinopsis": "Frodo hereda un anillo de poder y emprende, junto a una compañía de nueve, un viaje para destruirlo en el fuego donde fue forjado.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/libro-comunidad-anillo.jpg",
+      "generos": ["fantasía", "aventura"], "anio_publicacion_original": 1954,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000009", "isbn": "9780618251261", "paginas": 423, "editorial": "Houghton Mifflin", "idioma": "inglés", "anio": 2002 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T10:00:00Z", "actualizado_en": "2026-11-01T10:30:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000008", "titulo": "Orgullo y prejuicio",
+      "sinopsis": "Elizabeth Bennet y el reservado señor Darcy superan sus prejuicios mutuos en la Inglaterra rural de principios del siglo XIX.",
+      "generos": ["romance", "clásico"], "anio_publicacion_original": 1813,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000010", "paginas": 432, "editorial": "Editorial de ejemplo", "idioma": "español", "anio": 2010 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T10:10:00Z", "actualizado_en": "2026-11-01T10:40:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000009", "titulo": "Expiación",
+      "sinopsis": "Una acusación falsa de una niña de trece años destruye el amor de su hermana y cambia para siempre la vida de los tres.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/libro-expiacion.jpg",
+      "generos": ["drama", "romance"], "anio_publicacion_original": 2001,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000011", "isbn": "9780385721790", "paginas": 351, "editorial": "Anchor", "idioma": "inglés", "anio": 2003 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T10:20:00Z", "actualizado_en": "2026-11-01T10:50:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000010", "titulo": "Asesinato en el Orient Express",
+      "sinopsis": "El detective Hercule Poirot investiga un crimen cometido en un tren detenido por la nieve, donde todos los pasajeros tienen algo que ocultar.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/libro-orient-express.jpg",
+      "generos": ["misterio", "policíaco"], "anio_publicacion_original": 1934,
+      "ediciones": [
+        { "edicion_id": "e1000000-0000-4000-8000-000000000012", "isbn": "9780062073501", "paginas": 288, "editorial": "Harper", "idioma": "inglés", "anio": 2011 }
+      ],
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T10:30:00Z", "actualizado_en": "2026-11-01T11:00:00Z"
+    },
+    {
+      "id": "b1000000-0000-4000-8000-000000000011", "titulo": "Neuromante",
+      "sinopsis": "Un pirata informático castigado por sus antiguos empleadores recibe una última oportunidad de volver a entrar en el ciberespacio.",
+      "generos": ["ciencia ficción", "cyberpunk"], "anio_publicacion_original": 1984,
+      "ediciones": [],
+      "estado_publicacion": "borrador", "creado_en": "2026-11-05T09:00:00Z", "actualizado_en": "2026-11-05T09:00:00Z"
+    }
+  ],
+
+  "peliculas": [
+    {
+      "id": "f1000000-0000-4000-8000-000000000001", "titulo": "Dune",
+      "sinopsis": "Paul Atreides viaja a Arrakis para proteger a su familia y a un pueblo del desierto de las ambiciones de las grandes casas.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/pelicula-dune-2021.jpg",
+      "generos": ["ciencia ficción", "aventura"], "anio_estreno": 2021, "duracion_min": 155,
+      "plataformas": ["Plataforma A", "Plataforma B"],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Estados Unidos", "Canadá"], "productoras": ["Legendary Pictures", "Warner Bros. Pictures"], "clasificacion": "PG-13" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T11:00:00Z", "actualizado_en": "2026-11-01T11:30:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000002", "titulo": "Dune: Parte dos",
+      "sinopsis": "Paul Atreides se une a los fremen para vengar a su familia y evitar el futuro terrible que ha visto.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/pelicula-dune-parte-dos.jpg",
+      "generos": ["ciencia ficción", "aventura"], "anio_estreno": 2024, "duracion_min": 166,
+      "plataformas": ["Plataforma A"],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Estados Unidos", "Canadá"], "productoras": ["Legendary Pictures"], "clasificacion": "PG-13" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T11:10:00Z", "actualizado_en": "2026-11-01T11:40:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000003", "titulo": "Blade Runner",
+      "sinopsis": "En un Los Ángeles futurista, un expolicía debe dar caza a cuatro replicantes que han vuelto a la Tierra.",
+      "generos": ["ciencia ficción", "neo-noir"], "anio_estreno": 1982, "duracion_min": 117,
+      "plataformas": [],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Estados Unidos"], "productoras": ["The Ladd Company"], "clasificacion": "R" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T11:20:00Z", "actualizado_en": "2026-11-01T11:50:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000004", "titulo": "El marciano",
+      "sinopsis": "Un botánico dado por muerto en Marte improvisa su supervivencia mientras la Tierra prepara una misión de rescate.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/pelicula-marciano.jpg",
+      "generos": ["ciencia ficción", "aventura"], "anio_estreno": 2015, "duracion_min": 144,
+      "plataformas": ["Plataforma B"],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Estados Unidos", "Reino Unido"], "productoras": ["Scott Free Productions"], "clasificacion": "PG-13" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T11:30:00Z", "actualizado_en": "2026-11-01T12:00:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000005", "titulo": "La llegada",
+      "sinopsis": "Doce naves aparecen sobre la Tierra y una lingüista intenta descifrar el idioma de los visitantes antes de que estalle un conflicto.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/pelicula-la-llegada.jpg",
+      "generos": ["ciencia ficción", "drama"], "anio_estreno": 2016, "duracion_min": 116,
+      "plataformas": ["Plataforma A"],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Estados Unidos", "Canadá"], "productoras": ["FilmNation Entertainment"], "clasificacion": "PG-13" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T11:40:00Z", "actualizado_en": "2026-11-01T12:10:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000006", "titulo": "Parque Jurásico",
+      "sinopsis": "Un grupo de expertos visita un parque con dinosaurios clonados justo cuando falla su sistema de seguridad.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/pelicula-parque-jurasico.jpg",
+      "generos": ["ciencia ficción", "aventura"], "anio_estreno": 1993, "duracion_min": 127,
+      "plataformas": ["Plataforma B"],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Estados Unidos"], "productoras": ["Amblin Entertainment"], "clasificacion": "PG-13" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T11:50:00Z", "actualizado_en": "2026-11-01T12:20:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000007", "titulo": "El Hobbit: un viaje inesperado",
+      "sinopsis": "Bilbo Bolsón se une a trece enanos y al mago Gandalf para recuperar el reino de Erebor del dragón Smaug.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/pelicula-hobbit-viaje-inesperado.jpg",
+      "generos": ["fantasía", "aventura"], "anio_estreno": 2012, "duracion_min": 169,
+      "plataformas": ["Plataforma A"],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Nueva Zelanda", "Estados Unidos"], "productoras": ["New Line Cinema"], "clasificacion": "PG-13" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T12:00:00Z", "actualizado_en": "2026-11-01T12:30:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000008", "titulo": "El Señor de los Anillos: La Comunidad del Anillo",
+      "sinopsis": "Un joven hobbit recibe un anillo maldito y parte con una compañía de nueve para destruirlo en el Monte del Destino.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/pelicula-comunidad-anillo.jpg",
+      "generos": ["fantasía", "aventura"], "anio_estreno": 2001, "duracion_min": 178,
+      "plataformas": ["Plataforma A", "Plataforma B"],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Nueva Zelanda", "Estados Unidos"], "productoras": ["New Line Cinema"], "clasificacion": "PG-13" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T12:10:00Z", "actualizado_en": "2026-11-01T12:40:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000009", "titulo": "Orgullo y prejuicio",
+      "sinopsis": "Elizabeth Bennet, segunda de cinco hermanas, se enfrenta a las convenciones sociales y a su propio orgullo.",
+      "generos": ["romance", "drama"], "anio_estreno": 2005, "duracion_min": 129,
+      "plataformas": [],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Reino Unido", "Francia"], "productoras": ["Working Title Films"], "clasificacion": "PG" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T12:20:00Z", "actualizado_en": "2026-11-01T12:50:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000010", "titulo": "Expiación",
+      "sinopsis": "En 1935, la mentira de una niña separa a dos enamorados; años después intenta reparar el daño.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/pelicula-expiacion.jpg",
+      "generos": ["drama", "romance"], "anio_estreno": 2007, "duracion_min": 123,
+      "plataformas": ["Plataforma B"],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Reino Unido"], "productoras": ["Working Title Films"], "clasificacion": "R" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T12:30:00Z", "actualizado_en": "2026-11-01T13:00:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000011", "titulo": "Asesinato en el Orient Express",
+      "sinopsis": "Hercule Poirot debe resolver un asesinato a bordo de un lujoso tren atrapado por una avalancha.",
+      "portada_url": "https://almacenamiento.ejemplo.com/portadas/pelicula-orient-express.jpg",
+      "generos": ["misterio", "policíaco"], "anio_estreno": 2017, "duracion_min": 114,
+      "plataformas": ["Plataforma A"],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Estados Unidos", "Malta"], "productoras": ["Scott Free Productions", "Kinberg Genre"], "clasificacion": "PG-13" },
+      "estado_publicacion": "publicada", "creado_en": "2026-11-01T12:40:00Z", "actualizado_en": "2026-11-01T13:10:00Z"
+    },
+    {
+      "id": "f1000000-0000-4000-8000-000000000012", "titulo": "Neuromante",
+      "sinopsis": "Alta incompleta: la ficha se creó, pero todavía no tiene director ni reparto.",
+      "generos": ["ciencia ficción"], "anio_estreno": 2027, "duracion_min": 100,
+      "plataformas": [],
+      "datos_tecnicos": { "idioma_original": "inglés", "paises": ["Estados Unidos"] },
+      "estado_publicacion": "borrador", "creado_en": "2026-11-05T09:10:00Z", "actualizado_en": "2026-11-05T09:10:00Z"
+    }
+  ],
+
+  "escribio": [
+    { "persona": "a1000000-0000-4000-8000-000000000001", "libro": "b1000000-0000-4000-8000-000000000001" },
+    { "persona": "a1000000-0000-4000-8000-000000000002", "libro": "b1000000-0000-4000-8000-000000000002" },
+    { "persona": "a1000000-0000-4000-8000-000000000003", "libro": "b1000000-0000-4000-8000-000000000003" },
+    { "persona": "a1000000-0000-4000-8000-000000000004", "libro": "b1000000-0000-4000-8000-000000000004" },
+    { "persona": "a1000000-0000-4000-8000-000000000005", "libro": "b1000000-0000-4000-8000-000000000005" },
+    { "persona": "a1000000-0000-4000-8000-000000000006", "libro": "b1000000-0000-4000-8000-000000000006" },
+    { "persona": "a1000000-0000-4000-8000-000000000006", "libro": "b1000000-0000-4000-8000-000000000007" },
+    { "persona": "a1000000-0000-4000-8000-000000000007", "libro": "b1000000-0000-4000-8000-000000000008" },
+    { "persona": "a1000000-0000-4000-8000-000000000008", "libro": "b1000000-0000-4000-8000-000000000009" },
+    { "persona": "a1000000-0000-4000-8000-000000000009", "libro": "b1000000-0000-4000-8000-000000000010" },
+    { "persona": "a1000000-0000-4000-8000-000000000010", "libro": "b1000000-0000-4000-8000-000000000011" }
+  ],
+
+  "adaptado_a": [
+    { "libro": "b1000000-0000-4000-8000-000000000001", "pelicula": "f1000000-0000-4000-8000-000000000001" },
+    { "libro": "b1000000-0000-4000-8000-000000000001", "pelicula": "f1000000-0000-4000-8000-000000000002" },
+    { "libro": "b1000000-0000-4000-8000-000000000002", "pelicula": "f1000000-0000-4000-8000-000000000003" },
+    { "libro": "b1000000-0000-4000-8000-000000000003", "pelicula": "f1000000-0000-4000-8000-000000000004" },
+    { "libro": "b1000000-0000-4000-8000-000000000004", "pelicula": "f1000000-0000-4000-8000-000000000005" },
+    { "libro": "b1000000-0000-4000-8000-000000000005", "pelicula": "f1000000-0000-4000-8000-000000000006" },
+    { "libro": "b1000000-0000-4000-8000-000000000006", "pelicula": "f1000000-0000-4000-8000-000000000007" },
+    { "libro": "b1000000-0000-4000-8000-000000000007", "pelicula": "f1000000-0000-4000-8000-000000000008" },
+    { "libro": "b1000000-0000-4000-8000-000000000008", "pelicula": "f1000000-0000-4000-8000-000000000009" },
+    { "libro": "b1000000-0000-4000-8000-000000000009", "pelicula": "f1000000-0000-4000-8000-000000000010" },
+    { "libro": "b1000000-0000-4000-8000-000000000010", "pelicula": "f1000000-0000-4000-8000-000000000011" },
+    { "libro": "b1000000-0000-4000-8000-000000000011", "pelicula": "f1000000-0000-4000-8000-000000000012" }
+  ],
+
+  "dirigida_por": [
+    { "pelicula": "f1000000-0000-4000-8000-000000000001", "persona": "a1000000-0000-4000-8000-000000000011" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000002", "persona": "a1000000-0000-4000-8000-000000000011" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000003", "persona": "a1000000-0000-4000-8000-000000000012" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000004", "persona": "a1000000-0000-4000-8000-000000000012" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000005", "persona": "a1000000-0000-4000-8000-000000000011" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000006", "persona": "a1000000-0000-4000-8000-000000000013" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000007", "persona": "a1000000-0000-4000-8000-000000000014" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000008", "persona": "a1000000-0000-4000-8000-000000000014" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000009", "persona": "a1000000-0000-4000-8000-000000000015" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000010", "persona": "a1000000-0000-4000-8000-000000000015" },
+    { "pelicula": "f1000000-0000-4000-8000-000000000011", "persona": "a1000000-0000-4000-8000-000000000016" }
+  ],
+
+  "actuo_en": [
+    { "persona": "a1000000-0000-4000-8000-000000000017", "pelicula": "f1000000-0000-4000-8000-000000000001", "personaje": "Paul Atreides", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000018", "pelicula": "f1000000-0000-4000-8000-000000000001", "personaje": "Lady Jessica", "orden": 2 },
+    { "persona": "a1000000-0000-4000-8000-000000000017", "pelicula": "f1000000-0000-4000-8000-000000000002", "personaje": "Paul Atreides", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000018", "pelicula": "f1000000-0000-4000-8000-000000000002", "personaje": "Lady Jessica", "orden": 2 },
+    { "persona": "a1000000-0000-4000-8000-000000000019", "pelicula": "f1000000-0000-4000-8000-000000000003", "personaje": "Rick Deckard", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000020", "pelicula": "f1000000-0000-4000-8000-000000000004", "personaje": "Mark Watney", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000021", "pelicula": "f1000000-0000-4000-8000-000000000005", "personaje": "Louise Banks", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000022", "pelicula": "f1000000-0000-4000-8000-000000000006", "personaje": "Alan Grant", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000023", "pelicula": "f1000000-0000-4000-8000-000000000007", "personaje": "Bilbo Bolsón", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000024", "pelicula": "f1000000-0000-4000-8000-000000000007", "personaje": "Gandalf", "orden": 2 },
+    { "persona": "a1000000-0000-4000-8000-000000000025", "pelicula": "f1000000-0000-4000-8000-000000000008", "personaje": "Frodo Bolsón", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000024", "pelicula": "f1000000-0000-4000-8000-000000000008", "personaje": "Gandalf", "orden": 2 },
+    { "persona": "a1000000-0000-4000-8000-000000000026", "pelicula": "f1000000-0000-4000-8000-000000000009", "personaje": "Elizabeth Bennet", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000027", "pelicula": "f1000000-0000-4000-8000-000000000009", "personaje": "Señor Darcy", "orden": 2 },
+    { "persona": "a1000000-0000-4000-8000-000000000026", "pelicula": "f1000000-0000-4000-8000-000000000010", "personaje": "Cecilia Tallis", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000028", "pelicula": "f1000000-0000-4000-8000-000000000010", "personaje": "Robbie Turner", "orden": 2 },
+    { "persona": "a1000000-0000-4000-8000-000000000016", "pelicula": "f1000000-0000-4000-8000-000000000011", "personaje": "Hercule Poirot", "orden": 1 },
+    { "persona": "a1000000-0000-4000-8000-000000000029", "pelicula": "f1000000-0000-4000-8000-000000000011", "personaje": "Pilar Estravados", "orden": 2 }
+  ],
+
+  "resenas": [
+    { "id": "d1000000-0000-4000-8000-000000000001", "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000001", "calificacion": 5, "texto": "Una obra maestra de la ciencia ficción: política, religión y ecología en un solo desierto.", "oculta": false, "creado_en": "2026-11-03T18:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000002", "usuario": "c1000000-0000-4000-8000-000000000004", "obra": "b1000000-0000-4000-8000-000000000001", "calificacion": 4, "texto": "Denso al principio, pero la segunda mitad lo compensa.", "oculta": false, "creado_en": "2026-11-05T20:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000003", "usuario": "c1000000-0000-4000-8000-000000000005", "obra": "b1000000-0000-4000-8000-000000000001", "calificacion": 4, "texto": "Imprescindible, aunque el final llega de golpe.", "oculta": false, "creado_en": "2026-11-06T21:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000004", "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000003", "calificacion": 4, "texto": "Divertido y muy riguroso. Watney tiene mucha personalidad.", "oculta": false, "creado_en": "2026-11-04T19:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000005", "usuario": "c1000000-0000-4000-8000-000000000007", "obra": "b1000000-0000-4000-8000-000000000003", "calificacion": 5, "texto": "No pude soltarlo. Ciencia y humor a partes iguales.", "oculta": false, "creado_en": "2026-11-07T22:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000006", "usuario": "c1000000-0000-4000-8000-000000000005", "obra": "b1000000-0000-4000-8000-000000000004", "calificacion": 5, "texto": "Un relato breve que cambia cómo se piensa el tiempo.", "oculta": false, "creado_en": "2026-11-08T17:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000007", "usuario": "c1000000-0000-4000-8000-000000000003", "obra": "b1000000-0000-4000-8000-000000000005", "calificacion": 5, "texto": "Más tenso y más oscuro que la película.", "oculta": false, "creado_en": "2026-11-02T16:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000008", "usuario": "c1000000-0000-4000-8000-000000000007", "obra": "b1000000-0000-4000-8000-000000000005", "calificacion": 4, "texto": "Muy entretenido; la parte técnica se hace larga.", "oculta": false, "creado_en": "2026-11-09T18:30:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000009", "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000006", "calificacion": 3, "texto": "Agradable, pero esperaba más de la aventura.", "oculta": false, "creado_en": "2026-11-04T21:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000010", "usuario": "c1000000-0000-4000-8000-000000000004", "obra": "b1000000-0000-4000-8000-000000000008", "calificacion": 4, "texto": "Ingenioso y mordaz; los diálogos siguen funcionando.", "oculta": false, "creado_en": "2026-11-10T19:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000011", "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000009", "calificacion": 5, "texto": "Cuidado: este comentario revela el final de la novela.", "oculta": true, "creado_en": "2026-11-11T20:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000012", "usuario": "c1000000-0000-4000-8000-000000000008", "obra": "b1000000-0000-4000-8000-000000000009", "calificacion": 2, "texto": "Bien escrito, pero frío y previsible.", "oculta": false, "creado_en": "2026-11-12T20:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000013", "usuario": "c1000000-0000-4000-8000-000000000006", "obra": "f1000000-0000-4000-8000-000000000001", "calificacion": 4, "texto": "Visualmente impresionante.", "oculta": false, "creado_en": "2026-11-13T21:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000014", "usuario": "c1000000-0000-4000-8000-000000000004", "obra": "f1000000-0000-4000-8000-000000000001", "calificacion": 3, "texto": "Bella, pero deja fuera mucho de la política del libro.", "oculta": false, "creado_en": "2026-11-14T22:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000015", "usuario": "c1000000-0000-4000-8000-000000000003", "obra": "f1000000-0000-4000-8000-000000000006", "calificacion": 4, "texto": "Sigue siendo una gran película de aventuras.", "oculta": false, "creado_en": "2026-11-15T20:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000016", "usuario": "c1000000-0000-4000-8000-000000000007", "obra": "f1000000-0000-4000-8000-000000000004", "calificacion": 4, "texto": "Fiel al tono del libro.", "oculta": false, "creado_en": "2026-11-16T21:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000017", "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "f1000000-0000-4000-8000-000000000009", "calificacion": 5, "texto": "Una adaptación con mucha atmósfera.", "oculta": false, "creado_en": "2026-11-17T20:00:00Z" },
+    { "id": "d1000000-0000-4000-8000-000000000018", "usuario": "c1000000-0000-4000-8000-000000000008", "obra": "f1000000-0000-4000-8000-000000000010", "calificacion": 3, "texto": "La primera mitad es mejor que la segunda.", "oculta": false, "creado_en": "2026-11-18T20:00:00Z" }
+  ],
+
+  "estados": [
+    { "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000001", "estado": "terminada", "actualizado_en": "2026-11-03T18:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000003", "estado": "terminada", "actualizado_en": "2026-11-04T19:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000006", "estado": "terminada", "actualizado_en": "2026-11-04T21:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000009", "estado": "terminada", "actualizado_en": "2026-11-11T20:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000008", "estado": "pendiente", "actualizado_en": "2026-11-12T10:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "b1000000-0000-4000-8000-000000000010", "estado": "en_curso", "actualizado_en": "2026-11-19T10:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "f1000000-0000-4000-8000-000000000001", "estado": "terminada", "actualizado_en": "2026-11-09T22:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000002", "obra": "f1000000-0000-4000-8000-000000000009", "estado": "terminada", "actualizado_en": "2026-11-17T20:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000003", "obra": "b1000000-0000-4000-8000-000000000005", "estado": "terminada", "actualizado_en": "2026-11-02T16:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000003", "obra": "b1000000-0000-4000-8000-000000000001", "estado": "pendiente", "actualizado_en": "2026-11-08T12:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000003", "obra": "f1000000-0000-4000-8000-000000000006", "estado": "terminada", "actualizado_en": "2026-11-15T20:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000004", "obra": "b1000000-0000-4000-8000-000000000001", "estado": "terminada", "actualizado_en": "2026-11-05T20:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000004", "obra": "b1000000-0000-4000-8000-000000000008", "estado": "terminada", "actualizado_en": "2026-11-10T19:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000004", "obra": "f1000000-0000-4000-8000-000000000001", "estado": "terminada", "actualizado_en": "2026-11-14T22:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000005", "obra": "b1000000-0000-4000-8000-000000000001", "estado": "terminada", "actualizado_en": "2026-11-06T21:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000005", "obra": "b1000000-0000-4000-8000-000000000004", "estado": "terminada", "actualizado_en": "2026-11-08T17:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000005", "obra": "f1000000-0000-4000-8000-000000000002", "estado": "terminada", "actualizado_en": "2026-11-13T20:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000006", "obra": "f1000000-0000-4000-8000-000000000001", "estado": "terminada", "actualizado_en": "2026-11-13T21:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000006", "obra": "f1000000-0000-4000-8000-000000000002", "estado": "pendiente", "actualizado_en": "2026-11-15T10:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000006", "obra": "b1000000-0000-4000-8000-000000000003", "estado": "pendiente", "actualizado_en": "2026-11-15T10:05:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000007", "obra": "b1000000-0000-4000-8000-000000000005", "estado": "terminada", "actualizado_en": "2026-11-09T18:30:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000007", "obra": "b1000000-0000-4000-8000-000000000003", "estado": "terminada", "actualizado_en": "2026-11-07T22:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000007", "obra": "f1000000-0000-4000-8000-000000000004", "estado": "terminada", "actualizado_en": "2026-11-16T21:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000008", "obra": "b1000000-0000-4000-8000-000000000009", "estado": "terminada", "actualizado_en": "2026-11-12T20:00:00Z" },
+    { "usuario": "c1000000-0000-4000-8000-000000000008", "obra": "f1000000-0000-4000-8000-000000000010", "estado": "terminada", "actualizado_en": "2026-11-18T20:00:00Z" }
+  ],
+
+  "seguimientos": [
+    { "seguidor": "c1000000-0000-4000-8000-000000000006", "seguido": "c1000000-0000-4000-8000-000000000002" },
+    { "seguidor": "c1000000-0000-4000-8000-000000000006", "seguido": "c1000000-0000-4000-8000-000000000005" },
+    { "seguidor": "c1000000-0000-4000-8000-000000000006", "seguido": "c1000000-0000-4000-8000-000000000007" },
+    { "seguidor": "c1000000-0000-4000-8000-000000000003", "seguido": "c1000000-0000-4000-8000-000000000002" },
+    { "seguidor": "c1000000-0000-4000-8000-000000000004", "seguido": "c1000000-0000-4000-8000-000000000002" },
+    { "seguidor": "c1000000-0000-4000-8000-000000000004", "seguido": "c1000000-0000-4000-8000-000000000005" },
+    { "seguidor": "c1000000-0000-4000-8000-000000000007", "seguido": "c1000000-0000-4000-8000-000000000004" },
+    { "seguidor": "c1000000-0000-4000-8000-000000000008", "seguido": "c1000000-0000-4000-8000-000000000004" },
+    { "seguidor": "c1000000-0000-4000-8000-000000000008", "seguido": "c1000000-0000-4000-8000-000000000001" },
+    { "seguidor": "c1000000-0000-4000-8000-000000000002", "seguido": "c1000000-0000-4000-8000-000000000005" }
+  ],
+
+  "listas": [
+    {
+      "id": "11000000-0000-4000-8000-000000000001", "usuario": "c1000000-0000-4000-8000-000000000002", "nombre": "Por ver este año",
+      "obras": ["b1000000-0000-4000-8000-000000000004", "f1000000-0000-4000-8000-000000000005", "b1000000-0000-4000-8000-000000000002"]
+    },
+    {
+      "id": "11000000-0000-4000-8000-000000000002", "usuario": "c1000000-0000-4000-8000-000000000003", "nombre": "Ciencia ficción en pantalla",
+      "obras": ["f1000000-0000-4000-8000-000000000001", "f1000000-0000-4000-8000-000000000003", "f1000000-0000-4000-8000-000000000005"]
+    }
+  ],
+
+  "comparativas": [
+    {
+      "id": "ca000000-0000-4000-8000-000000000001", "usuario": "c1000000-0000-4000-8000-000000000002",
+      "libro": "b1000000-0000-4000-8000-000000000001", "pelicula": "f1000000-0000-4000-8000-000000000001",
+      "preferencia": "libro", "comentario": "La película es espectacular, pero el libro da más espacio a la política y a los personajes.",
+      "aspectos": [
+        { "nombre": "Fidelidad", "puntuacion": 4, "comentario": "Respeta la trama principal." },
+        { "nombre": "Ritmo", "puntuacion": 3 },
+        { "nombre": "Ambientación visual", "puntuacion": 5 }
+      ],
+      "oculta": false, "creado_en": "2026-11-10T20:00:00Z"
+    },
+    {
+      "id": "ca000000-0000-4000-8000-000000000002", "usuario": "c1000000-0000-4000-8000-000000000004",
+      "libro": "b1000000-0000-4000-8000-000000000001", "pelicula": "f1000000-0000-4000-8000-000000000001",
+      "preferencia": "pelicula", "comentario": "La película aclara lo que en el libro se vuelve confuso.",
+      "aspectos": [
+        { "nombre": "Ritmo", "puntuacion": 4 },
+        { "nombre": "Banda sonora", "puntuacion": 5, "comentario": "Imposible de ignorar." }
+      ],
+      "oculta": false, "creado_en": "2026-11-12T20:00:00Z"
+    },
+    {
+      "id": "ca000000-0000-4000-8000-000000000003", "usuario": "c1000000-0000-4000-8000-000000000005",
+      "libro": "b1000000-0000-4000-8000-000000000001", "pelicula": "f1000000-0000-4000-8000-000000000002",
+      "preferencia": "empate",
+      "aspectos": [
+        { "nombre": "Fidelidad", "puntuacion": 4 },
+        { "nombre": "Final", "comentario": "Cambia el final, pero conserva su espíritu." }
+      ],
+      "oculta": false, "creado_en": "2026-11-14T20:00:00Z"
+    },
+    {
+      "id": "ca000000-0000-4000-8000-000000000004", "usuario": "c1000000-0000-4000-8000-000000000007",
+      "libro": "b1000000-0000-4000-8000-000000000003", "pelicula": "f1000000-0000-4000-8000-000000000004",
+      "preferencia": "pelicula", "comentario": "La película resume bien la parte técnica sin perder el humor.",
+      "aspectos": [
+        { "nombre": "Humor", "puntuacion": 4 },
+        { "nombre": "Fidelidad", "puntuacion": 5 }
+      ],
+      "oculta": false, "creado_en": "2026-11-15T20:00:00Z"
+    },
+    {
+      "id": "ca000000-0000-4000-8000-000000000005", "usuario": "c1000000-0000-4000-8000-000000000008",
+      "libro": "b1000000-0000-4000-8000-000000000009", "pelicula": "f1000000-0000-4000-8000-000000000010",
+      "preferencia": "libro", "comentario": "Cuidado: este comentario revela el final de las dos obras.",
+      "aspectos": [
+        { "nombre": "Final", "puntuacion": 2 }
+      ],
+      "oculta": true, "creado_en": "2026-11-18T20:30:00Z"
+    }
+  ]
+}

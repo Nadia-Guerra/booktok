@@ -46,6 +46,11 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 | D-40 | Tipos concretos del relacional en PostgreSQL: `TIMESTAMPTZ`, `JSONB` e identidad del outbox | 2026-11-23 |
 | D-41 | La búsqueda de personas por nombre usa un índice de texto completo (`standard-folding`) en Neo4j | 2026-11-23 |
 | D-42 | El bloqueo de D-23 se toma reescribiendo `obra_id` en el nodo de la película (`CG-15-bloqueo`), y las pruebas del grafo usan un cliente efímero y la API HTTP | 2026-11-23 |
+| D-43 | La semilla sale de un solo JSON con un generador en PowerShell 5.1; los cargadores generados se versionan | 2026-11-23 |
+| D-44 | Las contraseñas de la semilla son hashes bcrypt (coste 10) generados con `pgcrypto` | 2026-11-23 |
+| D-45 | Forma concreta de CG-08, CG-09, CG-21 y CG-23 | 2026-11-23 |
+| D-46 | Las pruebas sobre la semilla son de solo lectura y la coherencia entre bases compara fuera de las bases | 2026-11-23 |
+| D-47 | La caché de páginas de Neo4j baja de 256 a 128 MB tras medir el consumo (ajusta D-36) | 2026-11-24 |
 
 ---
 
@@ -715,3 +720,92 @@ Las plataformas de una película se identifican por su `nombre`, sin id propio. 
 **Por qué.** Se comprobó con el motor (`db/scripts/probar-grafo-concurrencia.ps1`): con el bloqueo, la segunda sesión esperó mientras la primera tenía la transacción abierta y, al confirmar esta, vio su libro, y la película quedó con **un** libro de origen. Sin el bloqueo, las dos comprobaciones pasaron y la película quedó con **dos** (L1 y L2): la violación de RN-07 que D-23 evita.
 **Costo que se acepta.** Si la transacción no se confirma o revierte, el candado se retiene hasta que Neo4j la cierre por tiempo de espera: la API debe confirmar o revertir siempre. Las pruebas necesitan Windows PowerShell 5.1.
 **Dónde.** `db/grafo/consultas/CG-15-bloqueo.cypher`, `docker-compose.yml` (servicio `neo4j-cliente`), `db/scripts/probar-grafo.ps1` y `probar-grafo-concurrencia.ps1`.
+
+---
+
+## D-43. La semilla sale de un solo JSON con un generador en PowerShell 5.1; los cargadores generados se versionan
+
+**Contexto.** El brief (secciones 6 y 8) pide escribir los datos una vez y generar de ahí los tres cargadores, para que los ids coincidan en las tres bases (RNF-08), pero no dice en qué lenguaje. En esta máquina hay Node 24 y Python 3.14, pero lo único que el equipo tiene asegurado es Windows PowerShell 5.1: todos los scripts de `db/scripts` ya lo usan.
+**Decisión.**
+- `db/semilla/semilla.json` es la única fuente. `db/semilla/generar.ps1` (PowerShell 5.1, sin dependencias) la valida y escribe `db/relacional/04-semilla.sql`, `db/documental/03-semilla.js` y `db/grafo/02-semilla.cypher`, que se guardan en el repositorio como scripts legibles. `generar.ps1 -Verificar` comprueba que están al día y `cargar-semilla.ps1` lo exige antes de cargar.
+- El generador se niega a escribir si la fuente rompe una regla: UUID en minúsculas, referencias a ids inexistentes, los mínimos de D-24, un solo libro de origen por película (RN-07), una comparativa sin `adaptado_a` (RN-06), una reseña sin su estado "terminada" (RF-13), ISBN repetido o con mal dígito de control.
+- Lo derivado **no se escribe a mano**: `promedio` y `total_resenas` los calcula el trigger al insertar cada reseña (RN-08); el `reparto` de cada ficha se copia de `actuó_en` (D-12, D-27); `leyó` sale de los estados "terminada" de **libros** (D-16); `obra_resumen` y los nodos de obra salen de los libros y películas.
+- Los ids son UUID válidos con un patrón legible por tipo (`a1…` personas, `b1…` libros, `f1…` películas, `c1…` usuarios, `d1…` reseñas, `e1…` ediciones, `11…` listas, `ca…` comparativas), para reconocer una fila de cualquier base de un vistazo al depurar.
+- Cada cargador vacía su base antes de cargar (`TRUNCATE`, `deleteMany`, `DETACH DELETE`): se puede repetir.
+
+**Alternativas descartadas.**
+- Generador en Node o en Python: más cómodo con JSON, pero añade un requisito de instalación que el equipo no tiene garantizado hoy.
+- Un archivo de datos por base: tres fuentes que se desalinean, que es lo que RNF-08 quiere evitar.
+- Ids aleatorios: imposibles de reconocer a simple vista en una consulta o en un fallo de coherencia.
+- Escribir el reparto, el promedio y `leyó` en el JSON: serían datos derivados a mano que pueden contradecir a las reseñas, los estados y las relaciones.
+
+**Por qué.** El generador valida y escribe los tres archivos en unos 3 s. Los tres cargadores se ejecutaron en las tres bases sin errores (el validador estricto de MongoDB aceptó los 28 documentos) y la coherencia entre bases dio 13 de 13.
+**Costo que se acepta.** Los ids con patrón no son los que generará la API (aleatorios, D-11); sirven para la demostración. El generador no reproduce el `$jsonSchema` de MongoDB: lo hace el propio motor al cargar.
+**Dónde.** `db/semilla/` (con su `README.md`), `db/scripts/cargar-semilla.ps1`.
+
+---
+
+## D-44. Las contraseñas de la semilla son hashes bcrypt (coste 10) generados con `pgcrypto`
+
+**Contexto.** D-35 fija contraseñas con Argon2id "o bcrypt" y deja los parámetros para cuando se implemente la API. La semilla debe traer un administrador que pueda iniciar sesión, así que `password_hash` no puede ser texto de relleno, y el brief exige que la contraseña de prueba solo aparezca en `db/semilla/README.md`.
+**Decisión.** Los 8 usuarios llevan un hash bcrypt `$2a$10$…`, con un *salt* distinto cada uno, generado una sola vez con `crypt(contraseña, gen_salt('bf', 10))` de `pgcrypto` (viene en la imagen `postgres:18.7`), en una base temporal que se borró después. El hash vive en `semilla.json`; la contraseña, solo en `db/semilla/README.md`.
+**Alternativas descartadas.**
+- Argon2id: ninguna herramienta de la máquina ni de la imagen de PostgreSQL lo genera sin añadir una librería, y elegirla aquí sería decidir la librería de la API.
+- Un valor de relleno: las cuentas de la semilla no podrían iniciar sesión.
+- La contraseña en claro dentro de `semilla.json` o de los cargadores: contradice RNF-06 y el brief.
+
+**Por qué.** Se comprobó con el motor que los 8 hashes verifican con la contraseña de prueba y rechazan otra (`crypt(contraseña, hash) = hash`).
+**Costo que se acepta.** **No se probó con una librería de Node**, porque el proyecto aún no tiene API. Si ésta adopta Argon2id, hay que regenerar los 8 hashes en `semilla.json` (la contraseña de prueba puede seguir siendo la misma) y volver a ejecutar `generar.ps1`.
+**Dónde.** `db/semilla/semilla.json` (campo `password_hash`), `db/semilla/README.md`.
+
+---
+
+## D-45. Forma concreta de CG-08, CG-09, CG-21 y CG-23
+
+**Contexto.** `modelado/grafo/01-consultas-y-entidades.md` dice qué filtra y qué devuelve cada una, pero no fija columnas, orden ni casos límite. Faltaba escribirlas.
+**Decisión.**
+
+| Consulta | Parámetros | Devuelve |
+|---|---|---|
+| CG-08 | `$libros_partida` (lista de hasta 20 `obra_id` que entrega O18) y `$usuario_id` | Una fila por (libro recomendado, libro de partida, director): `obra_id`, `partida_id`, `persona_id`, `nombre`, `foto_url`. Excluye los libros de partida y los que el usuario ya `leyó`. La API agrupa por libro recomendado. Una lista vacía devuelve 0 filas |
+| CG-09 | `$usuario_id` | Una fila por película: `obra_id`, `libro_id` y `seguidos` (cuántos de los seguidos leyeron ese libro), de más a menos seguidos. No excluye las películas vistas (D-20) |
+| CG-21 | ninguno | Una fila por película, **también las que no tienen reparto** (`[]`): `obra_id` y `reparto`, una lista de mapas (`persona_id`, `nombre`, `foto_url`, `personaje`, `orden`) ordenada por `orden`. `foto_url` es nulo si la persona no tiene foto. Termina en `ORDER BY obra_id` para que la API añada `SKIP`/`LIMIT`, como en CG-22 |
+| CG-23 | ninguno | Una fila por nodo `Usuario`: `usuario_id`, `sigue` (ids de usuarios) y `leyo` (ids de obra), ordenadas. `leyó` se lee **sin filtrar la etiqueta del destino**, para que una relación hacia una película (que D-16 prohíbe) aparezca y la comparación con `estado_obra` la señale. Termina en `ORDER BY usuario_id` |
+
+CG-21 y CG-23 usan la cláusula de alcance `CALL (variable) { … }`, que exige Neo4j 5.23 o más; la versión fijada (5.26.34, D-39) la admite.
+**Alternativas descartadas.** CG-21 con una fila por actor: obliga a la API a reagrupar y pierde las películas sin reparto, que la reconciliación necesita ver (D-24). CG-23 en tres consultas (nodos, `sigue`, `leyó`): tres lecturas sin una vista común y más viajes. CG-08 con un solo libro por fila: pierde el libro de partida y el director que el diseño pide devolver (`05-cardinalidad.md`).
+**Por qué.** Se probaron sobre la semilla con 52 comprobaciones del grafo (`db/grafo/pruebas/semilla/01-consultas.cypher`), incluidos los casos negativos de RF-26 y RF-27.
+**Dónde.** `db/grafo/consultas/CG-08.cypher`, `CG-09.cypher`, `CG-21.cypher` y `CG-23.cypher`.
+
+---
+
+## D-46. Las pruebas sobre la semilla son de solo lectura y la coherencia entre bases compara fuera de las bases
+
+**Contexto.** Las pruebas existentes crean y borran sus propios datos, y `probar-grafo.ps1` vacía el grafo entero: no sirven para repetir las consultas sobre la semilla. El brief pide además un script de coherencia que falle si algo no cuadra.
+**Decisión.**
+- Las consultas representativas sobre la semilla no escriben nada que perdure: `06-consultas-semilla.sql` (O17, O18, O20 y O22) corre en una transacción que termina en `ROLLBACK`; `04-consultas-semilla.js` (AP-01 a AP-05, AP-21 y AP-23) lee la base de la aplicación y no la base de pruebas ni la borra; `probar-grafo.ps1 -Semilla` (CG-01 a CG-10 y CG-21 a CG-23) no limpia el grafo. `probar-semilla.ps1` las ejecuta juntas. Las pruebas que borran siguen siendo las de antes: se corren antes de cargar la semilla.
+- `db/scripts/coherencia.ps1` exporta de cada base con un solo proceso (`psql` y `mongosh` dentro de su contenedor; Neo4j por la API HTTP, sin JVM) y compara en PowerShell. Hace 13 comprobaciones: las cinco de la sección 8 del brief y además D-24, huérfanos, borradores, ISBN, comparativas y administrador. Sale con código 1 si alguna falla.
+- Como el script compara las bases entre sí y no contra `semilla.json`, sirve igual con datos reales cuando exista la API (reconciliación, RNF-03).
+
+**Alternativas descartadas.** Comparar cada base contra `semilla.json`: solo valdría para la semilla recién cargada. Una consulta de reconciliación dentro de cada base: ninguna ve a las otras dos.
+**Por qué.** Se comprobó que el script **sabe fallar**: se introdujeron 12 corrupciones deliberadas (4 en PostgreSQL, 2 en MongoDB y 6 en Neo4j) y 12 de las 13 comprobaciones fallaron, con código de salida 1, señalando el dato exacto; la 13.ª (ISBN, que no se tocó) pasó. Salida en `db/evidencias/semilla/coherencia-prueba-negativa.txt`. Tras recargar la semilla, 13 de 13.
+**Costo que se acepta.** C-12 (ISBN repetido) no se probó con una corrupción: el índice único *sparse* de MongoDB (IX-03) impide insertar un ISBN repetido, y eso ya lo cubren las pruebas de índices. Una ejecución completa de `coherencia.ps1` tarda unos 15 s, sobre todo por el proceso de `mongosh`.
+**Dónde.** `db/relacional/pruebas/06-consultas-semilla.sql`, `db/documental/pruebas/04-consultas-semilla.js`, `db/grafo/pruebas/semilla/01-consultas.cypher`, `db/scripts/probar-semilla.ps1`, `db/scripts/coherencia.ps1`, y los exportadores `coherencia-exportar.sql` y `coherencia-exportar.js`.
+
+---
+
+## D-47. La caché de páginas de Neo4j baja de 256 a 128 MB tras medir el consumo (ajusta D-36)
+
+**Contexto.** D-36 fijó valores iniciales "por ajustar con `docker stats`". Con la semilla cargada, Neo4j marcaba 81–85 % de su tope de 1,25 GB. Se midió qué parte era memoria que el sistema no puede liberar: el proceso de la JVM ocupaba unos 1000 MiB de forma estable (sin reinicios ni muertes por memoria), repartidos entre el montículo de 512 MB, la caché de páginas y la memoria interna de la JVM. No era una fuga: era el suelo de la configuración. Los topes de los contenedores ya suman unos 2,1 GB (2,5 GB con el cliente efímero y unos 2,9 GB con la API de D-36) sobre los ~3 GB que ve Docker, así que subir el tope de Neo4j no cabe.
+**Decisión.** `NEO4J_server_memory_pagecache_size` pasa de `256m` a `128m`. El montículo (512 MB) y el tope del contenedor (1,25 GB) no cambian. La caché de páginas guarda en memoria los datos del grafo y el de la semilla ocupa unos pocos MB.
+
+| Alternativa | Por qué no |
+|---|---|
+| Bajar el montículo a 384 MB | Con `ExitOnOutOfMemoryError`, quedarse corto mata el proceso, y CG-06 (caminos más cortos, profundidad 6) es lo que más montículo pedirá cuando el grafo crezca |
+| Subir el tope del contenedor | No cabe en los ~3 GB de Docker junto con los demás servicios |
+| Subir el límite de memoria de Docker/WSL | Depende de la máquina y de los otros proyectos; no lo decide el diseño |
+| No tocar nada | Válida (no hubo ningún fallo), pero deja menos margen para picos |
+
+**Por qué.** Se comprobó con el motor (Neo4j 5.26.34): tras reiniciar con 128 MB la JVM pasó de 1000 MiB a 768 MiB **en reposo**, pero después de cargar la semilla y correr todas las pruebas, la memoria no liberable (`anon`) quedó en 920 MiB frente a 975 MiB antes: **la mejora bajo carga es de unos 55 MiB (6 %)**, mucho menos que en reposo, porque el resto del crecimiento es memoria interna de la JVM, no la caché. Con `docker stats` pasó de 81–85 % a 79 % tras la carga y a 67 % en reposo. Con el cambio pasan las 137 comprobaciones del grafo, la prueba de concurrencia de D-23, las 117 consultas sobre la semilla y las 13 de coherencia, sin reinicios ni muertes por memoria.
+**Costo que se acepta.** El margen ganado es pequeño; no se midió si el consumo se estabiliza a largo plazo con la API en marcha. Con un grafo mucho mayor que el de la semilla, 128 MB de caché obligarían a Neo4j a leer más del disco: habría que volver a medir (y, si hace falta, subirla de nuevo). El resto del consumo (unos 175 MiB que aparecen al trabajar, de 768 a 943 MiB de proceso) es memoria interna de la JVM; reducirla pide ajustes de la JVM (código compilado, metaspacio) que no se probaron.
+**Dónde.** `docker-compose.yml` (servicio `neo4j`) y `docs/arquitectura/03-eleccion-stack.md` (tabla de memoria). Ajusta D-36; el brief del Entregable 4 conserva los valores iniciales.

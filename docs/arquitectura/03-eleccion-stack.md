@@ -152,7 +152,7 @@ La máquina tiene 6 GB de RAM y comparte Docker con otros proyectos. La JVM de N
 
 | Servicio | Tope del contenedor | Ajuste interno |
 |---|---|---|
-| Neo4j 5 Community | 1,25 GB | Montículo 512 MB y caché de páginas 256 MB. Los nombres exactos de las variables se confirman en la versión que se instale |
+| Neo4j 5 Community | 1,25 GB | Montículo 512 MB y caché de páginas 128 MB (ajustada desde 256 MB tras medirla, D-47). Variables confirmadas en 5.26.34: `server.memory.heap.initial_size`, `server.memory.heap.max_size` y `server.memory.pagecache.size` |
 | MongoDB | 512 MB | Caché de WiredTiger de 0,25 GB (el mínimo que admite) |
 | PostgreSQL | 384 MB | `shared_buffers` de 64 MB y 20 conexiones como máximo; la API usa un grupo de hasta 10 |
 | API Node (con el worker) | 384 MB | Montículo de Node de 256 MB |

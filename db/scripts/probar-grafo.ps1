@@ -9,6 +9,10 @@
 # Se conecta por la API HTTP de Neo4j (puerto NEO4J_HTTP_HOST_PORT de .env), sin lanzar ninguna JVM.
 # Codigo de salida: 0 si todo pasa, 1 si algo falla.
 #
+# Modo -Semilla: ejecuta db/grafo/pruebas/semilla/*.cypher sobre el grafo CON LA SEMILLA YA CARGADA (escalon 5).
+# NO borra nada (ni al empezar ni al terminar: las pruebas solo leen) y guarda en db/evidencias/semilla/grafo-*.txt.
+#   .\db\scripts\probar-grafo.ps1 -Semilla
+#
 # Formato de un archivo de pruebas (ver db/grafo/pruebas/):
 #   // @prueba ID | descripcion          empieza una prueba (limpia el grafo)
 #   // @paso descripcion                 (opcional) describe el paso que termina en el siguiente @espera
@@ -19,12 +23,13 @@
 # La expectativa va DESPUES de las sentencias y las evalua juntas, en una sola transaccion, sobre la ULTIMA.
 # Atajos de id: @P1 = persona 1, @L1 = libro 1, @F1 = pelicula 1, @U1 = usuario 1 (UUID reproducible).
 
-param([string[]]$Archivos)
+param([string[]]$Archivos, [switch]$Semilla)
 
 $ErrorActionPreference = 'Stop'
 $raiz = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $dirGrafo = Join-Path $raiz 'db\grafo'
-$destino = Join-Path $raiz 'db\evidencias\grafo'
+if ($Semilla) { $dirPruebas = Join-Path $dirGrafo 'pruebas\semilla'; $destino = Join-Path $raiz 'db\evidencias\semilla'; $prefijo = 'grafo-' }
+else { $dirPruebas = Join-Path $dirGrafo 'pruebas'; $destino = Join-Path $raiz 'db\evidencias\grafo'; $prefijo = '' }
 New-Item -ItemType Directory -Force -Path $destino | Out-Null
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 
@@ -69,8 +74,8 @@ function Texto-De([object]$v) {
     return [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0}', $v)
 }
 
-if ($Archivos) { $lista = $Archivos | ForEach-Object { Join-Path $dirGrafo ('pruebas\' + $_) } }
-else { $lista = Get-ChildItem (Join-Path $dirGrafo 'pruebas') -Filter '*.cypher' | Sort-Object Name | ForEach-Object { $_.FullName } }
+if ($Archivos) { $lista = $Archivos | ForEach-Object { Join-Path $dirPruebas $_ } }
+else { $lista = Get-ChildItem $dirPruebas -Filter '*.cypher' | Sort-Object Name | ForEach-Object { $_.FullName } }
 
 $totalFallas = 0
 $totalPasos = 0
@@ -90,7 +95,7 @@ foreach ($archivo in $lista) {
         if ($linea -match '^\s*//\s*@prueba\s+(\S+)\s*\|\s*(.+?)\s*$') {
             $pruebaId = $Matches[1]; $pruebaDesc = $Matches[2]; $paso = 0
             $buffer.Clear(); $parametros.Clear()
-            Invoke-Cypher @('MATCH (n) DETACH DELETE n') '' | Out-Null
+            if (-not $Semilla) { Invoke-Cypher @('MATCH (n) DETACH DELETE n') '' | Out-Null }
         }
         elseif ($linea -match '^\s*//\s*@paso\s+(.+?)\s*$') {
             $pasoDesc = $Matches[1]
@@ -149,12 +154,12 @@ foreach ($archivo in $lista) {
         elseif ($linea -match '^\s*//') { }
         else { $buffer.Add((Expandir $linea)) }
     }
-    Invoke-Cypher @('MATCH (n) DETACH DELETE n') '' | Out-Null
+    if (-not $Semilla) { Invoke-Cypher @('MATCH (n) DETACH DELETE n') '' | Out-Null }
 
-    $seg = [math]::Round(((Get-Date) - $inicio).TotalSeconds, 1)
+    $seg =[math]::Round(((Get-Date) - $inicio).TotalSeconds, 1)
     $salida.Add('')
     $salida.Add("Pasan $($pasos - $fallas) de $pasos, fallan $fallas.  ($seg s)")
-    [IO.File]::WriteAllLines((Join-Path $destino ($nombre + '.txt')), [string[]]$salida, $utf8)
+    [IO.File]::WriteAllLines((Join-Path $destino ($prefijo + $nombre + '.txt')), [string[]]$salida, $utf8)
     foreach ($l in $salida) { Write-Host $l }
     Write-Host ''
     $totalFallas += $fallas; $totalPasos += $pasos
@@ -162,7 +167,9 @@ foreach ($archivo in $lista) {
 }
 
 $cabecera = @("Pruebas del grafo - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')", 'Neo4j 5.26.34 Community', '')
-[IO.File]::WriteAllLines((Join-Path $destino 'resumen.txt'), [string[]]($cabecera + $resumen), $utf8)
+if ($Semilla) { $nombreResumen = 'resumen-grafo.txt'; $cabecera = @("Consultas del grafo sobre la semilla - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')", 'Neo4j 5.26.34 Community', '') }
+else { $nombreResumen = 'resumen.txt' }
+[IO.File]::WriteAllLines((Join-Path $destino $nombreResumen), [string[]]($cabecera + $resumen), $utf8)
 Write-Host ($resumen -join "`n")
 if ($totalFallas -gt 0) { Write-Host "`n$totalFallas paso(s) fallan." -ForegroundColor Red; exit 1 }
 Write-Host "`nTodas las pruebas del grafo pasan ($totalPasos pasos)." -ForegroundColor Green

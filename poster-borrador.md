@@ -28,17 +28,47 @@ Ingeniería en Tecnologías de la Información e Innovación Digital, Universida
 
 ## Resumen
 
-Quienes leen y ven cine suelen llevar su seguimiento en herramientas separadas, donde es difícil rastrear qué película adapta qué libro y comparar ambas versiones. Este trabajo propone *Del Libro a la Pantalla*, una aplicación móvil para registrar, reseñar y comparar libros y sus adaptaciones, y para descubrir obras por las conexiones entre autores, directores, actores y usuarios. Siguiendo las etapas del proyecto integrador se especificaron 27 requerimientos funcionales y se diseñaron tres bases de datos (relacional, documental y de grafo) con una fuente de verdad por dato y una API que las coordina. El modelo relacional ya se implementó en PostgreSQL y superó 84 comprobaciones con datos de prueba; la prueba de concurrencia obligó a corregir el diseño del bloqueo del promedio. Documental, grafo, API y aplicación están en curso o pendientes, y aún no hay mediciones de rendimiento.
+Quienes leen y ven cine suelen llevar su seguimiento en herramientas separadas, donde es difícil rastrear qué película adapta qué libro y comparar ambas versiones. El objetivo de este trabajo es crear *Del Libro a la Pantalla*, una aplicación móvil social para registrar, reseñar y comparar libros y sus adaptaciones, y para descubrir nuevas obras a partir de las conexiones entre autores, directores, actores y otros usuarios. Se siguió un enfoque por etapas: primero se definieron el problema, los usuarios y 27 requerimientos, y después el modelo de datos y la arquitectura, que reparte la información en tres tipos de base de datos según su naturaleza (relacional, documental y de grafo), coordinadas por una sola API. La solución desarrollada hasta ahora es el diseño completo de la aplicación y la implementación de su parte relacional, que superó 84 pruebas con datos de prueba; una de ellas llevó a corregir el diseño. Las otras dos bases, la API y la app están en curso o pendientes, y aún no hay mediciones de rendimiento.
 
 ---
 
 ## Introducción
 
-Quienes leen y ven películas suelen usar una aplicación para libros, otra para cine y notas sueltas [10], [11]. Cada una registra bien su medio, pero el vínculo entre un libro y su adaptación (qué película proviene de qué obra, quién participó en ambas) queda fuera de ellas. Este proyecto toma esa adaptación como relación central del dominio.
+**Contexto y relevancia.** La lectura es una práctica extendida en México: en 2026, 78.6 % de la población de 12 años y más leyó algún material de los que mide el INEGI, los libros fueron el material más frecuente (61.4 % entre quienes leyeron) y la población lectora de libros leyó en promedio 3.9 ejemplares en el último año [12]. La relación entre libros y cine también es estrecha: un estudio de BookNet Canada sobre 60 adaptaciones estrenadas en 2020 y 2021 encontró que las ventas de los libros adaptados subieron 307 % entre las 12 semanas previas al estreno y la primera semana posterior, y que las reservas en bibliotecas crecieron 89 % en el periodo analizado [13]. El efecto se concentra en las primeras semanas y el estudio se limita al mercado anglófono canadiense y a películas bien valoradas, por lo que no es generalizable, pero indica que el estreno de una adaptación coincide con un interés mayor por el libro.
 
-Sus datos son de naturaleza mixta: operaciones que deben ser atómicas, fichas con estructura anidada y variable, y una red de conexiones entre personas y obras. Esa mezcla motiva la persistencia políglota [6], [7], con una base de grafos para los recorridos [8].
+**Cómo se atiende hoy.** Para ver cómo se atiende ese interés se revisaron plataformas de seguimiento. Goodreads permite ordenar libros en estantes (leído, leyendo, por leer), calificarlos, reseñarlos, ver la actividad de otros lectores y recibir recomendaciones [10]; The StoryGraph ofrece reseñas, estadísticas de lectura y recomendaciones basadas en los hábitos del usuario [17]; y Letterboxd cumple un papel equivalente para el cine, con diario de películas vistas, reseñas, listas y seguimiento entre usuarios [11]. Cada plataforma atiende un solo medio. En lo revisado, la adaptación aparece como un género, listas y grupos creados por la comunidad (por ejemplo, la página "Adaptation" de Goodreads [18]) y no como una relación entre la ficha de un libro y la de su película.
 
-> NOTA: [10] y [11] (Goodreads y Letterboxd) solo si de verdad las revisaste. Las instrucciones piden decir "cómo otras personas lo atienden"; con una plataforma de libros y una de cine que hayas mirado basta. Si no las revisaste, quita esas dos citas y las dos referencias.
+Fuera de las plataformas sociales, la adaptación sí se trata como relación y como objeto de estudio. Wikidata la representa como un vínculo entre obras mediante la propiedad "basado en" (P144), cuyos alias incluyen "adaptación de" y "adaptado de" [16]. Hutcheon explora el desarrollo continuo de la adaptación creativa y sostiene que adaptar es central en la forma de contar historias [14], y trabajos computacionales recientes alinean libros con sus adaptaciones para comparar qué se conserva y qué cambia en 40 casos [19].
+
+**Cómo esto llevó al problema y a la solución.** De esta revisión se desprende la brecha que origina el proyecto: la lectura y el cine tienen buenas herramientas de seguimiento por separado, y la adaptación es una relación reconocida por las bases de conocimiento, la teoría y los datos de mercado, pero en las plataformas revisadas no es el eje de una herramienta social para quien lee y ve. Por eso el proyecto toma la adaptación (libro → película) como relación central. Conserva lo que ya hacen esas plataformas (registrar, reseñar, hacer listas, seguir a otros) y añade lo que no resuelven: comparar un libro con su película en una misma reseña y explorar las conexiones entre autores, directores, actores y lectores.
+
+La solución también se desprende de la naturaleza de los datos: hay operaciones que deben ser atómicas (publicar una reseña y actualizar su promedio), fichas con estructura anidada y variable (ediciones, plataformas) y una red de conexiones. Para esa mezcla se adoptó persistencia políglota [6], [7], con una base de grafos para los recorridos [8]. En recomendación, los grafos de conocimiento se usan como información adicional que ayuda con la escasez de datos y el arranque en frío [15], lo que respalda recomendar por conexiones.
+
+> NOTA 1 (esta versión es larga a propósito): si necesitas resumirla, lo imprescindible según las instrucciones es: (a) contexto y relevancia (INEGI [12], BookNet [13]), (b) cómo otros lo atienden (Goodreads/StoryGraph/Letterboxd, y Wikidata o Hutcheon) y (c) la brecha que llevó a la solución. Los párrafos 3 y 4 se pueden fundir en dos frases.
+>
+> NOTA 2 (ajusta a lo que de verdad hiciste): redacté "se revisaron plataformas" como el razonamiento que sustenta el problema. Si identificaste el problema por tu propia experiencia como lectora y espectadora, dilo en una frase al inicio del segundo párrafo ("Partiendo de la experiencia de usar herramientas separadas, se revisó…").
+>
+> NOTA 3 (comprueba esto antes de imprimir): la oración "en lo revisado, la adaptación aparece como género, listas y grupos… y no como una relación entre fichas" está respaldada por la página "Adaptation" de Goodreads [18], pero no abrí la ficha de un libro concreto ni la de una película en Letterboxd. Abre la ficha de un libro con película (por ejemplo, *Los juegos del hambre*) en Goodreads y la de su película en Letterboxd. Si alguna muestra un vínculo directo, ajusta o quita esa oración.
+>
+> NOTA 4 (qué quedó verificado y qué no): leí directamente el comunicado del INEGI [12] (comunicado 109/26, 18 de nov. de 2026), la página de BookNet Canada [13], la página de Goodreads [18], la de Wikidata [16], la ficha de Routledge [14] y los resúmenes de arXiv [15], [19]. Las descripciones de Goodreads, StoryGraph y Letterboxd salen de Wikipedia y de resultados de búsqueda; los sitios oficiales de StoryGraph y Letterboxd no los pude abrir. Ábrelos tú antes de citarlos. El volumen y las páginas de [15] los tomé de un resultado de búsqueda (dblp), no de la página de la revista.
+>
+> **Referencias nuevas para añadir** (no toqué la sección Referencias; copia estas entradas ahí). [10], [11], [6], [7] y [8] ya existen. Según IEEE, los números deben seguir el **orden de aparición** en el póster, así que al final renumera todo.
+>
+> [12] INEGI, "Módulo sobre Lectura (MOLEC) 2026," Comunicado de prensa 109/26, nov. 18, 2026. [Online]. Available: https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2026/molec/MOLEC2026_CP.pdf. [Accessed: Nov. 24, 2026].
+>
+> [13] BookNet Canada, "Must-watch, must-read: Book adaptations on the big screen," BookNet Canada, May 3, 2022. [Online]. Available: https://booknetcanada.ca/blog/research/2022/5/3/must-watch-must-read-book-adaptations-on-the-big-screen. [Accessed: Nov. 24, 2026].
+>
+> [14] L. Hutcheon, *A Theory of Adaptation*, 2nd ed. (with an epilogue by S. O'Flynn). Routledge, 2013.
+>
+> [15] Q. Guo, F. Zhuang, C. Qin, H. Zhu, X. Xie, H. Xiong, and Q. He, "A survey on knowledge graph-based recommender systems," *IEEE Trans. Knowl. Data Eng.*, vol. 34, no. 8, pp. 3549–3568, Aug. 2022, doi: 10.1109/TKDE.2020.3028705.
+>
+> [16] Wikidata, "Property:P144 (based on)." [Online]. Available: https://www.wikidata.org/wiki/Property:P144. [Accessed: Nov. 24, 2026].
+>
+> [17] The StoryGraph. [Online]. Available: https://www.thestorygraph.com/. [Accessed: *fecha*].
+>
+> [18] Goodreads, "Adaptation." [Online]. Available: https://www.goodreads.com/genres/adaptation. [Accessed: Nov. 24, 2026].
+>
+> [19] T. Pial, S. Salim, C. Pethe, A. Kim, and S. Skiena, "Analyzing film adaptation through narrative alignment," arXiv:2311.04020, Nov. 2023. [Online]. Available: https://arxiv.org/abs/2311.04020.
 
 ## Planteamiento del problema
 

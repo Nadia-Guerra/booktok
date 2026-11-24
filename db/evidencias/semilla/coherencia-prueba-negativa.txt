@@ -1,0 +1,42 @@
+PRUEBA NEGATIVA de coherencia.ps1: 12 corrupciones deliberadas (4 en PostgreSQL, 2 en MongoDB, 6 en Neo4j)
+antes de correrlo. Se deshicieron recargando la semilla. Resultado esperado: C-12 pasa (no se toco) y el resto falla.
+Corrupciones: M1 promedio de Dune a mano (C-09); M2 el unico admin pasa a lector (C-13); M3 resena sobre un borrador (C-11);
+M4 tipo de obra_resumen cambiado (C-02); M5 foto del reparto distinta (C-05); M6 comparativa sin adaptado_a (C-10);
+M7 sigue borrado (C-06); M8 leyo hacia una pelicula (C-07); M9 pelicula publicada sin director (C-04);
+M10 nodo Usuario huerfano (C-08); M11 nodo Libro sin ficha (C-03); M12 persona_id en mayusculas (C-01 y C-05).
+
+Coherencia entre bases - 2026-11-23 23:35:19
+
+Lectura: PostgreSQL 2.6 s, MongoDB 14.5 s, Neo4j 3.1 s
+
+FALLA  C-01  ids UUID en minusculas en las tres bases
+         x Neo4j: nodo con id mal formado o sin id: Persona:A1000000-0000-4000-8000-000000000029
+FALLA  C-02  cada ficha publicada existe en obra_resumen y como nodo, con el mismo tipo
+         x la ficha b1000000-0000-4000-8000-000000000002 es 'libro' pero obra_resumen dice 'pelicula'
+FALLA  C-03  sin huerfanos: toda ficha, obra_resumen y nodo de obra existe en las tres bases
+         x nodo Libro b1000000-0000-4000-8000-000000000099 no tiene ficha
+FALLA  C-04  cada ficha publicada tiene sus relaciones minimas de D-24 en el grafo
+         x D-24: la pelicula publicada 'Asesinato en el Orient Express' no tiene director
+FALLA  C-05  el reparto de cada ficha de pelicula coincide con actuo_en (nombre, personaje, orden y foto_url)
+         x 'Dune': solo en la ficha (1): a1000000-0000-4000-8000-000000000017|Timothée Chalamet|Paul Atreides|1|https://almacenamiento.ejemplo.com/personas/otra.jpg
+         x 'Dune': solo en el grafo (actuo_en) (1): a1000000-0000-4000-8000-000000000017|Timothée Chalamet|Paul Atreides|1|https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000017.jpg
+         x 'Asesinato en el Orient Express': solo en la ficha (1): a1000000-0000-4000-8000-000000000029|Penélope Cruz|Pilar Estravados|2|
+         x 'Asesinato en el Orient Express': solo en el grafo (actuo_en) (1): A1000000-0000-4000-8000-000000000029|Penélope Cruz|Pilar Estravados|2|
+FALLA  C-06  sigue coincide con seguimiento
+         x solo en seguimiento (relacional) (1): c1000000-0000-4000-8000-000000000006|c1000000-0000-4000-8000-000000000007
+FALLA  C-07  leyo coincide con los estados terminada de LIBROS (las peliculas terminadas no cuentan)
+         x leyo sin estado terminada de un libro (1): c1000000-0000-4000-8000-000000000006|f1000000-0000-4000-8000-000000000001
+FALLA  C-08  los usuarios del grafo son los del relacional
+         x nodo Usuario sin usuario en el relacional (huerfano) (1): c1000000-0000-4000-8000-000000000099
+FALLA  C-09  promedio y total_resenas coinciden con las resenas no ocultas (RN-08)
+         x b1000000-0000-4000-8000-000000000001 : obra_resumen dice total=3 promedio=1.00; las resenas no ocultas dan total=3 promedio=4.33
+FALLA  C-10  cada comparativa une usuario, libro y pelicula existentes y unidos por adaptado_a
+         x comparativa ca000000-0000-4000-8000-000000000098: el libro y la pelicula no estan unidos por adaptado_a (RN-06)
+FALLA  C-11  hay fichas en borrador y no tienen resenas, estados ni lugar en listas
+         x la ficha en borrador 'Neuromante' tiene resenas, estados o esta en una lista: se mostraria
+PASA   C-12  ISBN sin repetir entre libros y mezcla de libros con y sin ISBN
+         -> 8 libros con ISBN (8 ISBN distintos) y 3 sin ISBN
+FALLA  C-13  existe al menos un administrador
+         x no hay ningun usuario con rol admin
+
+12 de 13 comprobaciones FALLAN.  (21.1 s)

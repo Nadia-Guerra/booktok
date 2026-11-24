@@ -1,0 +1,49 @@
+Carga de la semilla - 2026-11-24 04:18:58
+
+=== relacional: PostgreSQL: 04-semilla.sql
+SET
+BEGIN
+TRUNCATE TABLE
+INSERT 0 8
+INSERT 0 23
+INSERT 0 25
+INSERT 0 18
+INSERT 0 10
+INSERT 0 2
+INSERT 0 6
+COMMIT
+     tabla      | filas 
+----------------+-------
+ usuario        |     8
+ obra_resumen   |    23
+ resena         |    18
+ estado_obra    |    25
+ seguimiento    |    10
+ lista          |     2
+ elemento_lista |     6
+(7 rows)
+
+-> CARGADO  relacional  PostgreSQL: 04-semilla.sql  (1.5 s, codigo 0)
+
+=== documental: MongoDB: 03-semilla.js
+Semilla cargada en la base 'dlbp': 11 libros, 12 peliculas, 5 comparativas.
+-> CARGADO  documental  MongoDB: 03-semilla.js  (12.7 s, codigo 0)
+
+=== grafo: Neo4j: 02-semilla.cypher (cliente efimero)
+ Container dlbp-neo4j-cliente-run-3c8bf2067050 Creating 
+ Container dlbp-neo4j-cliente-run-3c8bf2067050 Created 
+nodos, total
+"Libro", 11
+"Película", 12
+"Persona", 29
+"Usuario", 8
+relacion, total
+"actuó_en", 18
+"adaptado_a", 12
+"dirigida_por", 11
+"escribió", 11
+"leyó", 12
+"sigue", 10
+-> CARGADO  grafo       Neo4j: 02-semilla.cypher (cliente efimero)  (23.4 s, codigo 0)
+
+Total: 37.7 s

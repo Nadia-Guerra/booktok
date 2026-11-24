@@ -1,4 +1,4 @@
-Pruebas del grafo: 02-cardinalidad  (2026-11-23 23:00:11)
+Pruebas del grafo: 02-cardinalidad  (2026-11-24 04:18:30)
 
 PASA   K-01.1    Ejemplo de 05, sección 3.1: El hobbit tiene tres películas y cada una un solo libro de origen
              -> ok
@@ -109,4 +109,4 @@ PASA   K-10.15   Las escrituras idempotentes de sincronización y alta no duplic
 PASA   K-10.16   Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18) / Eliminar el seguimiento dos veces no falla y deja solo la adaptación
              -> valor 1
 
-Pasan 54 de 54, fallan 0.  (7.6 s)
+Pasan 54 de 54, fallan 0.  (12.2 s)

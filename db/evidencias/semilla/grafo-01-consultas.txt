@@ -1,0 +1,108 @@
+Pruebas del grafo: 01-consultas  (2026-11-24 04:19:46)
+
+PASA   S-01.1    CG-01 sobre la semilla / Villeneuve dirigió 3 películas (Dune 2021, Dune parte dos y La llegada)
+             -> valor 3|3|dirigida_por
+PASA   S-01.2    CG-01 sobre la semilla / Branagh tiene dos roles en la misma película: 1 obra, 2 vínculos (dirigida_por y actuó_en)
+             -> valor 2|1|2
+PASA   S-01.3    CG-01 sobre la semilla / 'TIMOTHEE' sin tilde y en mayúsculas encuentra a Chalamet: sus 2 películas por actuó_en
+             -> filas 2
+PASA   S-01.4    CG-01 sobre la semilla / Herbert escribió un libro
+             -> valor b1000000-0000-4000-8000-000000000001|libro|escribió
+PASA   S-02.1    CG-02 sobre la semilla / 'ian' encuentra a las dos personas llamadas Ian (McEwan y McKellen)
+             -> filas 2
+PASA   S-02.2    CG-02 sobre la semilla / Rebecca Ferguson tiene foto
+             -> valor https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000018.jpg
+PASA   S-02.3    CG-02 sobre la semilla / Matthew Macfadyen no tiene foto: la propiedad no existe
+             -> valor true
+PASA   S-03.1    CG-03 y CG-04 sobre la semilla / Dune tiene dos adaptaciones: las películas 01 y 02
+             -> valor 01,02
+PASA   S-03.2    CG-03 y CG-04 sobre la semilla / Androides tiene una: Blade Runner (03)
+             -> valor 03
+PASA   S-03.3    CG-03 y CG-04 sobre la semilla / Un id de película no tiene adaptaciones (se busca por etiqueta Libro)
+             -> filas 0
+PASA   S-03.4    CG-03 y CG-04 sobre la semilla / El libro de origen de Dune parte dos es Dune
+             -> valor b1000000-0000-4000-8000-000000000001
+PASA   S-03.5    CG-03 y CG-04 sobre la semilla / La película en borrador (Neuromante) ya tiene su libro de origen: el borrador del libro
+             -> valor b1000000-0000-4000-8000-000000000011
+PASA   S-04.1    CG-05 sobre la semilla / Autor de Dune
+             -> valor Frank Herbert
+PASA   S-04.2    CG-05 sobre la semilla / Director de Orient Express
+             -> valor Kenneth Branagh
+PASA   S-04.3    CG-05 sobre la semilla / La película en borrador no tiene director todavía: por D-24 no podría publicarse
+             -> filas 0
+PASA   S-05.1    CG-06 sobre la semilla (RF-24) / Herbert a Chalamet: 3 saltos y 2 rutas más cortas (por Dune 2021 y por Dune parte dos)
+             -> valor 2|3|3
+PASA   S-05.2    CG-06 sobre la semilla (RF-24) / Tolkien a McKellen: 3 saltos y 2 rutas (El Hobbit y La Comunidad del Anillo)
+             -> valor 2|3|3
+PASA   S-05.3    CG-06 sobre la semilla (RF-24) / Austen a McAvoy: 5 saltos y 2 rutas (por la actriz Knightley o por el director Wright)
+             -> valor 2|5|5
+PASA   S-05.4    CG-06 sobre la semilla (RF-24) / De un libro a otro: Dune a Historia de tu vida, por el director Villeneuve (4 saltos, 2 rutas: Dune 2021 o parte dos)
+             -> valor 2|4|4
+PASA   S-05.5    CG-06 sobre la semilla (RF-24) / Sin conexión: Gibson solo está unido a su libro y a su película en borrador, aislados del resto
+             -> filas 0
+PASA   S-06.1    CG-07 sobre la semilla (RF-25) / Villeneuve adaptó a 2 autores distintos (Herbert, con dos películas, y Chiang): 3 filas
+             -> valor 3|2
+PASA   S-06.2    CG-07 sobre la semilla (RF-25) / Scott adaptó a Dick y a Weir
+             -> valor 2|2
+PASA   S-06.3    CG-07 sobre la semilla (RF-25) / Wright adaptó a Austen y a McEwan
+             -> valor 2|2
+PASA   S-06.4    CG-07 sobre la semilla (RF-25) / Caso negativo: Jackson adaptó 2 libros pero de un solo autor (Tolkien): 2 filas, 1 autor
+             -> valor 2|1
+PASA   S-06.5    CG-07 sobre la semilla (RF-25) / Caso negativo: Spielberg adaptó un solo libro
+             -> valor 1|1
+PASA   S-06.6    CG-07 sobre la semilla (RF-25) / Caso negativo: Chalamet no dirigió nada
+             -> filas 0
+PASA   S-07.1    CG-08 sobre la semilla (RF-26) / Ana: partida Dune (5) y El marciano (4). Recomienda Historia de tu vida (por Villeneuve) y Androides (por Scott)
+             -> valor 2|02<03:Ridley Scott,04<01:Denis Villeneuve
+PASA   S-07.2    CG-08 sobre la semilla (RF-26) / Con esa misma lista, La Comunidad del Anillo (07) NO se recomienda: viene de El Hobbit, que Ana calificó con 3 y no es partida
+             -> valor 0
+PASA   S-07.3    CG-08 sobre la semilla (RF-26) / Pedro: partida Dune y Historia de tu vida. Cada uno ya es el otro (ya leído y de partida): nada que recomendar
+             -> filas 0
+PASA   S-07.4    CG-08 sobre la semilla (RF-26) / Ana, solo con Dune de partida: sale Historia de tu vida, que no ha leído (y no Dune, que es la partida)
+             -> valor b1000000-0000-4000-8000-000000000004
+PASA   S-07.5    CG-08 sobre la semilla (RF-26) / Marta: partida Orgullo y prejuicio y Dune (ambos terminados con 4). Recomienda Expiación (por Wright) e Historia de tu vida (por Villeneuve)
+             -> valor 2|04<01,09<08
+PASA   S-07.6    CG-08 sobre la semilla (RF-26) / Spielberg adaptó un solo libro: Luis, con Parque Jurásico de partida, no recibe nada
+             -> filas 0
+PASA   S-07.7    CG-08 sobre la semilla (RF-26) / Lista de partida vacía: no devuelve nada
+             -> filas 0
+PASA   S-08.1    CG-09 sobre la semilla (RF-27) / Sofía sigue a Ana, Pedro y Diego: 7 películas; las de Dune y El marciano las alcanzan 2 seguidos
+             -> valor 7|2|3
+PASA   S-08.2    CG-09 sobre la semilla (RF-27) / D-20: Sofía ya vio Dune (2021) y aun así sale, con 2 seguidos que leyeron el libro
+             -> valor 2|b1000000-0000-4000-8000-000000000001
+PASA   S-08.3    CG-09 sobre la semilla (RF-27) / Luis solo sigue a Ana: 5 películas, cada una por 1 seguido
+             -> valor 5|1
+PASA   S-08.4    CG-09 sobre la semilla (RF-27) / Ana solo sigue a Pedro, que leyó Dune e Historia de tu vida: 3 películas
+             -> valor 3|1
+PASA   S-08.5    CG-09 sobre la semilla (RF-27) / Caso negativo: Pedro no sigue a nadie
+             -> filas 0
+PASA   S-08.6    CG-09 sobre la semilla (RF-27) / Caso negativo: el administrador no sigue a nadie
+             -> filas 0
+PASA   S-09.1    CG-10 sobre la semilla / Dune y Dune parte dos están unidos
+             -> valor true
+PASA   S-09.2    CG-10 sobre la semilla / Dune y El marciano (película) no lo están
+             -> valor false
+PASA   S-09.3    CG-10 sobre la semilla / Los ids al revés (película como libro y libro como película) no cuentan
+             -> valor false
+PASA   S-10.1    CG-21, CG-22 y CG-23 sobre la semilla / CG-21 devuelve las 12 películas (también la del borrador)
+             -> filas 12
+PASA   S-10.2    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: la película en borrador no tiene reparto (lista vacía)
+             -> valor 0
+PASA   S-10.3    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: Dune 2021 tiene 2 actores, ordenados, con la foto de Chalamet
+             -> valor 2|Timothée Chalamet|Paul Atreides|1|0017.jpg
+PASA   S-10.4    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: en Orgullo y prejuicio, Macfadyen (2.º) no tiene foto
+             -> valor Matthew Macfadyen|true
+PASA   S-10.5    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: total de personas de reparto = 18 (las relaciones actuó_en)
+             -> valor 18
+PASA   S-10.6    CG-21, CG-22 y CG-23 sobre la semilla / CG-22: la única obra que no llega al mínimo de D-24 es la película en borrador
+             -> valor 1|f1000000-0000-4000-8000-000000000012
+PASA   S-10.7    CG-21, CG-22 y CG-23 sobre la semilla / CG-23 devuelve los 8 usuarios (el administrador incluido, sin relaciones)
+             -> filas 8
+PASA   S-10.8    CG-21, CG-22 y CG-23 sobre la semilla / CG-23: 10 pares sigue y 12 pares leyó en total
+             -> valor 10|12
+PASA   S-10.9    CG-21, CG-22 y CG-23 sobre la semilla / CG-23: Ana sigue a Pedro y leyó 4 libros (no las películas ni el que está en curso o pendiente)
+             -> valor 1|4
+PASA   S-10.10   CG-21, CG-22 y CG-23 sobre la semilla / CG-23: el administrador no tiene relaciones sigue ni leyó
+             -> valor 0|0
+
+Pasan 52 de 52, fallan 0.  (12.5 s)

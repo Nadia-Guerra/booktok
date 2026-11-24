@@ -1,8 +1,8 @@
-Pruebas relacionales - 2026-11-23 22:22:25
+Pruebas relacionales - 2026-11-23 23:23:04
 postgres (PostgreSQL) 18.7 (Debian 18.7-1.pgdg13+5)
 
-PASA   01-integridad    Integridad: pruebas 1, 1b, 2 a 13, 16, 17 y extras  (0.7 s, codigo 0)
+PASA   01-integridad    Integridad: pruebas 1, 1b, 2 a 13, 16, 17 y extras  (1.1 s, codigo 0)
 PASA   02-transaccion   Transaccion RF-13: prueba 14 (rollback)  (0.6 s, codigo 0)
-PASA   03-concurrencia  Concurrencia del trigger: prueba 15  (16.1 s, codigo 0)
-PASA   04-indices       Indices: EXPLAIN de las consultas documentadas  (1.3 s, codigo 0)
-PASA   05-consultas     Consultas representativas O17, O18, O20, O22  (0.4 s, codigo 0)
+PASA   03-concurrencia  Concurrencia del trigger: prueba 15  (17.5 s, codigo 0)
+PASA   04-indices       Indices: EXPLAIN de las consultas documentadas  (2 s, codigo 0)
+PASA   05-consultas     Consultas representativas O17, O18, O20, O22  (0.5 s, codigo 0)

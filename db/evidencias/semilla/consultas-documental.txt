@@ -1,0 +1,77 @@
+
+Consultas del documental sobre la semilla  (MongoDB 9.0.4, base 'dlbp')
+
+PASA  S-00a    Hay 11 libros, 12 películas y 5 comparativas
+      -> 11, 12, 5
+PASA  S-00b    Fichas en borrador: 1 libro y 1 película (Neuromante)
+      -> 1, 1
+PASA  S-AP01a  AP-01: ficha completa de Dune con sus 2 ediciones (una con ISBN y una sin él)
+      -> Dune | 2 ediciones | 1 con isbn
+PASA  S-AP01b  AP-01: una ficha de libro sin portada no trae portada_url (Historia de tu vida)
+      -> sin portada_url
+PASA  S-AP01c  AP-01: el campo estado_publicacion distingue la ficha en borrador (Neuromante, libro 11)
+      -> borrador
+PASA  S-AP02a  AP-02: ficha de Dune (2021) con su reparto copiado, ordenado y con foto
+      -> 2 actores | Timothée Chalamet (Paul Atreides) | con foto
+PASA  S-AP02b  AP-02: un actor sin foto no lleva foto_url en el reparto (Macfadyen, película 9)
+      -> Matthew Macfadyen | sin foto_url
+PASA  S-AP02c  AP-02: datos técnicos de Dune (2021)
+      -> inglés | Estados Unidos, Canadá | PG-13 | 155 min
+PASA  S-AP02d  AP-02: la ficha en borrador no tiene reparto todavía (Neuromante, película 12)
+      -> borrador | 0 actores
+PASA  S-AP03a  AP-03: 'dune' (visitante) encuentra el libro y las 2 películas publicadas
+      -> libros: Dune ; películas: Dune | Dune: Parte dos
+PASA  S-AP03b  AP-03: 'MARCIANO' en mayúsculas encuentra el libro y la película
+      -> 1 libro, 1 película
+PASA  S-AP03c  AP-03: 'expiacion' sin tilde encuentra Expiación
+      -> Expiación
+PASA  S-AP03d  AP-03: 'neuromante' no muestra los borradores a un visitante
+      -> 0 libros, 0 películas
+PASA  S-AP03e  AP-03: el administrador sí ve los borradores
+      -> 1 libro, 1 película
+PASA  S-AP03f  AP-03: 'dun' (parte de una palabra) no encuentra nada: limitación conocida del índice de texto
+      -> 0
+PASA  S-AP03g  AP-03: 'orgullo prejuicio' encuentra el libro y la película
+      -> Orgullo y prejuicio | Orgullo y prejuicio
+PASA  S-AP04a  AP-04: datos de presentación de 4 obras (2 libros y 2 películas) a partir de sus ids
+      -> Dune | Dune | Historia de tu vida | La llegada
+PASA  S-AP04b  AP-04: el id de una película buscado en la colección de libros no devuelve nada
+      -> 0
+PASA  S-AP05a  AP-05: el libro 1 existe y está publicado
+      -> existe, publicada
+PASA  S-AP05b  AP-05: el libro 11 (Neuromante) existe y está en borrador
+      -> existe, borrador
+PASA  S-AP05c  AP-05: la película 12 (Neuromante) existe y está en borrador
+      -> existe, borrador
+PASA  S-AP05d  AP-05: el id de un libro no existe en la colección de películas
+      -> no existe
+PASA  S-AP21a  AP-21: comparativas de Dune (libro 1) y Dune 2021 (película 1), la más reciente primero (Marta, luego Ana)
+      -> 02, 01
+PASA  S-AP21b  AP-21: el veredicto y los aspectos de la más reciente
+      -> pelicula | 2 aspectos | Banda sonora (5)
+PASA  S-AP21c  AP-21: la comparativa oculta (Elena, libro 9 y película 10) no se lista a un lector
+      -> 0
+PASA  S-AP21d  AP-21: el administrador sí ve la oculta
+      -> 05
+PASA  S-AP21e  AP-21: una pareja sin comparativas (Dune y El marciano, no unidas por adaptación) devuelve 0
+      -> 0
+PASA  S-AP21f  AP-21: usa el índice IX-05 (ix_comp_adaptacion)
+      -> usa ix_comp_adaptacion
+PASA  S-AP23a  AP-23: comparativas de Ana (usuario 2)
+      -> 01
+PASA  S-AP23b  AP-23: otro lector no ve la comparativa oculta de Elena (usuario 8)
+      -> 0
+PASA  S-AP23c  AP-23: la propia Elena (o el administrador) sí la ve
+      -> 05
+PASA  S-AP23d  AP-23: un usuario sin comparativas (Sofía, usuario 6) devuelve 0
+      -> 0
+PASA  S-AP23e  AP-23: usa el índice IX-04 (ix_comp_unica) por su prefijo usuario_id
+      -> usa ix_comp_unica
+PASA  S-IX03a  ISBN: 8 libros tienen al menos una edición con ISBN
+      -> 8
+PASA  S-IX03b  ISBN: 3 libros no tienen ninguno (2 con ediciones sin ISBN y el borrador sin ediciones): el índice sparse los admite
+      -> 3
+PASA  S-IX03c  ISBN: buscar uno encuentra su libro y usa el índice IX-03
+      -> Dune | usa ix_libros_isbn
+
+Pasan 36 de 36, fallan 0.
