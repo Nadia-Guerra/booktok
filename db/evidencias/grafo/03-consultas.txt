@@ -1,4 +1,4 @@
-Pruebas del grafo: 03-consultas  (2026-11-24 04:18:42)
+Pruebas del grafo: 03-consultas  (2026-11-24 04:31:01)
 
 PASA   Q-00.1    Consultas funcionales de catálogo y exploración
              -> ok
@@ -51,4 +51,4 @@ PASA   Q-00.24   Consultas funcionales de catálogo y exploración / CG-24 + CG-
 PASA   Q-00.25   Consultas funcionales de catálogo y exploración
              -> valor https://almacenamiento.ejemplo.com/personas/ferguson.jpg
 
-Pasan 25 de 25, fallan 0.  (6.9 s)
+Pasan 25 de 25, fallan 0.  (4.7 s)

@@ -25,6 +25,6 @@
 
                  dato                 | idx_outbox_pendientes_parcial | pk_sync_outbox_completo 
 --------------------------------------+-------------------------------+-------------------------
- Tamaño de índices del outbox (bytes) |                         16384 |                  909312
+ Tamaño de índices del outbox (bytes) |                         16384 |                  466944
 (1 row)
 

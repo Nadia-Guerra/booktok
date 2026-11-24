@@ -1,0 +1,6 @@
+-> 01-colecciones.js
+Colecciones creadas en la base 'dlbp': libros, peliculas, resenas_comparativas
+-> 02-indices.js
+Índices creados en la base 'dlbp'.
+-> 03-semilla.js (omitido: SIN_SEMILLA=1)
+Base documental construida.

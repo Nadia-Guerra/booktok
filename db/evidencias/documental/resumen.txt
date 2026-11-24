@@ -1,6 +1,6 @@
-Pruebas documentales - 2026-11-23 23:23:25
+Pruebas documentales - 2026-11-24 04:30:36
 MongoDB v9.0.4
 
-PASA   01-validacion  Validacion: documentos validos e invalidos (pruebas 1 a 26 y extras)  (10.8 s, codigo 0)
-PASA   02-indices     Indices: unicidades, texto y planes explain (pruebas 1 a 9)  (4.7 s, codigo 0)
-PASA   03-controles   Controles negativos: sparse, parcial y sin validador  (3.6 s, codigo 0)
+PASA   01-validacion  Validacion: documentos validos e invalidos (pruebas 1 a 26 y extras)  (5.7 s, codigo 0)
+PASA   02-indices     Indices: unicidades, texto y planes explain (pruebas 1 a 9)  (2.9 s, codigo 0)
+PASA   03-controles   Controles negativos: sparse, parcial y sin validador  (1.7 s, codigo 0)

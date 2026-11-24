@@ -51,6 +51,7 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 | D-45 | Forma concreta de CG-08, CG-09, CG-21 y CG-23 | 2026-11-23 |
 | D-46 | Las pruebas sobre la semilla son de solo lectura y la coherencia entre bases compara fuera de las bases | 2026-11-23 |
 | D-47 | La caché de páginas de Neo4j baja de 256 a 128 MB tras medir el consumo (ajusta D-36) | 2026-11-24 |
+| D-48 | `reconstruir.ps1` borra solo los volúmenes del proyecto, levanta una base cada vez, prueba sobre bases vacías y carga la semilla al final | 2026-11-24 |
 
 ---
 
@@ -809,3 +810,26 @@ CG-21 y CG-23 usan la cláusula de alcance `CALL (variable) { … }`, que exige 
 **Por qué.** Se comprobó con el motor (Neo4j 5.26.34): tras reiniciar con 128 MB la JVM pasó de 1000 MiB a 768 MiB **en reposo**, pero después de cargar la semilla y correr todas las pruebas, la memoria no liberable (`anon`) quedó en 920 MiB frente a 975 MiB antes: **la mejora bajo carga es de unos 55 MiB (6 %)**, mucho menos que en reposo, porque el resto del crecimiento es memoria interna de la JVM, no la caché. Con `docker stats` pasó de 81–85 % a 79 % tras la carga y a 67 % en reposo. Con el cambio pasan las 137 comprobaciones del grafo, la prueba de concurrencia de D-23, las 117 consultas sobre la semilla y las 13 de coherencia, sin reinicios ni muertes por memoria.
 **Costo que se acepta.** El margen ganado es pequeño; no se midió si el consumo se estabiliza a largo plazo con la API en marcha. Con un grafo mucho mayor que el de la semilla, 128 MB de caché obligarían a Neo4j a leer más del disco: habría que volver a medir (y, si hace falta, subirla de nuevo). El resto del consumo (unos 175 MiB que aparecen al trabajar, de 768 a 943 MiB de proceso) es memoria interna de la JVM; reducirla pide ajustes de la JVM (código compilado, metaspacio) que no se probaron.
 **Dónde.** `docker-compose.yml` (servicio `neo4j`) y `docs/arquitectura/03-eleccion-stack.md` (tabla de memoria). Ajusta D-36; el brief del Entregable 4 conserva los valores iniciales.
+
+---
+
+## D-48. `reconstruir.ps1` borra solo los volúmenes del proyecto, levanta una base cada vez, prueba sobre bases vacías y carga la semilla al final
+
+**Contexto.** El brief pide un solo comando de PowerShell que reconstruya todo desde cero (borra volúmenes, crea, carga y prueba). Tres cosas no estaban decididas: qué se borra, en qué orden se hace cada cosa y qué pasa con la semilla que `construir.sh` ya cargaba por su cuenta. Las pruebas de `db/*/pruebas/` crean y borran sus datos y `probar-grafo.ps1` vacía el grafo entero, así que no pueden correr después de cargar la semilla sin destruirla.
+**Decisión.** `db/scripts/reconstruir.ps1` ejecuta en este orden y deja la salida de cada paso en `db/evidencias/reconstruccion/`:
+1. **Borrar** con `docker compose --profile todas --profile herramientas down -v --remove-orphans`, que solo alcanza los contenedores y los tres volúmenes del proyecto `dlbp`; no toca nada de otros proyectos, que comparten este Docker. Como borra datos, **pide escribir `SI`**; `-Forzar` omite la pregunta.
+2. **Levantar** PostgreSQL, MongoDB y Neo4j **de uno en uno** con `up -d --wait`, para no arrancar a la vez los procesos pesados (D-36).
+3. **Construir los esquemas sin semilla**: los tres `construir.sh` aceptan `SIN_SEMILLA=1` y entonces omiten sus archivos de semilla.
+4. **Pruebas** de las tres bases y la de concurrencia de D-23, sobre bases vacías. Un paso de pruebas que falla no detiene la reconstrucción (se anota y se sigue); un fallo al borrar, levantar o construir sí la detiene.
+5. **Cargar la semilla** y repetir sobre ella las consultas y la coherencia (solo lectura).
+Termina con código 1 si falló algún paso. `-SinPruebas` omite el paso 4.
+
+**Alternativas descartadas.**
+- Construir con la semilla y correr las pruebas encima: las pruebas borran el grafo entero y habría que recargar de todos modos; además no se sabe si las pruebas relacionales y documentales toleran datos ajenos (no se probó).
+- `up --profile todas` de una vez: arranca las tres bases a la vez, lo que D-36 quiere evitar (no se probó si tumba Docker, pero es el riesgo que motivó la regla).
+- Limpiar con `docker system prune` o `docker volume prune`: alcanzaría volúmenes y contenedores de otros proyectos.
+- No pedir confirmación: un comando que borra datos no debe poder lanzarse sin querer.
+
+**Por qué.** Se ejecutó una vez desde cero con `-Forzar` y pasaron los 13 pasos en **202 s (3,4 min)**: 6 s en borrar, 12 s en levantar PostgreSQL, 7 s MongoDB, 42 s Neo4j, 20 s en construir los esquemas, 70 s en las pruebas, 22 s en cargar la semilla y 22 s en consultar y comprobar la coherencia. Al terminar: 8 usuarios, 23 obras, 18 reseñas, 11 libros, 12 películas y 5 comparativas; los tres contenedores sanos y Neo4j sin reinicios. Se comprobó además que responder `NO` a la confirmación cancela con código 1 sin tocar los contenedores.
+**Costo que se acepta.** **No se ejercitaron** la ruta sin `-Forzar` hasta el final (solo la cancelación), `-SinPruebas`, la falta de `.env` ni Docker apagado. Un fallo a medias deja las bases a medio construir: se arregla ejecutando de nuevo el script. Cada paso se ejecuta con `chcp 65001` para que los registros de los scripts hijos queden en UTF-8; se comprobó en el de `probar-grafo.ps1`, que es el que lleva acentos.
+**Dónde.** `db/scripts/reconstruir.ps1`, `db/relacional/construir.sh`, `db/documental/construir.sh`, `db/grafo/construir.sh` y `db/README.md`.

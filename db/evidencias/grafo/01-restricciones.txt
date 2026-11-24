@@ -1,4 +1,4 @@
-Pruebas del grafo: 01-restricciones  (2026-11-24 04:18:12)
+Pruebas del grafo: 01-restricciones  (2026-11-24 04:30:37)
 
 PASA   R-01.1    Dos nodos Persona con el mismo persona_id
              -> ok
@@ -117,4 +117,4 @@ PASA   R-20.5    foto_url es opcional: CG-13 sin foto no crea la propiedad, CG-2
 PASA   R-20.6    foto_url es opcional: CG-13 sin foto no crea la propiedad, CG-24 la asigna y la quita (nunca un valor vacío)
              -> valor true|false
 
-Pasan 58 de 58, fallan 0.  (18 s)
+Pasan 58 de 58, fallan 0.  (15.4 s)

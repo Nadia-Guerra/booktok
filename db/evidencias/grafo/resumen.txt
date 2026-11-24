@@ -1,6 +1,6 @@
-Pruebas del grafo - 2026-11-24 04:18:49
+Pruebas del grafo - 2026-11-24 04:31:05
 Neo4j 5.26.34 Community
 
-PASA   01-restricciones   58 de 58 pasos  (18 s)
-PASA   02-cardinalidad    54 de 54 pasos  (12.2 s)
-PASA   03-consultas       25 de 25 pasos  (6.9 s)
+PASA   01-restricciones   58 de 58 pasos  (15.4 s)
+PASA   02-cardinalidad    54 de 54 pasos  (7.7 s)
+PASA   03-consultas       25 de 25 pasos  (4.7 s)

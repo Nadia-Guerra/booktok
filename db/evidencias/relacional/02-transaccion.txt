@@ -3,7 +3,7 @@ LINE 2: VALUES (pg_temp.uid(701), pg_temp.uid(801), 'terminado_mal')...
                                                     ^
 psql:/db/relacional/pruebas/02-transaccion.sql:47: ERROR:  current transaction is aborted, commands ignored until end of transaction block
 psql:/db/relacional/pruebas/02-transaccion.sql:60: ERROR:  new row for relation "sync_outbox" violates check constraint "ck_outbox_tipo_evento"
-DETAIL:  Failing row contains (40011, obra_leida_mal, {"obra_id": "00000000-0000-4000-8000-000000000801", "usuario_id"..., pendiente, 0, null, 2026-11-24 05:22:44.004804+00, null).
+DETAIL:  Failing row contains (3, obra_leida_mal, {"obra_id": "00000000-0000-4000-8000-000000000801", "usuario_id"..., pendiente, 0, null, 2026-11-24 10:30:04.266481+00, null).
    prueba    |                                     descripcion                                      |                       esperado                        |                       obtenido                        | resultado 
 -------------+--------------------------------------------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------+-----------
  14-antes    | Punto de partida                                                                     | resenas=0 estados=0 eventos=0 total=0 promedio=(nulo) | resenas=0 estados=0 eventos=0 total=0 promedio=(nulo) | PASA

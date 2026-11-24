@@ -1,0 +1,5 @@
+ Container dlbp-neo4j-cliente-run-ddf8631b7d15 Creating 
+ Container dlbp-neo4j-cliente-run-ddf8631b7d15 Created 
+-> 01-restricciones.cypher
+-> 02-semilla.cypher (omitido: SIN_SEMILLA=1)
+Grafo construido.

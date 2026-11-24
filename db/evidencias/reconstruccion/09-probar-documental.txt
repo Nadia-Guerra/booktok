@@ -1,0 +1,5 @@
+PASA   01-validacion  Validacion: documentos validos e invalidos (pruebas 1 a 26 y extras)  (5.7 s, codigo 0)
+PASA   02-indices     Indices: unicidades, texto y planes explain (pruebas 1 a 9)  (2.9 s, codigo 0)
+PASA   03-controles   Controles negativos: sparse, parcial y sin validador  (1.7 s, codigo 0)
+
+Todas las pruebas documentales pasan. Evidencias en D:\dev\Proyecto Final BD\db\evidencias\documental

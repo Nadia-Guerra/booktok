@@ -1,0 +1,5 @@
+-> 01-esquema.sql
+-> 02-indices.sql
+-> 03-trigger.sql
+-> 04-semilla.sql (omitido: SIN_SEMILLA=1)
+Esquema relacional construido.
