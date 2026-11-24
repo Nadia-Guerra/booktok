@@ -1,0 +1,10 @@
+Colecciones creadas en la base 'dlbp_pruebas': libros, peliculas, resenas_comparativas
+Índices creados en la base 'dlbp_pruebas'.
+
+Controles negativos documentales  (MongoDB 9.0.4)
+
+PASA  C1      Único SIN sparse: dos libros con ediciones sin ISBN => el segundo falla (con sparse pasa: prueba 3)
+PASA  C2      Único PARCIAL (D-08 original): dos libros que mezclan edición con ISBN y sin él => el segundo falla
+PASA  C3      Sin validador: un libro sin título y con estado inválido SE ACEPTA (con validador: pruebas 2a y 4)
+
+Pasan 3 de 3, fallan 0.

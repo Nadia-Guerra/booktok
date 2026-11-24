@@ -1,0 +1,71 @@
+Colecciones creadas en la base 'dlbp_pruebas': libros, peliculas, resenas_comparativas
+Índices creados en la base 'dlbp_pruebas'.
+
+Pruebas de validación documental  (MongoDB 9.0.4)
+
+PASA  1       Insertar los documentos de ejemplo de libros, peliculas y resenas_comparativas
+PASA  2a      Libro sin titulo
+PASA  2b      Película sin datos_tecnicos.paises
+PASA  2c      Comparativa sin usuario_id
+PASA  3a      _id en mayúsculas
+PASA  3b      Reparto con persona_id inválido
+PASA  4       estado_publicacion distinto de borrador y publicada
+PASA  5a      Libro con generos vacío
+PASA  5b      Libro con géneros repetidos
+PASA  6a      Libro con año de publicación 3000
+PASA  6b      Película con año de estreno 1700
+PASA  6c      Película con duración 0
+PASA  7a      Libro con un campo no definido
+PASA  7b      Agregar una edición con un campo no definido
+PASA  8       Edición con ISBN con guiones
+PASA  9a      Edición sin paginas
+PASA  9b      Plataforma sin nombre
+PASA  9c      Plataforma con un campo url (ya no existe, D-26)
+PASA  9d      Reparto con orden 0
+PASA  10a     Puntuación 0
+PASA  10b     Puntuación 6
+PASA  10c     Preferencia 'ambas'
+PASA  10d     Sin aspectos
+PASA  10e     11 aspectos
+PASA  10f     oculta como texto
+PASA  10g     Comentario vacío en el veredicto
+PASA  11a     Libro sin ediciones (arreglo vacío)
+PASA  11b     Película en borrador con reparto vacío
+PASA  11c     Película sin productoras ni clasificacion
+PASA  12a     Agregar una edición válida con $push
+PASA  12b     Agregar una plataforma válida con $push
+PASA  12c     Reemplazar el reparto completo (AP-17)
+PASA  12d     El validador no se modificó
+PASA  13      Comparativa con un aspecto de nombre nuevo y sin puntuación (RF-16)
+PASA  14      Ocultar una comparativa (AP-26)
+PASA  15      Agregar a un libro una edición con un ISBN que ya tiene, con el filtro condicional de la API
+PASA  16      Agregar a una película una plataforma con un nombre que ya tiene, con el filtro condicional
+PASA  17a     Actualizar un libro válido dejando el título vacío
+PASA  17b     Actualizar una comparativa válida con puntuación 7
+PASA  18      Corregir el ISBN a uno que ya tiene otra edición del mismo libro, con el filtro condicional
+PASA  19a     Corregir el ISBN a uno libre
+PASA  19b     Corregir otro campo de la edición (paginas) sin filtro de ISBN
+PASA  19c     Corregir el ISBN a uno que ya tiene OTRO libro
+PASA  20      Renombrar una plataforma a un nombre que ya tiene la película, con el filtro condicional
+PASA  21      Renombrar una plataforma a un nombre libre
+PASA  21b     Tras renombrar, la película tiene A y Z (y ya no B)
+PASA  22a     Libro y película con portada_url válida
+PASA  22b     Libro y película sin portada_url
+PASA  23      portada_url http://: libro y película
+PASA  23      portada_url vacía: libro y película
+PASA  23      portada_url con espacios: libro y película
+PASA  23      portada_url de 501 caracteres: libro y película
+PASA  24a     Agregar portada_url a una ficha existente (AP-10)
+PASA  24b     Quitarla después con $unset
+PASA  24c     Tras el $unset el campo no existe
+PASA  25a     Película con un actor con foto_url válida y otro sin ella
+PASA  25b     Reemplazar el reparto cambiando una foto y quitando la otra (AP-17)
+PASA  26      reparto[].foto_url http://
+PASA  26      reparto[].foto_url vacía
+PASA  26      reparto[].foto_url con espacios
+PASA  26      reparto[].foto_url de 501 caracteres
+PASA  E1      Las tres colecciones tienen validationLevel strict y validationAction error
+PASA  E2      Puntuación decimal 4.0 (Double): el cliente debe enviar enteros
+PASA  E3      Fecha como texto en creado_en
+
+Pasan 64 de 64, fallan 0.

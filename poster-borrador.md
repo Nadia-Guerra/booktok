@@ -1,26 +1,22 @@
-# Borrador de contenido del póster ETEIA 2026
+# Borrador de contenido del póster ETEIA 2026 (versión 2, más breve)
 
-Texto por secciones para pasar a PowerPoint (formato recomendado: A1 vertical, 60 × 90 cm). Orden de la plantilla: columna izquierda con Introducción, Planteamiento y Justificación; columna derecha con Metodología y Resultados; Referencias al pie.
+Texto por secciones para pasar a PowerPoint (A1 vertical, 60 × 90 cm). Columna izquierda: Introducción, Planteamiento, Justificación. Columna derecha: Metodología y Resultados. Conclusiones y Referencias al pie.
 
 **Cómo leer este archivo**
 
-- Lo que está bajo **Texto del póster** es lo que va tal cual (o casi) en el póster.
-- Lo que está bajo **Figura / Tabla** describe qué dibujar, con su leyenda.
-- Los bloques `NOTA` son para ti: no van en el póster.
-- Todo lo que no está marcado como terminado está **sin validar**. Las instrucciones del ETEIA piden distinguir lo diseñado, lo implementado y lo validado (sección 5), y no atribuir mejoras que no se midieron.
+- **Texto** es lo que va en el póster.
+- **Figura / Tabla** dice qué dibujar. Según las instrucciones, cada figura va en un bloque propio con su leyenda, y el texto que la explica va **debajo**, no al lado.
+- Los bloques `NOTA` son para ti y no van en el póster.
 
-**Estado de referencia de este borrador:** etapas 1 a 3 terminadas (propuesta, modelado y arquitectura). El Entregable 4 (implementación de las tres bases) está en curso y todavía no tiene resultados. Si antes de imprimir tienes evidencia de ejecución, actualiza la Tabla 3.
+**Estado en el que se basa:** etapas 1 a 3 terminadas. El Entregable 4 está en curso: el modelo relacional ya se implementó y probó (evidencia en `db/evidencias/relacional/`, ejecución del 23 de nov. de 2026); documental y grafo siguen en curso. Si el Entregable 4 avanza antes de imprimir, actualiza la Tabla 2 y el último párrafo del resumen.
 
 ---
 
 ## Título
 
-**Del Libro a la Pantalla: diseño de una plataforma social que sigue cada libro hasta su adaptación cinematográfica**
+**Del Libro a la Pantalla: plataforma social para conectar libros, sus adaptaciones al cine y a quienes los leen y ven**
 
-Alternativas, por si prefieres otra:
-
-- La adaptación como relación central: modelo de datos para una red social de lectores y espectadores.
-- De la novela a la película: conectar obras, personas y lectores con datos distribuidos y coordinados.
+Alternativa: *Del libro a la película: modelo de datos y arquitectura para seguir una obra hasta su adaptación*.
 
 ## Autores y afiliación
 
@@ -32,269 +28,136 @@ Ingeniería en Tecnologías de la Información e Innovación Digital, Universida
 
 ## Resumen
 
-**Texto del póster**
-
-Quienes leen y ven cine llevan su seguimiento en herramientas separadas, y ninguna trata la adaptación, es decir, el paso de un libro a su película, como relación central. Este trabajo diseña *Del Libro a la Pantalla*, una aplicación móvil social para registrar, reseñar y comparar libros y sus adaptaciones, y para descubrir obras a través de las conexiones entre autores, directores, actores y otros usuarios.
-
-Siguiendo una metodología por etapas se definieron 27 requerimientos funcionales, 11 reglas de negocio y 10 requerimientos no funcionales. Se modelaron tres bases de datos con responsabilidades distintas (relacional, documental y de grafo), cada dato con una sola fuente de verdad y sincronización eventual entre bases, y se diseñó la arquitectura y el stack tecnológico.
-
-A la fecha el diseño está completo y documentado (etapas 1 a 3). La implementación de las bases está en curso y aún no hay resultados de pruebas ni mediciones de rendimiento.
+Quienes leen y ven cine suelen llevar su seguimiento en herramientas separadas, donde es difícil rastrear qué película adapta qué libro y comparar ambas versiones. Este trabajo propone *Del Libro a la Pantalla*, una aplicación móvil para registrar, reseñar y comparar libros y sus adaptaciones, y para descubrir obras por las conexiones entre autores, directores, actores y usuarios. Siguiendo las etapas del proyecto integrador se especificaron 27 requerimientos funcionales y se diseñaron tres bases de datos (relacional, documental y de grafo) con una fuente de verdad por dato y una API que las coordina. El modelo relacional ya se implementó en PostgreSQL y superó 84 comprobaciones con datos de prueba; la prueba de concurrencia obligó a corregir el diseño del bloqueo del promedio. Documental, grafo, API y aplicación están en curso o pendientes, y aún no hay mediciones de rendimiento.
 
 ---
 
 ## Introducción
 
-**Texto del póster**
+Quienes leen y ven películas suelen usar una aplicación para libros, otra para cine y notas sueltas [10], [11]. Cada una registra bien su medio, pero el vínculo entre un libro y su adaptación (qué película proviene de qué obra, quién participó en ambas) queda fuera de ellas. Este proyecto toma esa adaptación como relación central del dominio.
 
-Las personas que leen y ven películas suelen usar una aplicación para libros, otra para cine y notas sueltas. Cada una registra bien su propio medio, pero el vínculo entre ambos queda fuera: no es fácil saber qué películas provienen de un libro, comparar las dos versiones ni descubrir obras a partir de un autor, un director o un actor en común.
+Sus datos son de naturaleza mixta: operaciones que deben ser atómicas, fichas con estructura anidada y variable, y una red de conexiones entre personas y obras. Esa mezcla motiva la persistencia políglota [6], [7], con una base de grafos para los recorridos [8].
 
-Este proyecto parte de esa carencia y toma la **adaptación** (libro → película) como relación central del dominio. Para identificar el problema se revisaron plataformas de seguimiento de lectura y de cine [10], [11] y se delimitó un alcance acotado: solo libros y películas, sin compra ni reproducción, sin mensajería y con un catálogo propio.
-
-La naturaleza de los datos es mixta: operaciones que deben ser atómicas (reseñas, cuentas), fichas con estructura anidada y variable (ediciones, plataformas) y una red de conexiones entre personas y obras. Esa mezcla es la que motiva el uso de persistencia políglota [6], [7], con una base de grafos para los recorridos [8].
-
-**Figura 1.** Contexto, problemática y solución (ver Planteamiento).
-
-> NOTA (verifica antes de imprimir): la frase "se revisaron plataformas [10], [11]" solo es válida si de verdad las revisaste. Si no, quita esa oración y las dos referencias. Tampoco afirmes que "ninguna" plataforma trata la adaptación como relación central sin comprobarlo en cada una; el texto de arriba evita esa afirmación a propósito.
->
-> NOTA: la plantilla pide "cómo otras personas lo atienden". Con una sola plataforma de libros y una de cine que hayas mirado (qué ofrecen y qué no) ya cumples.
-
----
+> NOTA: [10] y [11] (Goodreads y Letterboxd) solo si de verdad las revisaste. Las instrucciones piden decir "cómo otras personas lo atienden"; con una plataforma de libros y una de cine que hayas mirado basta. Si no las revisaste, quita esas dos citas y las dos referencias.
 
 ## Planteamiento del problema
 
-**Texto del póster**
+- **Situación:** el seguimiento de lecturas y películas está repartido y la adaptación no está modelada como dato.
+- **Afectados:** el lector/espectador (registrar, reseñar, comparar, descubrir), el administrador/curador (mantener el catálogo y moderar) y el visitante (consultar el catálogo).
+- **Necesidad:** un solo lugar donde la obra, su adaptación y sus personas estén conectadas.
+- **Consecuencias:** reseñas del libro y de la película aisladas; descubrimiento manual; historial disperso.
 
-**Situación.** El seguimiento de lecturas y películas está repartido en herramientas que no se comunican. La adaptación no es un dato de primera clase: no se puede preguntar qué películas salieron de un libro, ni comparar ambas versiones, ni explorar conexiones entre obras y personas.
+**Figura 1. Contexto, problemática y solución propuesta** (tres paneles, como en la plantilla): *Contexto*: lectores y espectadores, libros y películas. *Problemática*: apps separadas, adaptación sin relacionar, reseñas aisladas. *Solución*: una aplicación móvil que coordina tres bases mediante una API.
+*Fuente: elaboración propia.*
 
-**Usuarios afectados.**
-
-| Usuario | Qué necesita hacer |
-|---|---|
-| Lector/espectador | Registrar lo que leyó o vio, reseñar, comparar libro y adaptación, armar listas, seguir a otros y descubrir adaptaciones |
-| Administrador/curador | Mantener el catálogo (obras, personas, adaptaciones) y moderar reseñas |
-| Visitante | Consultar el catálogo sin iniciar sesión |
-
-**Consecuencias.**
-
-- Las reseñas de un libro y de su película quedan aisladas y no se pueden comparar.
-- El descubrimiento depende de búsquedas manuales, no de las conexiones entre autores, directores y actores.
-- El usuario debe sostener su historial en varios lugares.
-
-**Figura 1. Contexto, problemática y solución propuesta** (tres paneles, como en la plantilla)
-
-- *Contexto:* lectores y espectadores; libros y películas.
-- *Problemática:* apps separadas · la adaptación no se relaciona · reseñas aisladas · descubrimiento limitado.
-- *Solución propuesta:* una aplicación móvil que coordina tres bases de datos mediante una API.
-
----
+La Figura 1 resume el problema y la solución que se propone; el alcance se limita a libros y películas, con catálogo propio.
 
 ## Justificación
 
-**Texto del póster**
+La aplicación busca reunir en un solo lugar lo que hoy está disperso y volver consultable la adaptación: comparar un libro con su película y descubrir obras a partir de autores, directores y actores en común. Es un valor esperado del diseño; aún no se evaluó con usuarios.
 
-La plataforma es pertinente porque su valor está en las **conexiones** (libro → película → personas → lectores), que las herramientas separadas no ofrecen. Además, el dominio tiene tres tipos de datos con necesidades distintas, y cada base se usa para lo que su modelo resuelve mejor. No se eligieron tres bases para cumplir un requisito: se comprobó qué capacidad se pierde si se quita cada una (Tabla 1).
-
-**Tabla 1. Prueba de eliminación: qué se pierde si se quita cada base**
-
-| Si se quita… | Se pierde o empeora… |
-|---|---|
-| **Relacional** | Atomicidad de publicar reseña + estado + promedio; cascada al borrar una cuenta sin dejar registros huérfanos; unicidad y rangos (una reseña por usuario y obra, calificación de 1 a 5) |
-| **Documental** | Leer la ficha completa de una obra en una consulta; ediciones y plataformas anidadas y de campos distintos por tipo; la reseña comparativa con aspectos de número y nombre libres |
-| **Grafo** | Recorridos de longitud variable (camino entre un autor y un actor a través de adaptaciones) y las recomendaciones por adaptaciones y por lo que leen las personas que se siguen |
-
-**Alternativa más fuerte que se evaluó:** "todo en PostgreSQL" (JSONB para fichas y consultas recursivas para caminos). Funcionaría para un sistema pequeño, pero obligaría a imitar un grafo con una tabla de aristas y a leer las fichas sin ventaja de modelo. Se reconoce como objeción válida.
-
-> NOTA: no escribas "mejora" ni "optimiza" en esta sección. Es un valor esperado del diseño, no un resultado medido.
->
-> NOTA: la plantilla muestra aquí una figura de cuatro cuadros. Puedes hacer lo mismo con: (1) relación libro → adaptación como núcleo, (2) integridad en cuentas y reseñas, (3) fichas flexibles, (4) exploración por conexiones. Es contenido, no resultados.
+Cada tipo de dato se asigna a la base que lo resuelve mejor, no por cumplir un requisito: se comprobó qué capacidad se pierde si se quita cada una (Figura 3).
 
 ---
 
 ## Metodología
 
-### 1. Etapas del proyecto
+**Etapas.** El trabajo sigue las etapas del proyecto integrador: cada una produce la evidencia que usa la siguiente (Figura 2). Se definieron requerimientos y un modelo conceptual común antes de modelar las tres bases.
 
-**Texto del póster**
+**Figura 2. Etapas del proyecto y su estado** (flujo con colores)
 
-El trabajo avanza por etapas, y cada una produce la evidencia que usa la siguiente. Se evitó programar las bases antes de definir problema, usuarios, requerimientos y modelo.
+| Etapa | Estado |
+|---|---|
+| 1 Propuesta · 2 Modelado de datos · 3 Arquitectura y stack | Terminadas |
+| 4 Implementación de las tres bases | En curso (relacional terminada) |
+| 5 Catálogo de operaciones · 6 Backend y API · 7 Aplicación e integración · 8 Pruebas y despliegue | Pendientes |
 
-**Figura 2. Etapas del proyecto y su estado** (diagrama de flujo con colores de estado)
+*Fuente: elaboración propia a partir de la guía del proyecto integrador.*
 
-| Etapa | Entregable | Estado |
-|---|---|---|
-| 1 | Propuesta de aplicación | Terminada |
-| 2 | Modelado de datos (conceptual y de las tres bases) | Terminada |
-| 3 | Arquitectura y selección tecnológica | Terminada |
-| 4 | Implementación de las tres bases | En curso |
-| 5 | Catálogo de operaciones y consultas | Pendiente |
-| 6 | Backend y API | Pendiente |
-| 7 | Aplicación e integración | Pendiente |
-| 8 | Pruebas, documentación y despliegue | Pendiente |
+**Responsabilidades de cada base.** Comparten solo `obra_id` y `usuario_id` (mismo UUID en las tres). La Figura 3 muestra qué guarda cada una y qué se pierde sin ella.
 
-### 2. Arquitectura y tecnologías
+**Figura 3. Una base por tipo de problema** (tres paneles)
 
-**Texto del póster**
+- **Relacional** (PostgreSQL [1]–[3]) · *¿Es válido y consistente?* Usuarios, reseñas, listas, estados, seguimientos y promedio de cada obra. 9 tablas. *Sin ella:* se pierde la atomicidad de publicar una reseña con su estado y su promedio, y la cascada al eliminar una cuenta.
+- **Documental** (MongoDB [5]) · *¿Cómo se ve esta obra completa?* Fichas de libro y película con ediciones y plataformas anidadas, y la reseña comparativa. 3 colecciones. *Sin ella:* la ficha no se lee en una consulta y las comparativas de aspectos libres no tienen estructura propia.
+- **Grafo** (Neo4j [4], [8]) · *¿Cómo se conectan?* Personas, libros, películas y usuarios; 6 tipos de relación. *Sin ella:* se pierde el camino de longitud variable entre dos personas u obras y las recomendaciones por adaptaciones.
 
-La aplicación móvil nunca se conecta a las bases. Habla con una **API** de un solo proceso organizada en tres capas: rutas (sesión, rol y formato), servicios (reglas de negocio y orden de las operaciones) y repositorios (uno por base). Un *worker* dentro de la API propaga los cambios entre bases.
+*Fuente: elaboración propia (modelado del proyecto).*
 
-**Figura 3. Arquitectura de la aplicación** (diagrama de componentes)
+**Arquitectura, backend e integración.** La aplicación móvil nunca accede a las bases: habla con una API única en tres capas (rutas, servicios y repositorios, uno por base), con un proceso de sincronización dentro (Figura 4). El backend usa Node, Express y TypeScript; la app, React Native con Expo; todo corre en contenedores. **Esta arquitectura está diseñada; la API y la app aún no se implementan.**
 
-- Teléfono Android: app React Native + Expo.
-- Flecha por HTTPS con token a la API.
-- API (Node + Express + TypeScript): Rutas → Servicios → Repositorios; worker de sincronización; comando de reconciliación.
-- Tres bases: PostgreSQL, MongoDB, Neo4j Community.
-- Todo en contenedores con Docker Compose.
+**Figura 4. Arquitectura de la aplicación** (diagrama de componentes): Teléfono Android (app) → API (Rutas → Servicios → Repositorios; worker de sincronización; reconciliación) → PostgreSQL, MongoDB, Neo4j. Todo en Docker Compose.
+*Fuente: elaboración propia.*
 
-**Tecnologías elegidas**
+**Fuente de verdad y sincronización.** Cada dato se modifica oficialmente en una sola base; las demás guardan copias. Los cambios del relacional hacia el grafo salen por una tabla de eventos escrita en la misma transacción que el dato [9]; un proceso los aplica en orden, con reintento, y un script de reconciliación reconstruye las copias (Figura 5). Entre bases no hay transacción atómica: la consistencia es eventual.
 
-| Componente | Tecnología | Razón principal |
-|---|---|---|
-| App móvil | React Native con Expo (TypeScript) | Experiencia previa y prueba rápida en teléfono real |
-| API | Node + Express + TypeScript | Un solo lenguaje para app y API; drivers oficiales de las tres bases |
-| Validación | Zod | Cubre lo que Neo4j Community no impone y se comparte con la app |
-| Relacional | PostgreSQL | UUID, ENUM, CHECK, triggers y bloqueo de fila nativos |
-| Documental | MongoDB | Documentos anidados, validador e índices necesarios para el diseño |
-| Grafo | Neo4j Community | Recorridos y patrones en Cypher; edición gratuita |
-| Sesión | Token con hash en PostgreSQL; contraseñas con Argon2id (o bcrypt) | Cierra sesión de verdad y la cascada de eliminar cuenta la invalida sola |
-| Despliegue | Docker Compose con límites de memoria | Misma composición en cualquier máquina |
+**Figura 5. Sincronización entre bases** (flechas de fuente a copia)
 
-> NOTA: el stack se comparó con alternativas (Kotlin nativo, Flutter + Python, Fastify, NestJS, MySQL). Si te sobra espacio, una línea basta: "Se compararon tres combinaciones de cliente y API y dos motores relacionales; ganó la de menor riesgo con el plazo".
+- Relacional → Grafo: usuario, `sigue`, `leyó` (para recorridos y recomendaciones).
+- Documental → Relacional y Grafo: id y tipo de obra (llaves foráneas y anclas del grafo).
+- Grafo → Documental: reparto de la película (ficha completa en una lectura).
+- Si una copia falla: la operación principal ya quedó confirmada, la copia se reintenta y, si se agota, se reconcilia.
 
-### 3. Responsabilidades de cada base
+*Fuente: elaboración propia.*
 
-**Texto del póster**
-
-Las tres bases comparten solo dos identificadores, `obra_id` y `usuario_id` (mismo UUID en las tres). Cada una responde a una pregunta distinta.
-
-**Figura 4. Tres modelos, tres preguntas** (figura de tres paneles)
-
-*Panel A. Relacional: "¿es válido y consistente este dato?"* 9 tablas.
-Mini diagrama entidad-relación con: `usuario` 1—N `resena` N—1 `obra_resumen` (promedio y total); `usuario` 1—N `estado_obra`; `usuario` 1—N `lista` 1—N `elemento_lista`; `usuario` N—N `usuario` mediante `seguimiento`. Aparte, las tablas técnicas `sync_outbox` y `sesion`.
-Reglas: una reseña por usuario y obra, calificación de 1 a 5, nadie se sigue a sí mismo, borrado en cascada.
-
-*Panel B. Documental: "¿cómo se ve esta obra o esta comparación completa?"* 3 colecciones: `libros`, `peliculas` y `resenas_comparativas`.
-Ejemplo ilustrativo de estructura (los valores son marcadores, no datos reales):
-
-```json
-{
-  "_id": "uuid",
-  "titulo": "…",
-  "sinopsis": "…",
-  "generos": ["…"],
-  "anio_publicacion_original": 0,
-  "ediciones": [
-    { "edicion_id": "uuid", "isbn": "… (opcional)",
-      "paginas": 0, "editorial": "…", "idioma": "…", "anio": 0 }
-  ],
-  "estado_publicacion": "borrador | publicada"
-}
-```
-
-Reglas: validador estricto, ISBN opcional y único, índice único (usuario, libro, película) en la comparativa.
-
-*Panel C. Grafo: "¿cómo se conectan estas personas y obras?"* 4 tipos de nodo y 6 de relación.
-Dibujar nodos Persona, Libro, Película y Usuario con: Persona –escribió→ Libro, Libro –adaptado_a→ Película, Película –dirigida_por→ Persona, Persona –actuó_en→ Película; y Usuario –sigue→ Usuario, Usuario –leyó→ Libro.
-Recorrido de ejemplo (estructura, no resultado): Autor → Libro → Película ← Actor.
-
-**Figura 4.** Responsabilidad de cada base y su modelo. Los valores del Panel B son ilustrativos.
-
-### 4. Fuente de verdad y sincronización
-
-**Texto del póster**
-
-Cada dato se modifica oficialmente en **una sola base**; las demás guardan copias para evitar consultas encadenadas. Se escribe primero en la fuente y luego en la copia, con reintento. Los cambios del relacional hacia las otras bases salen por una tabla `sync_outbox` que se escribe **en la misma transacción** que el dato; un proceso único los aplica en orden y de forma idempotente. Las copias nunca se editan a mano y un script de reconciliación las reconstruye desde la fuente.
-
-**Figura 5. Sincronización entre bases** (cada flecha va de la fuente a la copia)
-
-| Flecha | Qué viaja | Para qué |
-|---|---|---|
-| Relacional → Grafo | Nodo Usuario, `sigue`, `leyó` (solo libros) | Recorridos sociales y recomendaciones |
-| Documental → Relacional y Grafo | Id y tipo de la obra | Llaves foráneas y anclas del grafo |
-| Grafo → Documental | Reparto con foto de cada actor | Ficha de película completa en una lectura |
-| Relacional → Documental | Evento de eliminación de usuario | Borrar sus reseñas comparativas |
-
-El promedio de cada obra vive en el relacional (`obra_resumen`) y se actualiza en la misma transacción que la reseña, por lo que no necesita sincronización.
-
-**Tabla 2. Qué pasa si una operación falla a medias**
-
-| Operación | Si falla… | Política |
-|---|---|---|
-| Publicar reseña | La transacción relacional falla | Rollback: nada cambió |
-| Publicar reseña | Se confirma, pero falla la propagación al grafo | Reseña y promedio correctos; la recomendación aún no incluye esa lectura. Reintento con límite y, si se agota, evento `fallido` para reconciliación |
-| Alta de obra | Falla tras crear la ficha | La ficha queda en `borrador` y no se muestra; se completan los pasos pendientes |
-| Eliminar cuenta | Falla la limpieza en otra base | La cuenta ya no existe; los restos no son visibles porque la API los filtra; se reintenta y la reconciliación los detecta |
-
-**Limitación reconocida:** entre bases distintas no hay transacción atómica. La consistencia fuerte solo se garantiza dentro de cada base; entre bases es eventual.
-
-### 5. Estrategia de pruebas (planeada, aún no ejecutada)
-
-**Texto del póster**
-
-- Relacional: 17 pruebas de integridad y transacciones (rollback de la reseña, cascada, promedio, unicidad, concurrencia).
-- Documental: documentos válidos e inválidos, e índices.
-- Grafo: restricciones de unicidad y cardinalidad de las seis relaciones.
-- Entre bases: script de coherencia (ids, reparto, `sigue`, `leyó`, promedios) y caso integrado de extremo a extremo.
-
-> NOTA: esta es la única subsección donde el verbo es "planeada". No la presentes como hecha.
+**Estrategia de pruebas.** Por base (integridad, transacción, concurrencia, índices, consultas; documentos válidos e inválidos; unicidad y cardinalidad en el grafo) y entre bases (coherencia de ids y copias, caso integrado). Se ejecutan contra el motor real, con salida guardada como evidencia. **Hasta ahora solo se han ejecutado las del relacional.**
 
 ---
 
 ## Resultados
 
-**Texto del póster**
+El modelo relacional se implementó en PostgreSQL 18.7 (9 tablas, restricciones, índices y el *trigger* que mantiene el promedio) y se probó con **datos de prueba**, no reales. Las 84 comprobaciones pasaron (Tabla 1). Los contenedores de las tres bases se levantan con control de salud.
 
-Hasta ahora los resultados son del **diseño**: el modelo está completo, documentado y es consistente entre sus partes. La implementación de las tres bases está en curso. No se presentan mediciones de rendimiento ni resultados de pruebas porque todavía no existen.
+**Tabla 1. Pruebas del modelo relacional**
 
-**Tabla 3. Estado de cada componente** (distingue lo diseñado, lo implementado y lo validado)
+| Grupo | Qué verifica | Resultado |
+|---|---|---|
+| Integridad | Unicidad, rangos, llaves foráneas, cascada al eliminar cuenta, promedio por *trigger* | 43 de 43 |
+| Transacción (RF-13) | Si falla un paso, no queda reseña, estado, evento ni promedio | 5 de 5 |
+| Concurrencia | Reseñas simultáneas sobre la misma obra | 3 de 3, tras corregir el diseño |
+| Índices | Cada consulta usa el índice previsto (`EXPLAIN`) | 16 de 16 |
+| Consultas | Sesión, reseñas de una obra, libros de partida de la recomendación, verificación del promedio | 17 de 17 |
+
+*Fuente: salidas en `db/evidencias/relacional/`, ejecución del 23 de nov. de 2026, datos de prueba.*
+
+**Incidencia que cambió el diseño.** Con el bloqueo previsto (`FOR UPDATE`), una ráfaga de 8 reseñas simultáneas sobre la misma obra abortó entre 6 y 7 sesiones por interbloqueo (dos ejecuciones). Sin bloqueo el promedio salía incorrecto. Con `FOR NO KEY UPDATE` las 8 se confirmaron sin errores y el promedio coincidió con el recálculo manual (Figura 6). El diseño se corrigió (D-38).
+
+**Figura 6. Reseñas simultáneas según el bloqueo** (gráfica de barras sencilla)
+
+| Variante | Resultado |
+|---|---|
+| Sin bloqueo (2 reseñas) | Incorrecto: total 1, promedio 2,00 (correcto: total 2, promedio 3,50) |
+| `FOR UPDATE` (8 reseñas) | 6 a 7 sesiones abortadas por interbloqueo |
+| `FOR NO KEY UPDATE` (8 reseñas) | 8 confirmadas, total 8, promedio 3,13 = recálculo manual |
+
+*Fuente: prueba 15, `db/evidencias/relacional/`, datos de prueba.*
+
+La Figura 6 muestra que la prueba contra el motor reveló un fallo que la documentación no mostraba. En el documental hubo otra corrección: el índice único parcial del ISBN falló en MongoDB 9.0.4 y se sustituyó por uno *sparse*.
+
+**Tabla 2. Estado por componente**
 
 | Componente | Diseñado | Implementado | Validado |
 |---|---|---|---|
-| Requerimientos (27 RF, 11 RN, 10 RNF) | Sí | No aplica | Revisión cruzada entre documentos |
-| Modelo relacional (9 tablas) | Sí | En curso | Pendiente (17 pruebas escritas, sin ejecutar) |
-| Modelo documental (3 colecciones) | Sí | En curso | Parcial: índice único *sparse* del ISBN y pruebas 22 a 26 del validador, ejecutados en MongoDB 9.0.4 |
-| Modelo de grafo (4 nodos, 6 relaciones, 24 consultas) | Sí | En curso | Pendiente |
-| Arquitectura y stack | Sí | No | Pendiente (límites de memoria estimados, no medidos) |
-| Sincronización (bandeja de salida y reconciliación) | Sí | No | Pendiente |
-| API y aplicación móvil | Sí (responsabilidades y capas) | No | Pendiente |
+| Relacional | Sí | Sí | Sí, con datos de prueba |
+| Documental | Sí | En curso | Parcial (índice del ISBN y validador, en MongoDB 9.0.4) |
+| Grafo | Sí | En curso | No |
+| Sincronización, API y aplicación | Sí | No | No |
 
-**Hallazgos del trabajo realizado**
-
-- **Corrección con prueba en motor real.** El diseño usaba un índice único *parcial* para el ISBN opcional. Al probarlo en MongoDB 9.0.4 falló: un segundo libro con una edición con ISBN y otra sin él producía clave duplicada. Se corrigió a un índice único *sparse*, que admite esos casos y sigue rechazando el mismo ISBN en otro libro.
-- **Seis huecos detectados al cruzar los documentos** (por ejemplo, ningún documento decía qué base manda sobre la identidad de una obra, y las reseñas no tenían a qué apuntar en el relacional). Cada uno se resolvió comparando alternativas con criterios explícitos.
-- **Trazabilidad.** Cada requerimiento está asignado a una base y la prueba de eliminación (Tabla 1) lo respalda.
-
-**Limitaciones identificadas**
-
-- Sin transacción entre bases: la consistencia entre ellas es eventual.
-- El documental es la justificación más delicada: con los campos actuales de las ediciones, una tabla hija en SQL también serviría. Se apoya en la reseña comparativa de estructura libre.
-- Solo el camino entre dos personas u obras tiene longitud verdaderamente variable; las demás consultas de grafo tienen profundidad fija.
-- El catálogo es acotado, por diseño.
-- Aún no hay API, aplicación ni mediciones.
-
-**Continuidad**
-
-Implementar y probar las tres bases desde cero con una semilla coherente (etapa 4); documentar el catálogo de operaciones con evidencia de ejecución (5); construir la API y la aplicación (6 y 7); y evaluar consistencia y rendimiento con condiciones documentadas (8). El caso integrado previsto es *seguir a un lector y ver recomendaciones de películas*, que recorre las tres bases.
-
-> NOTA: la plantilla muestra gráficas de rendimiento, escalabilidad y clasificación. **No pongas gráficas** si no hay datos medidos: las instrucciones lo prohíben expresamente. La Tabla 3 ocupa ese espacio.
->
-> NOTA: si el Entregable 4 produce evidencia antes de imprimir (por ejemplo, "las tres bases levantan desde cero" o "pasaron N de 17 pruebas relacionales"), cambia la celda correspondiente de la Tabla 3 de "En curso" a la evidencia real, con la salida guardada. Incluye solo lo que de verdad ejecutaste.
+**Incompleto:** no hay aún API, aplicación, flujos entre bases ni mediciones de rendimiento.
 
 ---
 
 ## Conclusiones
 
-**Texto del póster**
-
-- Se logró un diseño completo y coherente de una plataforma donde la adaptación es la relación central, con tres bases de datos justificadas por necesidades distintas (transacciones, documentos anidados y conexiones) y una fuente de verdad por dato.
-- La prueba de eliminación y la comparación de alternativas, incluida "todo en PostgreSQL", sostienen la elección de cada base; el documental es el punto más débil y se reconoce.
-- Se identificó y documentó el riesgo central de la integración: sin transacción entre bases, una operación puede fallar a medias. Se mitiga con bandeja de salida, reintento y reconciliación, pero esa mitigación **aún no está probada**.
-- El valor del diseño solo se podrá afirmar cuando se implementen y prueben las bases y la API (etapas 4 a 8).
+- **Qué se logró:** un diseño completo de tres bases con responsabilidades y fuente de verdad definidas, y un modelo relacional implementado que superó 84 comprobaciones con datos de prueba.
+- **Qué significan los resultados:** probar contra el motor corrigió un error de diseño (D-38) y uno del documental. La integración entre bases todavía no se ha demostrado.
+- **Limitaciones y mejoras:** no hay transacción entre bases y no hay mediciones. El siguiente paso es completar documental y grafo, implementar la API y probar un caso integrado (seguir a un lector y ver recomendaciones), porque ahí está el mayor riesgo sin probar: la sincronización.
 
 ---
 
 ## Referencias
 
-Las cinco primeras vienen de la plantilla. Las demás son propuestas mías: **verifica autores, año, editorial y URL antes de imprimir**, y pon tú la fecha de acceso real de las páginas web.
+Las cinco primeras vienen de la plantilla. Las demás son propuestas mías: **verifica autores, año, editorial y URL**, y pon tú la fecha de acceso real.
 
 [1] E. F. Codd, "A relational model of data for large shared data banks," *Communications of the ACM*, vol. 13, no. 6, pp. 377–387, 1970, doi: 10.1145/362384.362685.
 
@@ -318,20 +181,24 @@ Las cinco primeras vienen de la plantilla. Las demás son propuestas mías: **ve
 
 [11] Letterboxd. [Online]. Available: https://letterboxd.com/. [Accessed: *fecha*].
 
-> NOTA: [9] respalda el mecanismo de la bandeja de salida. Para usarla, cítala en la subsección "Fuente de verdad y sincronización" (por ejemplo, "…mediante una bandeja de salida [9]"). Hoy ese texto no la cita, así que o la agregas ahí o la quitas de la lista.
->
-> NOTA: [10] y [11] solo si las revisaste (ver nota de la Introducción).
-
 ---
 
-## Lista de revisión antes de entregar (de las instrucciones del ETEIA)
+## Revisión contra los criterios de INSTRUCCIONES POSTER
 
-- [ ] El título describe el aporte y no repite una fórmula común.
-- [ ] Autores y afiliación completos.
-- [ ] El resumen coincide con el contenido (si cambias la Tabla 3, ajusta el último párrafo del resumen).
-- [ ] Las responsabilidades de las tres bases están explicadas y justificadas.
-- [ ] Los resultados provienen de entregables y pruebas reales: nada medido que no se midió.
-- [ ] Cada figura y tabla tiene leyenda y se explica en el texto.
-- [ ] Referencias completas y citadas en el texto.
-- [ ] QR y enlaces probados (todavía sin destino).
-- [ ] Exposición oral preparada: 5 a 7 minutos más preguntas.
+| Criterio | Dónde se cumple |
+|---|---|
+| Título específico, sin enumerar tecnologías ni prometer impactos | Título |
+| Autores completos y afiliación | Autores y afiliación |
+| Resumen: problema, objetivo, enfoque, solución y resultados | Resumen |
+| Justificación sin apoyarse solo en "tres bases" | Justificación (valor de la aplicación) y Figura 3 |
+| Metodología: modelado, responsabilidades, arquitectura, backend, integración y pruebas | Metodología, Figuras 2 a 5 |
+| Resultados: implementado y verificado, con procedimiento; lo terminado frente a lo parcial | Resultados, Tablas 1 y 2, Figura 6 |
+| Distinguir diseñado, implementado y validado; datos de prueba declarados | Tabla 2 y notas "datos de prueba" |
+| Indicar funcionalidades incompletas | Cierre de Resultados |
+| Conclusiones con limitaciones y mejoras justificadas | Conclusiones |
+| Figuras y tablas con leyenda, fuente y explicadas en el texto | Cada figura y tabla |
+| Referencias IEEE y citadas en el texto | Referencias [1] a [11], todas citadas |
+| Poco texto, diagramas como protagonistas | Texto breve y 6 figuras |
+| QR probado | **Pendiente: aún no hay destino** |
+
+> NOTA: recuenta las cifras (84, 43, 5, 3, 16, 17) en `db/evidencias/relacional/resumen.txt` justo antes de imprimir, porque el Entregable 4 sigue corriendo y puede cambiarlas.

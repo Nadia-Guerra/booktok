@@ -1,0 +1,34 @@
+Colecciones creadas en la base 'dlbp_pruebas': libros, peliculas, resenas_comparativas
+Índices creados en la base 'dlbp_pruebas'.
+
+Pruebas de índices documentales  (MongoDB 9.0.4)
+
+PASA  1       Insertar un libro con un ISBN que ya tiene otro libro
+PASA  2       Dos libros con una edición con ISBN y otra sin él
+PASA  3       Dos libros cuyas ediciones no tienen ISBN, y dos libros sin ediciones
+PASA  4       Agregar a un libro, con una actualización, un ISBN que ya tiene otro libro
+PASA  5       Segunda comparativa del mismo usuario sobre la misma pareja (RN-05)
+PASA  6       Comparativa de otro usuario sobre la misma pareja
+PASA  7a      Buscar 'dune'
+PASA  7b      Buscar 'DUNE' (mayúsculas)
+PASA  7c      Buscar 'juegos hambre'
+PASA  7d      Buscar 'dune' en películas (IX-02)
+PASA  8       Buscar 'dun' (parte de una palabra): sin resultados, limitación conocida
+PASA  9-AP01  Libro por _id (AP-01)
+PASA  9-AP02  Película por _id (AP-02)
+PASA  9-AP04  Varias obras por una lista de ids (AP-04)
+PASA  9-AP20  Comparativa por _id (AP-20)
+PASA  9-AP03  Búsqueda por título en libros (AP-03)
+PASA  9-AP03b Búsqueda por título en películas (AP-03)
+PASA  9-AP11  ISBN existente en otro libro (AP-11)
+PASA  9-AP19  Comparativa de un usuario sobre una pareja (AP-19)
+PASA  9-AP21  Comparativas de una adaptación, recientes primero (AP-21)
+PASA  9-AP21b AP-21 sin ordenar en memoria (el índice ya entrega el orden)
+PASA  9-AP21c AP-21 devuelve de más reciente a más antigua
+PASA  9-AP23  Comparativas de un usuario (AP-23): prefijo de IX-04
+PASA  9-AP28  Borrado por usuario (AP-28): prefijo de IX-04
+PASA  9-AP28b AP-28 repetido no falla y la segunda vez no borra nada
+PASA  9-AP33  Usuarios con comparativas (AP-33): recorre solo el índice, sin leer documentos
+PASA  9-AP33b AP-33 devuelve los 199 usuarios restantes (200 menos el borrado en AP-28)
+
+Pasan 27 de 27, fallan 0.
