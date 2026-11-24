@@ -1,0 +1,101 @@
+# Del Libro a la Pantalla: las tres bases del Entregable 4.
+#
+# Un perfil por base, para levantar solo lo que se esté probando:
+#   docker compose --profile postgres up -d --wait
+#   docker compose --profile mongo    up -d --wait
+#   docker compose --profile neo4j    up -d --wait
+#   docker compose --profile todas    up -d --wait     (las tres)
+#
+# Límites de memoria: D-36 (docs/decisiones_tomadas.md) y 03-eleccion-stack.md, sección 4.7.
+# Son valores iniciales; los medidos con `docker stats` están en db/README.md.
+# Las credenciales vienen de .env (copia de .env.example); .env no se versiona.
+
+name: dlbp
+
+services:
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-18.7}
+    container_name: dlbp-postgres
+    profiles: ["postgres", "todas"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?falta POSTGRES_USER en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:?falta POSTGRES_DB en .env}
+      TZ: UTC
+    # D-36: shared_buffers de 64 MB y 20 conexiones como máximo.
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "max_connections=20"]
+    mem_limit: 384m
+    memswap_limit: 384m          # sin swap extra: si se pasa, se reinicia y se nota
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql   # PostgreSQL 18 guarda en un subdirectorio versionado
+      - ./db:/db:ro                          # los scripts se ejecutan dentro del contenedor, sin pasar por PowerShell
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  mongo:
+    image: mongo:${MONGO_VERSION:-9.0.4}
+    container_name: dlbp-mongo
+    profiles: ["mongo", "todas"]
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?falta MONGO_USER en .env}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?falta MONGO_PASSWORD en .env}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:?falta MONGO_DB en .env}
+    # D-36: caché de WiredTiger de 0,25 GB (el mínimo que admite).
+    command: ["mongod", "--wiredTigerCacheSizeGB", "0.25", "--bind_ip_all"]
+    mem_limit: 512m
+    memswap_limit: 512m
+    ports:
+      - "127.0.0.1:${MONGO_HOST_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./db:/db:ro
+    healthcheck:
+      # Solo abre el puerto: `mongosh` arranca un Node entero y, repetido cada pocos segundos dentro
+      # del tope de 512 MB, ahogó a mongod (probado: CPU al 800 % y la comprobación nunca terminaba).
+      # El ping real (`db.adminCommand('ping')`) lo hacen los scripts de prueba, una vez y a demanda.
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/27017' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  neo4j:
+    image: neo4j:${NEO4J_VERSION:-5.26.34-community}
+    container_name: dlbp-neo4j
+    profiles: ["neo4j", "todas"]
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:?falta NEO4J_USER en .env}/${NEO4J_PASSWORD:?falta NEO4J_PASSWORD en .env}
+      # D-36: montículo de 512 MB y caché de páginas de 256 MB.
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 256m
+      NEO4J_server_jvm_additional: -XX:+ExitOnOutOfMemoryError
+    mem_limit: 1280m             # 1,25 GB
+    memswap_limit: 1280m
+    ports:
+      - "127.0.0.1:${NEO4J_HTTP_HOST_PORT:-7474}:7474"
+      - "127.0.0.1:${NEO4J_BOLT_HOST_PORT:-7687}:7687"
+    volumes:
+      - neo4j_data:/data
+      - ./db:/db:ro
+    healthcheck:
+      # Neo4j tarda en levantar y Compose, por sí solo, no espera: por eso el start_period largo.
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 40s
+
+volumes:
+  postgres_data:
+  mongo_data:
+  neo4j_data:

@@ -1,0 +1,20 @@
+psql:/db/relacional/pruebas/02-transaccion.sql:45: ERROR:  invalid input value for enum estado_lectura: "terminado_mal"
+LINE 2: VALUES (pg_temp.uid(701), pg_temp.uid(801), 'terminado_mal')...
+                                                    ^
+psql:/db/relacional/pruebas/02-transaccion.sql:47: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+psql:/db/relacional/pruebas/02-transaccion.sql:60: ERROR:  new row for relation "sync_outbox" violates check constraint "ck_outbox_tipo_evento"
+DETAIL:  Failing row contains (20007, obra_leida_mal, {"obra_id": "00000000-0000-4000-8000-000000000801", "usuario_id"..., pendiente, 0, null, 2026-11-24 04:22:06.731581+00, null).
+   prueba    |                                     descripcion                                      |                       esperado                        |                       obtenido                        | resultado 
+-------------+--------------------------------------------------------------------------------------+-------------------------------------------------------+-------------------------------------------------------+-----------
+ 14-antes    | Punto de partida                                                                     | resenas=0 estados=0 eventos=0 total=0 promedio=(nulo) | resenas=0 estados=0 eventos=0 total=0 promedio=(nulo) | PASA
+ 14a         | Fallo en el paso 3: no queda reseña, estado, evento ni promedio                      | resenas=0 estados=0 eventos=0 total=0 promedio=(nulo) | resenas=0 estados=0 eventos=0 total=0 promedio=(nulo) | PASA
+ 14b         | Fallo en el paso 4: tampoco queda la reseña ni el estado, que sí se habían insertado | resenas=0 estados=0 eventos=0 total=0 promedio=(nulo) | resenas=0 estados=0 eventos=0 total=0 promedio=(nulo) | PASA
+ 14c         | Control: sin fallo, reseña, estado, evento y promedio quedan guardados               | resenas=1 estados=1 eventos=1 total=1 promedio=4.00   | resenas=1 estados=1 eventos=1 total=1 promedio=4.00   | PASA
+ 14-limpieza | La prueba no deja datos                                                              | usuarios=0 obras=0                                    | usuarios=0 obras=0                                    | PASA
+(5 rows)
+
+ pasan | fallan | total 
+-------+--------+-------
+     5 |      0 |     5
+(1 row)
+

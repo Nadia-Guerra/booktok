@@ -122,6 +122,8 @@ Opcionales (admiten nulo): `usuario.biografia`, `resena.texto`, `obra_resumen.pr
 
 **Concurrencia:** el bloqueo previo es lo que hace correcto el resultado. Si dos reseñas de la misma obra se confirman a la vez, la segunda espera a la primera y calcula con los datos ya confirmados. Si el trigger calculara *antes* de bloquear, la segunda podría sobrescribir el resultado de la primera y dejar `total_resenas` o `promedio` incorrectos.
 
+**Modo de bloqueo (D-38, comprobado en PostgreSQL 18.7):** el bloqueo es `FOR NO KEY UPDATE`, no `FOR UPDATE`. El `INSERT` de la reseña ya tomó `FOR KEY SHARE` sobre la fila de la obra al comprobar la llave foránea; `FOR UPDATE` choca con ese modo y dos reseñas simultáneas se interbloqueaban (6 de 8 sesiones abortadas en la prueba 15). `FOR NO KEY UPDATE` no choca con `KEY SHARE` y sí con otro `NO KEY UPDATE`, así que se serializan sin interbloqueo.
+
 **Lo que no hace:** no genera eventos para otras bases. El promedio no se replica (vive solo en `obra_resumen`).
 
 ## 8. Reglas que la base no puede imponer

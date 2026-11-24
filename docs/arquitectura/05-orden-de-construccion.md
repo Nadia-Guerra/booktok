@@ -160,7 +160,9 @@ Con las dos primeras medidas faltan todavía unas 3,5 h, que se cubren con horas
 |---|---|
 | Si las 10 h del miércoles y el jueves son realistas, y cuántas horas quedan hoy | Ajustar el calendario |
 | Si la demo del jueves por la noche debe incluir los 27 requerimientos o se acepta recortar el bloque 6 | Decidir en el punto de control del miércoles |
-| Fecha de entrega de **cada** entregable (4 a 8): cuáles vencen el viernes y cuáles después | Saber si el calendario de la sección 7 alcanza o si el trabajo de la sección 9.2 cae fuera de la semana |
+| Cuántas horas hay el viernes antes de entregar | Ver cuánto de lo que se redacta sobre lo ya construido (sección 9.3) cabe ese día |
+
+**Resuelto:** los entregables 4 a 8 vencen todos el viernes 27. La demo debe estar lista el jueves por la noche, para que el viernes quede solo como margen y para terminar documentos.
 
 ## 9. Los entregables del curso y los bloques
 
@@ -193,4 +195,13 @@ Son estimaciones mías, sin medir. Parte se puede escribir mientras se construye
 | Documentación de instalación, configuración, carga y ejecución | 1,5 |
 | **Total** | **~8** |
 
-Sumadas a las 6,5 h que ya faltaban en la sección 7, **la diferencia hasta el jueves por la noche sería de unas 14 h**, si todos los entregables vencieran ese día. Por eso la primera pregunta de la sección 8 es la fecha de cada uno.
+Sumadas a las 6,5 h que ya faltaban en la sección 7, **la diferencia hasta el jueves por la noche sería de unas 14 h**, si todos los entregables vencieran ese día. Como todos vencen el viernes, la diferencia no desaparece: solo se puede **repartir** entre el jueves por la noche y el viernes (9.3).
+
+### 9.3 Reparto propuesto entre el jueves y el viernes
+
+| Cuándo | Qué se hace | Por qué ahí |
+|---|---|---|
+| Hasta el jueves por la noche | Los bloques 0 a 5 (más el 6 y el 7 si caben), las pruebas escritas junto a cada bloque y el APK instalado en el teléfono | La aplicación funcionando es lo que no se puede improvisar el último día |
+| El viernes, antes de entregar | Lo que se redacta sobre lo ya construido: el catálogo de operaciones (entregable 5), la justificación de REST frente a GraphQL y el contrato de la API (6), el README de instalación y la evaluación de rendimiento (8), y las capturas de la evidencia | Son documentos y mediciones que dependen de que el sistema ya corra |
+
+No se contó cuántas horas hay el viernes ni cuánto tarda cada documento, así que este reparto es una propuesta, no un cálculo.

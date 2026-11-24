@@ -41,6 +41,9 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 | D-35 | La sesión es un token aleatorio cuyo hash se guarda en PostgreSQL (tabla `sesion`) | 2026-11-23 |
 | D-36 | Cada contenedor del Compose lleva un límite de memoria y los motores se ajustan a él; los servicios se levantan por perfiles | 2026-11-23 |
 | D-37 | La validación de datos usa Zod, con esquemas compartidos entre la app y la API | 2026-11-23 |
+| D-38 | El bloqueo del trigger del promedio es `FOR NO KEY UPDATE`, no `FOR UPDATE` (corrige D-02 tras probarlo) | 2026-11-23 |
+| D-39 | Versiones fijadas del Compose, puerto de PostgreSQL y comprobación de salud de MongoDB | 2026-11-23 |
+| D-40 | Tipos concretos del relacional en PostgreSQL: `TIMESTAMPTZ`, `JSONB` e identidad del outbox | 2026-11-23 |
 
 ---
 
@@ -83,7 +86,7 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 ## D-02. El trigger del promedio bloquea la fila antes de recalcular
 
 **Problema.** Si el trigger calcula el promedio y después actualiza `obra_resumen`, dos reseñas simultáneas de la misma obra pueden pisarse: la segunda sobrescribe el resultado de la primera.
-**Decisión.** El trigger bloquea primero la fila de `obra_resumen` y solo después recalcula desde las reseñas.
+**Decisión.** El trigger bloquea primero la fila de `obra_resumen` y solo después recalcula desde las reseñas. *(Corrección de implementación, D-38: el bloqueo es `FOR NO KEY UPDATE`; con `FOR UPDATE` varias reseñas simultáneas se interbloquean.)*
 **Alternativa descartada.** Guardar una suma de calificaciones y actualizar por incremento: es más rápido pero el trigger se vuelve más complejo (alta, baja, edición y ocultar), y el volumen del proyecto no lo exige.
 **Dónde.** `modelado/relacional/02-restricciones-integridad.md`, sección 7 y prueba 15.
 
@@ -536,7 +539,7 @@ Las plataformas de una película se identifican por su `nombre`, sin id propio. 
 
 **Alternativa descartada.** MySQL o MariaDB: obligan a resolver el UUID (MySQL no tiene un tipo nativo) y el `ENUM` de otra forma que la ya escrita en los documentos.
 
-**Por qué.** Los tipos del diseño existen tal cual en PostgreSQL: `UUID`, `ENUM` como tipo propio, `CHECK`, `UNIQUE`, llaves foráneas con cascada, triggers y `SELECT ... FOR UPDATE` para el bloqueo de D-02.
+**Por qué.** Los tipos del diseño existen tal cual en PostgreSQL: `UUID`, `ENUM` como tipo propio, `CHECK`, `UNIQUE`, llaves foráneas con cascada, triggers y bloqueo de fila para D-02 (`SELECT ... FOR UPDATE`; el modo exacto se corrigió a `FOR NO KEY UPDATE` en D-38).
 **Costo que se acepta.** PostgreSQL no indexa automáticamente las llaves foráneas, así que los índices de la tabla de cobertura de `modelado/relacional/03-indices.md` (sección 3) se crean a mano.
 **Si se quisiera cambiar más adelante.** Habría que comprobar que el nuevo motor ofrece los mismos tipos, el trigger con bloqueo de fila y las llaves foráneas con cascada; el resto del diseño es propio del modelo relacional.
 **Dónde.** `modelado/relacional/` y `arquitectura/03-eleccion-stack.md`.
@@ -622,3 +625,59 @@ Las plataformas de una película se identifican por su `nombre`, sin id propio. 
 **Por qué.** Un esquema se escribe una vez y sirve para validar en la API y avisar pronto en los formularios de la app.
 **Si se quisiera cambiar más adelante.** El diseño de las bases y de la sincronización no depende de la librería; cambiaría solo la capa de rutas y los formularios.
 **Dónde.** `arquitectura/03-eleccion-stack.md`, sección 4.3.
+
+---
+
+## D-38. El bloqueo del trigger del promedio es `FOR NO KEY UPDATE`, no `FOR UPDATE`
+
+**Contexto.** D-02 fija que el trigger bloquea la fila de `obra_resumen` antes de recalcular, y D-33 lo anotó como `SELECT ... FOR UPDATE`. Al implementarlo, la prueba 15 con dos sesiones pasaba, pero una ráfaga de 8 sesiones publicando a la vez sobre la misma obra falló: 6 de las 8 fueron abortadas por interbloqueo (`deadlock detected`), y quedó `total_resenas = 2` en lugar de 8. Salida guardada en `db/evidencias/relacional/hallazgo-interbloqueo-con-for-update.txt`. Con dos sesiones no se veía porque la segunda llegaba cuando la primera ya tenía el candado.
+**Causa.** El `INSERT` en `resena` comprueba la llave foránea `fk_resena_obra` y para ello toma `FOR KEY SHARE` sobre la fila de la obra. Ese modo choca con `FOR UPDATE`. Dos transacciones simultáneas reciben primero su `KEY SHARE` y después cada una pide `FOR UPDATE` esperando que la otra suelte el suyo: interbloqueo.
+**Decisión.** El trigger conserva el orden de D-02 (bloquear primero, recalcular después) pero con `FOR NO KEY UPDATE`. Ese modo no choca con `KEY SHARE` y sí con otro `NO KEY UPDATE`, así que las reseñas de la misma obra se serializan sin interbloquearse. Es además el modo que el `UPDATE` posterior toma de todos modos, porque no toca la clave.
+
+| Alternativa | Resultado | Descartada porque |
+|---|---|---|
+| `FOR UPDATE` (la redacción original) | 6 de 8 sesiones abortadas por interbloqueo | Falla en la prueba |
+| Sin bloqueo | Pierde una actualización: con dos reseñas quedó `total = 1` y `promedio = 2.00` (control 15c) | Es el problema que D-02 quería evitar |
+| Bloqueo consultivo por obra (`pg_advisory_xact_lock`) | Funcionaría | Añade un mecanismo ajeno a la fila, sin ventaja sobre el candado de fila |
+| Guardar suma e incrementar | Sin recálculo | Ya descartado en D-02 |
+
+**Por qué.** Se comprobó con el motor (PostgreSQL 18.7): la ráfaga de 8 termina sin errores con `total = 8` y el promedio igual al recálculo manual, en tres ejecuciones seguidas.
+**Costo que se acepta.** Sigue siendo posible un interbloqueo entre dos eliminaciones de cuenta simultáneas cuyas reseñas caigan en las mismas obras en distinto orden, porque la cascada de RF-04 bloquea una obra tras otra. **No se probó**: es un caso raro con el volumen del proyecto. La API debe tratar el código `40P01` como reintentable.
+**Si se quisiera cambiar más adelante.** Si se necesitara eliminar cuentas en masa, ordenar las obras antes de borrar o usar el bloqueo consultivo.
+**Dónde.** `db/relacional/03-trigger.sql`, `db/relacional/pruebas/03-concurrencia.sh` (15a, 15b y los controles 15c y 15d), `modelado/relacional/02-restricciones-integridad.md`, sección 7. Corrige la anotación de D-02 y D-33.
+
+---
+
+## D-39. Versiones fijadas del Compose, puerto de PostgreSQL y comprobación de salud de MongoDB
+
+**Contexto.** Al construir el Compose (D-36) había que fijar versiones y se encontraron dos cosas que los documentos no preveían.
+**Decisión.**
+- **Versiones:** PostgreSQL 18.7 (imagen Debian), MongoDB 9.0.4 (existe la etiqueta con la que se hicieron las pruebas de los documentos) y Neo4j 5.26.34 Community. Se fijan en `.env.example`.
+- **Puerto de PostgreSQL en la máquina:** 5433, no 5432, porque un PostgreSQL local de Windows ya escucha en 5432. Es configurable (`POSTGRES_HOST_PORT`).
+- **Comprobación de salud de MongoDB:** abre el puerto TCP; no ejecuta `mongosh`. El ping real lo hacen las pruebas, una vez y a demanda.
+- **Scripts dentro del contenedor:** `./db` se monta de solo lectura en `/db` en las tres bases y los scripts se ejecutan allí, no canalizados desde PowerShell, porque Windows PowerShell 5.1 antepone un BOM al texto que se canaliza y Neo4j lo rechazó.
+
+**Alternativas descartadas.**
+- PostgreSQL 17.12 o 16.4 (esta última ya estaba en la máquina): más veteranas pero menos recientes; el diseño no usa nada que dependa de la versión.
+- Comprobación de MongoDB con `mongosh`: se probó primero. Cada comprobación arranca un proceso Node entero; repetidas dentro del tope de 512 MB dejaron a `mongod` al 800 % de CPU y el contenedor nunca llegó a `healthy`. Subir el tope a más de 512 MB se descartó porque rompe el presupuesto de D-36.
+
+**Por qué.** Se comprobó en el motor: con la comprobación por puerto, MongoDB queda sano en unos 14 s y usa ~205 MB.
+**Costo que se acepta.** La comprobación de MongoDB confirma que el puerto está abierto, no que el motor responda a una orden. PostgreSQL 18 guarda los datos en un subdirectorio versionado: el volumen se monta en `/var/lib/postgresql`, no en `/var/lib/postgresql/data`, y un volumen creado con la 16 no se reutiliza.
+**Dónde.** `docker-compose.yml`, `.env.example`. El `db/README.md` los documentará al cerrar el entregable.
+
+---
+
+## D-40. Tipos concretos del relacional en PostgreSQL: `TIMESTAMPTZ`, `JSONB` e identidad del outbox
+
+**Contexto.** Los documentos describen tipos genéricos (`TIMESTAMP`, `JSON`, `BIGINT autoincremental`). PostgreSQL pide elegir la variante.
+**Decisión.**
+- Las fechas son `TIMESTAMPTZ` con `DEFAULT now()` en las de creación (D-13 pide UTC; `TIMESTAMP` sin zona deja la interpretación a quien lee).
+- `sync_outbox.payload` es `JSONB`.
+- `sync_outbox.evento_id` es `BIGINT GENERATED ALWAYS AS IDENTITY`.
+- Los UUID no llevan `DEFAULT`: los genera la aplicación (RNF-08, D-11).
+- Todas las restricciones llevan nombre explícito (`pk_`, `uq_`, `ck_`, `fk_`), para que las pruebas comprueben **qué** restricción rechazó, no solo que hubo rechazo.
+
+**Alternativas descartadas.** `TIMESTAMP` sin zona y `JSON` (texto sin índice ni operadores): el diseño no se beneficia de ninguna de las dos. `UUID DEFAULT gen_random_uuid()`: ocultaría un error si la API olvidara generar el id y rompería el mismo id en las tres bases.
+**Por qué.** Cambian el tipo, no el diseño: las columnas, claves y restricciones son las de `01` y `02`.
+**Costo que se acepta.** Dos reglas del diseño no las impone la base y quedan a cargo de la API: la inmutabilidad de `resena.usuario_id` y `resena.obra_id` (el trigger solo se dispara al cambiar `calificacion` u `oculta`, como dice `02`, sección 7) y el formato de 64 caracteres hexadecimales de `sesion.token_hash` (la columna es `CHAR(64)`, sin CHECK de formato).
+**Dónde.** `db/relacional/01-esquema.sql`.

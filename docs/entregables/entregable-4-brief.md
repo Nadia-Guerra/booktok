@@ -143,7 +143,7 @@ Pequeña pero **con forma**. El objetivo es que cualquier consulta de los docume
 - **Docker y memoria.** La máquina tiene **6 GB de RAM** y su Docker también aloja contenedores de **otros proyectos**: no los toques ni los detengas. No lances muchas JVM a la vez: como mucho 2 o 3 procesos de `cypher-shell` en paralelo, con un `--memory` fijo. Pon `timeout` a los comandos `docker`. Para concurrencia, usa hilos de un solo script, no muchos `docker exec`.
 - **Scripts con expresiones regulares o barras invertidas:** escríbelos con la herramienta de escritura de archivos, no con *heredoc* de Bash, que se come las barras.
 - **Seguridad.** Ningún secreto en el repositorio: usa `.env.example` y mantén `.env` fuera de los commits.
-- **Git.** No hagas commits ni `push` salvo que el usuario lo pida.
+- **Git.** El repositorio ya existe (rama `master`, con un primer commit de `docs/`). No cambies de rama, no hagas `push` y haz commits solo si el usuario lo pide. Otra sesión puede estar editando `docs/` a la vez, así que **vuelve a leer un archivo de `docs/` justo antes de editarlo**. Tú trabajas en `db/`, `docker-compose.yml` y `.env.example`.
 - **Documentación.** Si decides algo que no estaba decidido, o corriges algo tras probarlo en el motor, registra una decisión nueva en `docs/decisiones_tomadas.md` con contexto, alternativas y razón, igual que las demás.
 - **Pendientes.** Cuando dejes algo pendiente, explícalo con contexto y un ejemplo, no con una fila escueta.
 - **Honestidad en los resultados.** Si una prueba falla o algo no se pudo ejecutar, dilo con la salida real. No marques como hecho lo que no corriste.

@@ -1,0 +1,26 @@
+ prueba |                                         descripcion                                          |                        esperado                        |                        obtenido                        | resultado 
+--------+----------------------------------------------------------------------------------------------+--------------------------------------------------------+--------------------------------------------------------+-----------
+ Q-O22a | O22: sesión vigente devuelve el usuario y su rol actual                                      | admin                                                  | admin                                                  | PASA
+ Q-O22b | O22: sesión vencida no devuelve nada                                                         | (sin sesión)                                           | (sin sesión)                                           | PASA
+ Q-O22c | O22: token inexistente no devuelve nada                                                      | (sin sesión)                                           | (sin sesión)                                           | PASA
+ Q-O22d | O22: tras cambiar el rol en usuario, la misma sesión ya trae el rol nuevo                    | lector                                                 | lector                                                 | PASA
+ Q-O18a | O18: solo libros terminados con calificación >= 4 y reseña visible, mejor calificado primero | obra 1002 (5), obra 1001 (4)                           | obra 1002 (5), obra 1001 (4)                           | PASA
+ Q-O18b | O18: excluye calificación 3, estado pendiente, película, reseña oculta y libro sin reseña    | 0 de [1003, 1004, 1005, 1006, 1007]                    | 0 de [1003, 1004, 1005, 1006, 1007]                    | PASA
+ Q-O18c | O18: :limite acota la lista                                                                  | 1                                                      | 1                                                      | PASA
+ Q-O17a | O17: reseñas de la obra 1001 no ocultas, la más reciente primero                             | usuario 3 (2), usuario 1 (4)                           | usuario 3 (2), usuario 1 (4)                           | PASA
+ Q-O17b | O17: la reseña oculta no aparece en el listado de su obra                                    | 0                                                      | 0                                                      | PASA
+ Q-O17c | O17: promedio y total de la obra 1001 (reseñas 4 y 2)                                        | total=2 promedio=3.00                                  | total=2 promedio=3.00                                  | PASA
+ Q-O17d | O17: obra con solo una reseña oculta: total 0 y sin promedio (1005)                          | total=0 promedio=(nulo)                                | total=0 promedio=(nulo)                                | PASA
+ Q-O17e | O17: obras terminadas de la usuaria 1 (1001, 1002, 1003, 1005, 1006 y 1007)                  | 6                                                      | 6                                                      | PASA
+ Q-O17f | O17: a quién sigue la usuaria 1                                                              | usuario 2, usuario 3                                   | usuario 2, usuario 3                                   | PASA
+ Q-O17g | O17: quién sigue al usuario 2                                                                | usuario 1, usuario 3                                   | usuario 1, usuario 3                                   | PASA
+ Q-O17h | O17: obras de una lista en su posición (no es el orden de inserción)                         | 1001, 1007, 1002                                       | 1001, 1007, 1002                                       | PASA
+ Q-O20a | O20: con datos creados solo por el trigger no hay obras con promedio incorrecto              | 0                                                      | 0                                                      | PASA
+ Q-O20b | O20: la consulta SÍ detecta una obra cuyo promedio no coincide (1006)                        | 1006: total=0 promedio=(nulo) vs total=1 promedio=1.00 | 1006: total=0 promedio=(nulo) vs total=1 promedio=1.00 | PASA
+(17 rows)
+
+ pasan | fallan | total 
+-------+--------+-------
+    17 |      0 |    17
+(1 row)
+

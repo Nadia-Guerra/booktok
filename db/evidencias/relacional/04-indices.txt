@@ -1,0 +1,30 @@
+ prueba |                                  descripcion                                  |           esperado           |           obtenido           | resultado 
+--------+-------------------------------------------------------------------------------+------------------------------+------------------------------+-----------
+ I-01   | Usuario por correo (inicio de sesión)                                         | usa uq_usuario_correo        | usa uq_usuario_correo        | PASA
+ I-02   | Reseñas de una obra, recientes primero (I1)                                   | usa idx_resena_obra_fecha    | usa idx_resena_obra_fecha    | PASA
+ I-03   | Recálculo del promedio de una obra, el del trigger (I1)                       | usa idx_resena_obra_fecha    | usa idx_resena_obra_fecha    | PASA
+ I-04   | Reseñas de un usuario, recientes primero (I2)                                 | usa idx_resena_usuario_fecha | usa idx_resena_usuario_fecha | PASA
+ I-05   | Obras terminadas de un usuario                                                | usa pk_estado_obra           | usa pk_estado_obra           | PASA
+ I-06   | RF-26 paso 1 (O18): estados terminados unidos con reseñas del mismo usuario   | usa pk_estado_obra           | usa pk_estado_obra           | PASA
+ I-06b  | RF-26 paso 1 (O18): la unión con reseñas usa el UNIQUE (usuario, obra)        | usa uq_resena_usuario_obra   | usa uq_resena_usuario_obra   | PASA
+ I-07   | Seguidores de un usuario (I4)                                                 | usa idx_seguimiento_seguido  | usa idx_seguimiento_seguido  | PASA
+ I-07b  | A quién sigue un usuario                                                      | usa pk_seguimiento           | usa pk_seguimiento           | PASA
+ I-08   | Listas de un usuario (I5)                                                     | usa idx_lista_usuario        | usa idx_lista_usuario        | PASA
+ I-09   | Eventos pendientes en orden (I6, parcial)                                     | usa idx_outbox_pendientes    | usa idx_outbox_pendientes    | PASA
+ I-10   | Validar la sesión de una petición (O22): por clave primaria de sesion         | usa pk_sesion                | usa pk_sesion                | PASA
+ I-10b  | Validar la sesión (O22): y por clave primaria de usuario                      | usa pk_usuario               | usa pk_usuario               | PASA
+ I-11   | Sesiones de un usuario, la cascada de RF-04 (I7)                              | usa idx_sesion_usuario       | usa idx_sesion_usuario       | PASA
+ I-12   | I6 está definido como parcial sobre estado = pendiente                        | parcial                      | parcial                      | PASA
+ I-13   | I6 pesa menos de una décima parte que el índice completo de la clave primaria | menor                        | menor                        | PASA
+(16 rows)
+
+ pasan | fallan | total 
+-------+--------+-------
+    16 |      0 |    16
+(1 row)
+
+                 dato                 | idx_outbox_pendientes_parcial | pk_sync_outbox_completo 
+--------------------------------------+-------------------------------+-------------------------
+ Tamaño de índices del outbox (bytes) |                         16384 |                  909312
+(1 row)
+

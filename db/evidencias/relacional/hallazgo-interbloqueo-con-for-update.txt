@@ -1,0 +1,13 @@
+PASA   15a       Dos reseñas simultáneas: total=2 promedio=3.50 (= recálculo manual)
+PASA   15a-espera La sesión B esperó el bloqueo de la fila de obra_resumen
+                  B tardó 2.0 s en confirmar (A retuvo la transacción 3 s)
+FALLA  15b       Ráfaga de 8 sesiones
+                  obtenido: total=2 promedio=3.50 | recálculo manual: total=2 promedio=3.50 | errores: 6 (esperado: total=8, 0 errores)
+                  psql:/tmp/conc15/r102.sql:2: ERROR:  deadlock detected
+                  DETAIL:  Process 4087 waits for ShareLock on transaction 858; blocked by process 4088.
+INFO   15c       Control sin bloqueo: resultado INCORRECTO, como se preveía: total=1 promedio=2.00
+                  Lo correcto sería total=2 promedio=3.50. Es lo que evita el bloqueo de D-02.
+INFO   15d       Control con FOR UPDATE: 7 sesiones abortadas por interbloqueo en la ráfaga de 8
+                  Con FOR NO KEY UPDATE (el trigger real) la misma ráfaga termina sin errores (15b).
+
+Prueba 15: FALLA (1 comprobaciones)

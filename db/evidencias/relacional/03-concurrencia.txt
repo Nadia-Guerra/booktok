@@ -1,0 +1,10 @@
+PASA   15a       Dos reseñas simultáneas: total=2 promedio=3.50 (= recálculo manual)
+PASA   15a-espera La sesión B esperó el bloqueo de la fila de obra_resumen
+                  B tardó 2.0 s en confirmar (A retuvo la transacción 3 s)
+PASA   15b       Ráfaga de 8 sesiones sobre la misma obra: total=8 promedio=3.13 (= recálculo manual), sin errores
+INFO   15c       Control sin bloqueo: resultado INCORRECTO, como se preveía: total=1 promedio=2.00
+                  Lo correcto sería total=2 promedio=3.50. Es lo que evita el bloqueo de D-02.
+INFO   15d       Control con FOR UPDATE: 6 sesiones abortadas por interbloqueo en la ráfaga de 8
+                  Con FOR NO KEY UPDATE (el trigger real) la misma ráfaga termina sin errores (15b).
+
+Prueba 15: PASA (15a, 15a-espera, 15b)

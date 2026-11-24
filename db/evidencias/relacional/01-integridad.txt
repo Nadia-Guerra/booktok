@@ -1,0 +1,52 @@
+  prueba  |                                 descripcion                                  |                          esperado                           |                          obtenido                           | resultado 
+----------+------------------------------------------------------------------------------+-------------------------------------------------------------+-------------------------------------------------------------+-----------
+ 1        | Dos usuarios con el mismo correo                                             | 23505 uq_usuario_correo                                     | 23505 uq_usuario_correo                                     | PASA
+ 1b       | Correo con mayúsculas                                                        | 23514 ck_usuario_correo_minusculas                          | 23514 ck_usuario_correo_minusculas                          | PASA
+ 2        | Segunda reseña del mismo usuario y obra                                      | 23505 uq_resena_usuario_obra                                | 23505 uq_resena_usuario_obra                                | PASA
+ 3a       | Calificación 0                                                               | 23514 ck_resena_calificacion                                | 23514 ck_resena_calificacion                                | PASA
+ 3b       | Calificación 6                                                               | 23514 ck_resena_calificacion                                | 23514 ck_resena_calificacion                                | PASA
+ 4        | Seguimiento de un usuario a sí mismo                                         | 23514 ck_seguimiento_no_propio                              | 23514 ck_seguimiento_no_propio                              | PASA
+ 5        | Mismo seguimiento dos veces                                                  | 23505 pk_seguimiento                                        | 23505 pk_seguimiento                                        | PASA
+ 6        | Misma obra dos veces en una lista                                            | 23505 pk_elemento_lista                                     | 23505 pk_elemento_lista                                     | PASA
+ 7a       | Reseña con obra inexistente                                                  | 23503 fk_resena_obra                                        | 23503 fk_resena_obra                                        | PASA
+ 7b       | Estado con obra inexistente                                                  | 23503 fk_estado_obra                                        | 23503 fk_estado_obra                                        | PASA
+ 7c       | Elemento de lista con obra inexistente                                       | 23503 fk_elemento_obra                                      | 23503 fk_elemento_obra                                      | PASA
+ 8a       | Estado de lectura fuera de la lista                                          | 22P02                                                       | 22P02                                                       | PASA
+ 8b       | Rol fuera de la lista                                                        | 22P02                                                       | 22P02                                                       | PASA
+ 8c       | Tipo de obra fuera de la lista                                               | 22P02                                                       | 22P02                                                       | PASA
+ 9        | Borrar una obra con reseñas                                                  | 23001 fk_resena_obra                                        | 23001 fk_resena_obra                                        | PASA
+ 10-antes | Antes de borrar: promedio de la obra 101 (4, 5 y 3)                          | total=3 promedio=4.00                                       | total=3 promedio=4.00                                       | PASA
+ 10a      | No queda ninguna fila del usuario borrado (todas las tablas)                 | resena=0 estado=0 lista=0 elemento=0 seguimiento=0 sesion=0 | resena=0 estado=0 lista=0 elemento=0 seguimiento=0 sesion=0 | PASA
+ 10b      | Lo ajeno sobrevive: reseñas de otros, seguimiento 1->3, sesión del usuario 1 | resena=3 seguimiento=1 sesion=1                             | resena=3 seguimiento=1 sesion=1                             | PASA
+ 11a      | Tras borrar al usuario: obra 101 = reseñas de 5 y 3                          | total=2 promedio=4.00                                       | total=2 promedio=4.00                                       | PASA
+ 11b      | Tras borrar al usuario: obra 102 = reseña de 5                               | total=1 promedio=5.00                                       | total=1 promedio=5.00                                       | PASA
+ 11c      | Resumen = recálculo manual en 101 y 102                                      | iguales                                                     | iguales                                                     | PASA
+ 12a      | Insertar reseña (5)                                                          | total=1 promedio=5.00                                       | total=1 promedio=5.00                                       | PASA
+ 12b      | Insertar segunda reseña (2)                                                  | total=2 promedio=3.50                                       | total=2 promedio=3.50                                       | PASA
+ 12c      | Editar calificación 5 -> 4                                                   | total=2 promedio=3.00                                       | total=2 promedio=3.00                                       | PASA
+ 12d      | Ocultar la reseña de 2                                                       | total=1 promedio=4.00                                       | total=1 promedio=4.00                                       | PASA
+ 12e      | Volver a mostrarla                                                           | total=2 promedio=3.00                                       | total=2 promedio=3.00                                       | PASA
+ 12f      | Eliminar la reseña de 4                                                      | total=1 promedio=2.00                                       | total=1 promedio=2.00                                       | PASA
+ 12g      | Resumen = recálculo manual al final                                          | iguales                                                     | iguales                                                     | PASA
+ 12h      | Redondeo a dos decimales: 5, 4 y 4                                           | total=3 promedio=4.33                                       | total=3 promedio=4.33                                       | PASA
+ 13-antes | Una sola reseña vigente                                                      | total=1 promedio=3.00                                       | total=1 promedio=3.00                                       | PASA
+ 13       | Ocultar la única reseña de la obra                                           | total=0 promedio=(nulo)                                     | total=0 promedio=(nulo)                                     | PASA
+ 16-antes | Tres sesiones abiertas                                                       | 3                                                           | 3                                                           | PASA
+ 16       | Tras borrar al usuario no queda ninguna sesión suya                          | 0                                                           | 0                                                           | PASA
+ 17a      | Sesión con expira_en igual a creado_en                                       | 23514 ck_sesion_vigencia                                    | 23514 ck_sesion_vigencia                                    | PASA
+ 17b      | Sesión con expira_en anterior a creado_en                                    | 23514 ck_sesion_vigencia                                    | 23514 ck_sesion_vigencia                                    | PASA
+ E1       | obra_resumen: promedio sin reseñas (ck_obra_coherencia)                      | 23514 ck_obra_coherencia                                    | 23514 ck_obra_coherencia                                    | PASA
+ E2       | obra_resumen: promedio fuera de 1 a 5                                        | 23514 ck_obra_promedio_rango                                | 23514 ck_obra_promedio_rango                                | PASA
+ E3       | obra_resumen: total_resenas negativo                                         | 23514 ck_obra_total_no_negativo                             | 23514 ck_obra_total_no_negativo                             | PASA
+ E4       | elemento_lista: posición 0                                                   | 23514 ck_elemento_posicion                                  | 23514 ck_elemento_posicion                                  | PASA
+ E5       | sync_outbox: tipo de evento desconocido                                      | 23514 ck_outbox_tipo_evento                                 | 23514 ck_outbox_tipo_evento                                 | PASA
+ E6       | Borrar una obra que tiene estados de lectura (RESTRICT)                      | 23001 fk_estado_obra                                        | 23001 fk_estado_obra                                        | PASA
+ E6b      | Borrar una obra que está en una lista (RESTRICT)                             | 23001 fk_elemento_obra                                      | 23001 fk_elemento_obra                                      | PASA
+ E7       | Valores por defecto: rol, oculta, total_resenas, estado e intentos           | lector falsa 0 pendiente 0                                  | lector falsa 0 pendiente 0                                  | PASA
+(43 rows)
+
+ pasan | fallan | total 
+-------+--------+-------
+    43 |      0 |    43
+(1 row)
+
