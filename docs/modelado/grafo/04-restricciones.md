@@ -119,7 +119,7 @@ Son las reglas que dependen de otras bases o del contexto, y que ninguna restric
 
 ## 6. Cómo crearlas
 
-Sintaxis de Neo4j 5. No se ha ejecutado contra una instancia, a diferencia de las pruebas del documental, que sí se hicieron en MongoDB.
+Sintaxis de Neo4j 5. **Ejecutado el 2026-11-23 contra Neo4j 5.26.34 Community** (`db/grafo/01-restricciones.cypher`, pruebas R-01 a R-09 en `db/grafo/pruebas/01-restricciones.cypher`): las cuatro restricciones de unicidad se crean y rechazan los duplicados; las de existencia y de tipo las rechaza Neo4j con `ConstraintCreationFailed` ("requires Neo4j Enterprise Edition"), tal como decía la documentación. Lo que Community deja pasar (una `Persona` sin `nombre`, un `orden` de texto) es responsabilidad de la API (R-08 y R-09). El índice por nombre que faltaba se define en D-41.
 
 ```cypher
 // Unicidad: todas las ediciones. Crea además el índice de cada id

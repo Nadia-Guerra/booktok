@@ -1,0 +1,112 @@
+Pruebas del grafo: 02-cardinalidad  (2026-11-23 23:00:11)
+
+PASA   K-01.1    Ejemplo de 05, sección 3.1: El hobbit tiene tres películas y cada una un solo libro de origen
+             -> ok
+PASA   K-01.2    Ejemplo de 05, sección 3.1: El hobbit tiene tres películas y cada una un solo libro de origen / Un libro puede tener varias adaptaciones (CG-03): tres
+             -> filas 3
+PASA   K-01.3    Ejemplo de 05, sección 3.1: El hobbit tiene tres películas y cada una un solo libro de origen / Una película tiene exactamente un libro de origen: mínimo y máximo de libros por película
+             -> valor 1|1
+PASA   K-01.4    Ejemplo de 05, sección 3.1: El hobbit tiene tres películas y cada una un solo libro de origen / CG-04 devuelve exactamente un libro para una película con origen
+             -> filas 1
+PASA   K-01.5    Ejemplo de 05, sección 3.1: El hobbit tiene tres películas y cada una un solo libro de origen / Una persona dirige varias películas: Peter Jackson tiene tres dirigida_por
+             -> valor 3
+PASA   K-01.6    Ejemplo de 05, sección 3.1: El hobbit tiene tres películas y cada una un solo libro de origen / Un actor aparece en varias películas del mismo libro: tres actuó_en, una con cada película
+             -> valor 3|3
+PASA   K-02.1    D-19: una sola actuó_en por persona y película; la segunda se rechaza y no sobrescribe el personaje
+             -> ok
+PASA   K-02.2    D-19: una sola actuó_en por persona y película; la segunda se rechaza y no sobrescribe el personaje / Primera actuó_en (CG-14): se crea
+             -> filas 1
+PASA   K-02.3    D-19: una sola actuó_en por persona y película; la segunda se rechaza y no sobrescribe el personaje / Segunda del mismo par, con otro personaje y orden: se rechaza (ninguna fila)
+             -> filas 0
+PASA   K-02.4    D-19: una sola actuó_en por persona y película; la segunda se rechaza y no sobrescribe el personaje / Queda una relación, con el personaje original
+             -> valor 1|Gandalf|1
+PASA   K-03.1    El reparto tiene como máximo 300 personas (CG-14): la 301 se rechaza
+             -> ok
+PASA   K-03.2    El reparto tiene como máximo 300 personas (CG-14): la 301 se rechaza
+             -> ok
+PASA   K-03.3    El reparto tiene como máximo 300 personas (CG-14): la 301 se rechaza / Con 299 en el reparto, la persona 300 sí entra
+             -> filas 1
+PASA   K-03.4    El reparto tiene como máximo 300 personas (CG-14): la 301 se rechaza / Con 300 en el reparto, la 301 se rechaza
+             -> filas 0
+PASA   K-03.5    El reparto tiene como máximo 300 personas (CG-14): la 301 se rechaza / El reparto quedó en exactamente 300
+             -> valor 300
+PASA   K-04.1    05, sección 3.2: una persona dirigió y actuó en la misma película => dos relaciones de tipos distintos
+             -> ok
+PASA   K-04.2    05, sección 3.2: una persona dirigió y actuó en la misma película => dos relaciones de tipos distintos / Hay dos relaciones entre los mismos nodos, de tipos distintos
+             -> valor 2|2
+PASA   K-04.3    05, sección 3.2: una persona dirigió y actuó en la misma película => dos relaciones de tipos distintos / RF-24 (CG-06) devuelve dos caminos entre ellos, uno por cada tipo, porque son conexiones distintas
+             -> valor 2|1|1
+PASA   K-05.1    05, sección 3.2: una persona escribió el libro y dirigió su adaptación (RF-25, CG-07)
+             -> ok
+PASA   K-05.2    05, sección 3.2: una persona escribió el libro y dirigió su adaptación (RF-25, CG-07)
+             -> filas 1
+PASA   K-06.1    RN-07: Neo4j NO impide un segundo libro de origen; CG-22 lo detecta (por eso existe D-23)
+             -> ok
+PASA   K-06.2    RN-07: Neo4j NO impide un segundo libro de origen; CG-22 lo detecta (por eso existe D-23) / Registrar el primer libro de origen con CG-15
+             -> filas 1
+PASA   K-06.3    RN-07: Neo4j NO impide un segundo libro de origen; CG-22 lo detecta (por eso existe D-23) / CG-15 por sí sola NO rechaza un segundo libro (la API comprueba CG-04 antes, con el nodo bloqueado)
+             -> filas 1
+PASA   K-06.4    RN-07: Neo4j NO impide un segundo libro de origen; CG-22 lo detecta (por eso existe D-23) / La reconciliación (CG-22) lo detecta: la película tiene 2 libros de origen
+             -> valor 2
+PASA   K-07.1    Mínimos de D-24: CG-22 señala exactamente las obras que no llegan al mínimo
+             -> ok
+PASA   K-07.2    Mínimos de D-24: CG-22 señala exactamente las obras que no llegan al mínimo / Libro 2 sin autor, libro 3 sin adaptación; película 2 sin director, 3 sin libro, 4 sin reparto, 5 con dos libros
+             -> valor libro2,libro3,pelicula2,pelicula3,pelicula4,pelicula5
+PASA   K-07.3    Mínimos de D-24: CG-22 señala exactamente las obras que no llegan al mínimo / Antes de publicar, CG-03 del libro 3 (sin adaptación) no devuelve nada
+             -> filas 0
+PASA   K-07.4    Mínimos de D-24: CG-22 señala exactamente las obras que no llegan al mínimo / CG-05 de la película 2 (sin director) no devuelve nada
+             -> filas 0
+PASA   K-07.5    Mínimos de D-24: CG-22 señala exactamente las obras que no llegan al mínimo / CG-05 del libro 2 (sin autor) no devuelve nada
+             -> filas 0
+PASA   K-07.6    Mínimos de D-24: CG-22 señala exactamente las obras que no llegan al mínimo / CG-04 de la película 3 (sin libro de origen) no devuelve nada
+             -> filas 0
+PASA   K-07.7    Mínimos de D-24: CG-22 señala exactamente las obras que no llegan al mínimo / CG-20 de la película 4 (sin reparto) no devuelve nada
+             -> filas 0
+PASA   K-07.8    Mínimos de D-24: CG-22 señala exactamente las obras que no llegan al mínimo / Las obras completas sí cumplen: libro 1 (autor y 3 adaptaciones) y película 1 (libro, director y reparto)
+             -> filas 1
+PASA   K-07.9    Mínimos de D-24: CG-22 señala exactamente las obras que no llegan al mínimo / CG-20 de la película 1
+             -> filas 1
+PASA   K-08.1    `orden` repetido en el reparto: Neo4j lo acepta; la API lo valida y la reconciliación puede detectarlo
+             -> ok
+PASA   K-08.2    `orden` repetido en el reparto: Neo4j lo acepta; la API lo valida y la reconciliación puede detectarlo
+             -> valor 1
+PASA   K-09.1    sigue y leyó son N a M: un usuario sigue a varios y es seguido por varios; un libro lo leen varios
+             -> ok
+PASA   K-09.2    sigue y leyó son N a M: un usuario sigue a varios y es seguido por varios; un libro lo leen varios / U1 sigue a 2 y U2 es seguido por 2
+             -> valor 2|2
+PASA   K-09.3    sigue y leyó son N a M: un usuario sigue a varios y es seguido por varios; un libro lo leen varios / U1 leyó 2 libros y el libro 1 lo leyeron 2 usuarios
+             -> valor 2|2
+PASA   K-10.1    Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.2    Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.3    Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.4    Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.5    Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.6    Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.7    Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.8    Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18) / Tras repetir CG-11 y CG-16: un libro, una película y dos usuarios
+             -> valor 1|1|2
+PASA   K-10.9    Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.10   Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.11   Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.12   Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.13   Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18) / Tras repetir CG-15 y CG-18: una adaptado_a y un sigue
+             -> valor 2|2
+PASA   K-10.14   Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.15   Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18)
+             -> ok
+PASA   K-10.16   Las escrituras idempotentes de sincronización y alta no duplican (CG-11, CG-15, CG-16, CG-18) / Eliminar el seguimiento dos veces no falla y deja solo la adaptación
+             -> valor 1
+
+Pasan 54 de 54, fallan 0.  (7.6 s)

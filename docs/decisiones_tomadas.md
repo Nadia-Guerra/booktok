@@ -44,6 +44,8 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 | D-38 | El bloqueo del trigger del promedio es `FOR NO KEY UPDATE`, no `FOR UPDATE` (corrige D-02 tras probarlo) | 2026-11-23 |
 | D-39 | Versiones fijadas del Compose, puerto de PostgreSQL y comprobación de salud de MongoDB | 2026-11-23 |
 | D-40 | Tipos concretos del relacional en PostgreSQL: `TIMESTAMPTZ`, `JSONB` e identidad del outbox | 2026-11-23 |
+| D-41 | La búsqueda de personas por nombre usa un índice de texto completo (`standard-folding`) en Neo4j | 2026-11-23 |
+| D-42 | El bloqueo de D-23 se toma reescribiendo `obra_id` en el nodo de la película (`CG-15-bloqueo`), y las pruebas del grafo usan un cliente efímero y la API HTTP | 2026-11-23 |
 
 ---
 
@@ -681,3 +683,35 @@ Las plataformas de una película se identifican por su `nombre`, sin id propio. 
 **Por qué.** Cambian el tipo, no el diseño: las columnas, claves y restricciones son las de `01` y `02`.
 **Costo que se acepta.** Dos reglas del diseño no las impone la base y quedan a cargo de la API: la inmutabilidad de `resena.usuario_id` y `resena.obra_id` (el trigger solo se dispara al cambiar `calificacion` u `oculta`, como dice `02`, sección 7) y el formato de 64 caracteres hexadecimales de `sesion.token_hash` (la columna es `CHAR(64)`, sin CHECK de formato).
 **Dónde.** `db/relacional/01-esquema.sql`.
+
+---
+
+## D-41. La búsqueda de personas por nombre usa un índice de texto completo (`standard-folding`) en Neo4j
+
+**Contexto.** CG-01 (obras por el nombre de una persona) y CG-02 (personas por nombre, para reutilizar una existente) filtran por `Persona.nombre`. Los documentos del grafo (`03`, `04` y `05`) terminaban en "después siguen los índices: el nombre de `Persona`" y ese paso no se escribió, así que la decisión estaba pendiente al implementar. Las restricciones de unicidad ya indexan los ids; el nombre no tenía índice.
+**Decisión.** Un índice de texto completo `persona_nombre_texto` sobre `Persona.nombre`, con el analizador `standard-folding`. Busca palabras completas sin distinguir mayúsculas ni tildes, igual que los índices de texto del documental (IX-01 e IX-02): `timothee` y `CHALAMET` encuentran a "Timothée Chalamet", y `ferguson villeneuve` encuentra a las dos personas.
+
+| Alternativa | Por qué no |
+|---|---|
+| Índice `RANGE` sobre `nombre` | Solo acepta igualdad y prefijo, y distingue mayúsculas y tildes: el visitante tendría que escribir el nombre exacto |
+| Índice `TEXT` con `CONTAINS` | Admite fragmentos, pero distingue mayúsculas y tildes; habría que guardar además una copia normalizada del nombre |
+| Sin índice | Recorrería todos los nodos `Persona` en cada búsqueda, y CG-02 se ejecuta cada vez que el administrador registra a alguien |
+
+**Por qué.** Se comprobó en Neo4j 5.26.34 Community (el índice de texto completo está disponible en esa edición): las pruebas R-16 a R-19 de `db/grafo/pruebas/01-restricciones.cypher`.
+**Costo que se acepta.** **No encuentra fragmentos de palabra**: `chala` y `timo` no devuelven nada (prueba R-19), la misma limitación que el documental; RF-05 no pide búsqueda mientras se escribe. El texto de búsqueda es sintaxis Lucene (`*`, `~`, `AND`...), así que la API debe sanearlo antes de pasarlo a CG-01 y CG-02.
+**Dónde.** `db/grafo/01-restricciones.cypher`, `db/grafo/consultas/CG-01.cypher` y `CG-02.cypher`. Cierra el "siguiente paso" de `modelado/grafo/04-restricciones.md` y `05-cardinalidad.md`.
+
+---
+
+## D-42. El bloqueo de D-23 se toma reescribiendo `obra_id` en el nodo de la película (`CG-15-bloqueo`), y las pruebas del grafo usan un cliente efímero y la API HTTP
+
+**Contexto.** D-23 dice que la API bloquea el nodo de la película "escribiendo en él dentro de la misma transacción" antes de consultar CG-04 y crear con CG-15, pero no dice **qué** escribir. Escribir una propiedad nueva (un marcador) la dejaría en el nodo y en el modelo. Además, el contenedor de Neo4j va justo de memoria (D-36: 85 % de sus 1,25 GB en reposo) y cada `cypher-shell` es una JVM.
+**Decisión.**
+- El bloqueo es `MATCH (f:Película {obra_id: $pelicula_id}) SET f.obra_id = f.obra_id` (`db/grafo/consultas/CG-15-bloqueo.cypher`): reescribe la propiedad con el mismo valor, sin dejar nada nuevo en el grafo. La API ejecuta, en **una** transacción: `CG-15-bloqueo`, `CG-04` y, solo si CG-04 no devolvió nada, `CG-15`.
+- Los scripts Cypher de creación se ejecutan con `cypher-shell` en un contenedor cliente efímero (`neo4j-cliente`, perfil `herramientas`, tope de 384 MB), no dentro del contenedor de Neo4j.
+- Las pruebas del grafo hablan con Neo4j por su API HTTP transaccional desde PowerShell: sin JVM, y con transacciones abiertas e intercaladas para probar la concurrencia desde un solo script.
+
+**Alternativas descartadas.** Un marcador (`SET f.bloqueo = true REMOVE f.bloqueo`): deja una propiedad fuera del modelo si algo falla a medias. Ejecutar `cypher-shell` dentro del contenedor de Neo4j: sumaba una JVM a un contenedor ya al 85 %.
+**Por qué.** Se comprobó con el motor (`db/scripts/probar-grafo-concurrencia.ps1`): con el bloqueo, la segunda sesión esperó mientras la primera tenía la transacción abierta y, al confirmar esta, vio su libro, y la película quedó con **un** libro de origen. Sin el bloqueo, las dos comprobaciones pasaron y la película quedó con **dos** (L1 y L2): la violación de RN-07 que D-23 evita.
+**Costo que se acepta.** Si la transacción no se confirma o revierte, el candado se retiene hasta que Neo4j la cierre por tiempo de espera: la API debe confirmar o revertir siempre. Las pruebas necesitan Windows PowerShell 5.1.
+**Dónde.** `db/grafo/consultas/CG-15-bloqueo.cypher`, `docker-compose.yml` (servicio `neo4j-cliente`), `db/scripts/probar-grafo.ps1` y `probar-grafo-concurrencia.ps1`.

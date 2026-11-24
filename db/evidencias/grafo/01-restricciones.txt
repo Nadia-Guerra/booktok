@@ -1,0 +1,120 @@
+Pruebas del grafo: 01-restricciones  (2026-11-23 23:00:05)
+
+PASA   R-01.1    Dos nodos Persona con el mismo persona_id
+             -> ok
+PASA   R-01.2    Dos nodos Persona con el mismo persona_id
+             -> error Neo.ClientError.Schema.ConstraintValidationFailed
+PASA   R-02.1    Dos nodos Libro con el mismo obra_id
+             -> ok
+PASA   R-02.2    Dos nodos Libro con el mismo obra_id
+             -> error Neo.ClientError.Schema.ConstraintValidationFailed
+PASA   R-03.1    Dos nodos Película con el mismo obra_id
+             -> ok
+PASA   R-03.2    Dos nodos Película con el mismo obra_id
+             -> error Neo.ClientError.Schema.ConstraintValidationFailed
+PASA   R-04.1    Dos nodos Usuario con el mismo usuario_id
+             -> ok
+PASA   R-04.2    Dos nodos Usuario con el mismo usuario_id
+             -> error Neo.ClientError.Schema.ConstraintValidationFailed
+PASA   R-05.1    MERGE por id es idempotente: repetirlo no duplica el nodo
+             -> ok
+PASA   R-05.2    MERGE por id es idempotente: repetirlo no duplica el nodo
+             -> valor 1
+PASA   R-06.1    Libro y Película pueden compartir obra_id (D-21): la unicidad es por etiqueta
+             -> ok
+PASA   R-06.2    Libro y Película pueden compartir obra_id (D-21): la unicidad es por etiqueta
+             -> valor 2
+PASA   R-07.1    Las restricciones de existencia y de tipo NO se pueden crear en Community
+             -> error Neo.DatabaseError.Schema.ConstraintCreationFailed
+PASA   R-07.2    Las restricciones de existencia y de tipo NO se pueden crear en Community
+             -> error Neo.DatabaseError.Schema.ConstraintCreationFailed
+PASA   R-07.3    Las restricciones de existencia y de tipo NO se pueden crear en Community
+             -> error Neo.DatabaseError.Schema.ConstraintCreationFailed
+PASA   R-08.1    Community acepta una Persona sin nombre ni persona_id: RESPONSABILIDAD DE LA API
+             -> ok
+PASA   R-08.2    Community acepta una Persona sin nombre ni persona_id: RESPONSABILIDAD DE LA API
+             -> valor 3
+PASA   R-09.1    Community acepta tipos incorrectos (nombre numérico, orden de texto): RESPONSABILIDAD DE LA API
+             -> ok
+PASA   R-09.2    Community acepta tipos incorrectos (nombre numérico, orden de texto): RESPONSABILIDAD DE LA API
+             -> valor 7|primero
+PASA   R-10.1    Neo4j NO impide relaciones repetidas con CREATE: por eso toda escritura usa MERGE
+             -> ok
+PASA   R-10.2    Neo4j NO impide relaciones repetidas con CREATE: por eso toda escritura usa MERGE
+             -> valor 2
+PASA   R-11.1    MERGE por par no duplica ninguno de los seis tipos de relación
+             -> ok
+PASA   R-11.2    MERGE por par no duplica ninguno de los seis tipos de relación
+             -> ok
+PASA   R-11.3    MERGE por par no duplica ninguno de los seis tipos de relación
+             -> valor 6|6
+PASA   R-12.1    CG-14: un id de otro tipo no crea la relación (las escrituras buscan por etiqueta)
+             -> ok
+PASA   R-12.2    CG-14: un id de otro tipo no crea la relación (las escrituras buscan por etiqueta)
+             -> filas 0
+PASA   R-12.3    CG-14: un id de otro tipo no crea la relación (las escrituras buscan por etiqueta)
+             -> valor 0
+PASA   R-13.1    CG-19 con el id de una PELÍCULA no crea `leyó` (D-16): el proceso descarta las películas
+             -> ok
+PASA   R-13.2    CG-19 con el id de una PELÍCULA no crea `leyó` (D-16): el proceso descarta las películas
+             -> filas 0
+PASA   R-13.3    CG-19 con el id de una PELÍCULA no crea `leyó` (D-16): el proceso descarta las películas
+             -> filas 1
+PASA   R-14.1    CG-17 elimina al usuario con sigue y leyó en ambos sentidos, y repetirlo no falla (idempotente)
+             -> ok
+PASA   R-14.2    CG-17 elimina al usuario con sigue y leyó en ambos sentidos, y repetirlo no falla (idempotente)
+             -> ok
+PASA   R-14.3    CG-17 elimina al usuario con sigue y leyó en ambos sentidos, y repetirlo no falla (idempotente)
+             -> valor 1
+PASA   R-14.4    CG-17 elimina al usuario con sigue y leyó en ambos sentidos, y repetirlo no falla (idempotente)
+             -> ok
+PASA   R-14.5    CG-17 elimina al usuario con sigue y leyó en ambos sentidos, y repetirlo no falla (idempotente)
+             -> valor 2
+PASA   R-15.1    `sigue` de un usuario a sí mismo: el grafo lo acepta; lo impide el CHECK del relacional (RN-03)
+             -> ok
+PASA   R-15.2    `sigue` de un usuario a sí mismo: el grafo lo acepta; lo impide el CHECK del relacional (RN-03)
+             -> filas 1
+PASA   R-16.1    Inventario: 4 restricciones de unicidad y el índice de texto de Persona.nombre en línea
+             -> ok
+PASA   R-16.2    Inventario: 4 restricciones de unicidad y el índice de texto de Persona.nombre en línea
+             -> valor 4
+PASA   R-16.3    Inventario: 4 restricciones de unicidad y el índice de texto de Persona.nombre en línea
+             -> valor 1
+PASA   R-17.1    Las búsquedas por id usan el índice de la restricción (NodeUniqueIndexSeek), no recorren todo
+             -> plan con NodeUniqueIndexSeek
+PASA   R-17.2    Las búsquedas por id usan el índice de la restricción (NodeUniqueIndexSeek), no recorren todo
+             -> plan con NodeUniqueIndexSeek
+PASA   R-17.3    Las búsquedas por id usan el índice de la restricción (NodeUniqueIndexSeek), no recorren todo
+             -> plan con NodeUniqueIndexSeek
+PASA   R-17.4    Las búsquedas por id usan el índice de la restricción (NodeUniqueIndexSeek), no recorren todo
+             -> plan con NodeUniqueIndexSeek
+PASA   R-18.1    Búsqueda por nombre (CG-02): palabras completas, sin distinguir mayúsculas ni tildes
+             -> ok
+PASA   R-18.2    Búsqueda por nombre (CG-02): palabras completas, sin distinguir mayúsculas ni tildes
+             -> filas 1
+PASA   R-18.3    Búsqueda por nombre (CG-02): palabras completas, sin distinguir mayúsculas ni tildes
+             -> filas 1
+PASA   R-18.4    Búsqueda por nombre (CG-02): palabras completas, sin distinguir mayúsculas ni tildes
+             -> filas 1
+PASA   R-18.5    Búsqueda por nombre (CG-02): palabras completas, sin distinguir mayúsculas ni tildes
+             -> filas 2
+PASA   R-19.1    Limitación conocida del índice de texto: un fragmento de palabra no encuentra nada
+             -> ok
+PASA   R-19.2    Limitación conocida del índice de texto: un fragmento de palabra no encuentra nada
+             -> filas 0
+PASA   R-19.3    Limitación conocida del índice de texto: un fragmento de palabra no encuentra nada
+             -> filas 0
+PASA   R-20.1    foto_url es opcional: CG-13 sin foto no crea la propiedad, CG-24 la asigna y la quita (nunca un valor vacío)
+             -> ok
+PASA   R-20.2    foto_url es opcional: CG-13 sin foto no crea la propiedad, CG-24 la asigna y la quita (nunca un valor vacío)
+             -> valor true
+PASA   R-20.3    foto_url es opcional: CG-13 sin foto no crea la propiedad, CG-24 la asigna y la quita (nunca un valor vacío)
+             -> ok
+PASA   R-20.4    foto_url es opcional: CG-13 sin foto no crea la propiedad, CG-24 la asigna y la quita (nunca un valor vacío)
+             -> valor https://almacenamiento.ejemplo.com/personas/ana.jpg
+PASA   R-20.5    foto_url es opcional: CG-13 sin foto no crea la propiedad, CG-24 la asigna y la quita (nunca un valor vacío)
+             -> ok
+PASA   R-20.6    foto_url es opcional: CG-13 sin foto no crea la propiedad, CG-24 la asigna y la quita (nunca un valor vacío)
+             -> valor true|false
+
+Pasan 58 de 58, fallan 0.  (6.3 s)

@@ -1,0 +1,10 @@
+Prueba de concurrencia de D-23 (2026-11-23 23:00:24)
+
+PASA   D23-a1   A: con el nodo bloqueado, CG-04 no ve ningun libro de origen (0 filas) y crea la adaptacion con L1 (sin confirmar)
+PASA   D23-a2   B: tras 3 s su bloqueo sigue esperando a que A confirme (peticion completada: False)
+PASA   D23-a3   B: al confirmar A, su bloqueo se libera
+PASA   D23-a4   B: su CG-04 ya ve el libro de A (1 fila): la API rechazaria y NO llamaria a CG-15
+PASA   D23-a5   Resultado con bloqueo: la pelicula tiene exactamente un libro de origen (L1)
+INFO   D23-b    Control SIN bloqueo: las dos comprobaciones pasaron (B vio 0 filas) y la pelicula quedo con DOS libros de origen (L1,L2): lo que D-23 evita
+
+Prueba D-23: PASA

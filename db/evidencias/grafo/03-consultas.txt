@@ -1,0 +1,54 @@
+Pruebas del grafo: 03-consultas  (2026-11-23 23:00:19)
+
+PASA   Q-00.1    Consultas funcionales de catálogo y exploración
+             -> ok
+PASA   Q-00.2    Consultas funcionales de catálogo y exploración / CG-01: buscar 'villeneuve' devuelve las 3 películas que dirigió, con el vínculo dirigida_por
+             -> valor 3|1|dirigida_por|pelicula
+PASA   Q-00.3    Consultas funcionales de catálogo y exploración / CG-01: buscar 'chalamet' sin tilde ni mayúsculas: sus 2 películas por actuó_en, con su foto_url
+             -> filas 2
+PASA   Q-00.4    Consultas funcionales de catálogo y exploración / CG-01: buscar 'herbert' devuelve el libro que escribió
+             -> valor 00000000-0000-4000-8000-200000000001|libro|escribió
+PASA   Q-00.5    Consultas funcionales de catálogo y exploración / CG-01: un nombre inexistente no devuelve nada
+             -> filas 0
+PASA   Q-00.6    Consultas funcionales de catálogo y exploración / CG-02: buscar 'tolkien' devuelve la persona con su foto_url (ayuda a distinguir homónimos)
+             -> valor 00000000-0000-4000-8000-100000000002|J. R. R. Tolkien|https://almacenamiento.ejemplo.com/personas/tolkien.jpg
+PASA   Q-00.7    Consultas funcionales de catálogo y exploración / CG-05 de un libro devuelve su autor
+             -> valor Frank Herbert
+PASA   Q-00.8    Consultas funcionales de catálogo y exploración / CG-05 de una película devuelve su director
+             -> valor Denis Villeneuve
+PASA   Q-00.9    Consultas funcionales de catálogo y exploración / RF-24: de un autor a un actor, 3 saltos y MÁS DE UNA ruta más corta (Herbert -> Dune -> {F1, F2} -> Chalamet)
+             -> valor 2|3|3
+PASA   Q-00.10   Consultas funcionales de catálogo y exploración / RF-24: el camino lleva los tipos de relación en orden: escribió, adaptado_a, actuó_en
+             -> valor escribió,adaptado_a,actuó_en
+PASA   Q-00.11   Consultas funcionales de catálogo y exploración / RF-24: cada nodo trae tipo, id y, en las personas, nombre
+             -> valor Persona:Frank Herbert ... Persona:Timothée Chalamet
+PASA   Q-00.12   Consultas funcionales de catálogo y exploración / RF-24: entre obras: de un libro a otro por el director común (Dune -> F1 -> Villeneuve -> F4 -> Sueñan...)
+             -> valor 2|4
+PASA   Q-00.13   Consultas funcionales de catálogo y exploración / RF-24: dos nodos sin conexión (otra parte del grafo) no devuelven ningún camino
+             -> filas 0
+PASA   Q-00.14   Consultas funcionales de catálogo y exploración / RF-24: un origen inexistente no devuelve nada ni falla
+             -> filas 0
+PASA   Q-00.15   Consultas funcionales de catálogo y exploración / RF-25: Villeneuve adaptó libros de DOS autores (Herbert y Dick): 3 filas, 2 autores distintos
+             -> valor 3|2
+PASA   Q-00.16   Consultas funcionales de catálogo y exploración / RF-25: Jackson adaptó libros de un solo autor
+             -> valor 1|1
+PASA   Q-00.17   Consultas funcionales de catálogo y exploración / CG-10: Dune y Dune 2021 están unidos por una adaptación
+             -> valor true
+PASA   Q-00.18   Consultas funcionales de catálogo y exploración / CG-10: Dune y Un viaje inesperado no están unidos (RN-06 rechazaría la comparativa)
+             -> valor false
+PASA   Q-00.19   Consultas funcionales de catálogo y exploración / CG-20: el reparto de Dune 2021 sale ordenado por `orden`, con personaje y foto
+             -> valor 1:Timothée Chalamet:Paul Atreides | 2:Rebecca Ferguson:Lady Jessica
+PASA   Q-00.20   Consultas funcionales de catálogo y exploración / CG-22: cuenta autores y adaptaciones de cada libro (Dune: 1 autor y 2 adaptaciones)
+             -> valor 1|2
+PASA   Q-00.21   Consultas funcionales de catálogo y exploración / CG-22: cuenta libro, directores y reparto de cada película (Dune 2021: 1 libro, 1 director, 2 actores)
+             -> valor 1|1|2
+PASA   Q-00.22   Consultas funcionales de catálogo y exploración / CG-22: las 3 + 4 obras del grafo, todas con el mínimo (ninguna señalada)
+             -> valor 0
+PASA   Q-00.23   Consultas funcionales de catálogo y exploración / CG-25: Chalamet actuó en 2 películas (las que hay que regenerar si cambia su foto)
+             -> filas 2
+PASA   Q-00.24   Consultas funcionales de catálogo y exploración / CG-24 + CG-25 + CG-20: al cambiar la foto, el reparto leído refleja la foto nueva
+             -> ok
+PASA   Q-00.25   Consultas funcionales de catálogo y exploración
+             -> valor https://almacenamiento.ejemplo.com/personas/ferguson.jpg
+
+Pasan 25 de 25, fallan 0.  (3.9 s)
