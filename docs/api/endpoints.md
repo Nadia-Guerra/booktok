@@ -1,6 +1,6 @@
 # Endpoints de la API: Del Libro a la Pantalla
 
-Lista de endpoints REST (D-52) que cubren el flujo completo de la aplicación. Es una **propuesta de planeación**: todavía no hay código. Las operaciones (`O`, `AP`, `CG`), las reglas y los límites salen de los documentos de diseño; **las rutas, los cuerpos y las respuestas son una propuesta nueva**. El contrato definitivo irá en `openapi.yaml`.
+Lista de endpoints REST (D-52) que cubren el flujo completo de la aplicación. La lista y su prioridad están aprobadas (D-59, sección 2.11); lo ya construido se ve en `openapi.yaml`. Las operaciones (`O`, `AP`, `CG`), las reglas y los límites salen de los documentos de diseño; **las rutas, los cuerpos y las respuestas son una propuesta nueva**. El contrato definitivo irá en `openapi.yaml`.
 
 ## 1. Convenciones
 
@@ -152,9 +152,15 @@ Las tablas solo anotan los errores **propios** de cada ruta.
 
 EP-51 es la evidencia de consistencia que propone `05-orden-de-construccion.md` (9.1). CG-15 incluye el bloqueo previo de `CG-15-bloqueo` (D-23).
 
-### 2.11 Lo que hace falta para la demo mínima (bloques 0 a 4)
+### 2.11 Prioridad (D-59)
 
-19 endpoints: EP-01 a EP-06, EP-08 a EP-11, EP-13 a EP-20 y EP-22. El catálogo de la demo se carga con la semilla y el alta por script usa los servicios, sin endpoints de administración.
+| Tramo | Cuándo | Endpoints |
+|---|---|---|
+| **19** | La demo | EP-01 a EP-06, EP-08 a EP-11, EP-13 a EP-20 y EP-22 |
+| **41** | Si se puede | Todos menos EP-24, 38, 42, 44, 45, 47, 48, 49, 50 y 51 |
+| **51** | Solo si sobra tiempo | Todos |
+
+El catálogo de la demo sale de la semilla: el alta de obras no se construye hasta el tramo de los 41.
 
 ## 3. Flujo completo de la aplicación
 
@@ -266,7 +272,7 @@ Al desarrollar y antes de la demo, EP-01 confirma que el teléfono llega a la AP
 
 ## 6. Huecos del diseño, ya decididos
 
-Aparecieron al recorrer los flujos. Las propuestas se aprobaron el 2026-11-24: H1, H2 y H10 en D-54; H3 en D-55; H4 y H5 en D-56; H6 a H8 en D-57; H9 en D-58. **La lista de endpoints en sí sigue en revisión.**
+Aparecieron al recorrer los flujos. Las propuestas se aprobaron el 2026-11-24: H1, H2 y H10 en D-54; H3 en D-55; H4 y H5 en D-56; H6 a H8 en D-57; H9 en D-58.
 
 | # | Hueco y ejemplo | Decisión |
 |---|---|---|

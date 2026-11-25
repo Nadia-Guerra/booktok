@@ -1,0 +1,73 @@
+# Del Libro a la Pantalla
+
+Reseñas de libros y de sus adaptaciones al cine. App Android, API REST y tres bases de datos (PostgreSQL, MongoDB y Neo4j). El diseño está en `docs/` y las bases en `db/` (ver `db/README.md`).
+
+| Carpeta | Contenido |
+|---|---|
+| `backend/` | API (Express 5, TypeScript sobre Node 24) |
+| `frontend/` | App Android (Expo). Se desarrolla en la rama `feat/frontend` |
+| `shared/` | Esquemas Zod y tipos que usan las dos |
+
+## Requisitos
+
+Node 24, Docker Desktop y `cloudflared`.
+
+## Puesta en marcha
+
+1. Copia `.env.example` como `.env` y cambia las claves.
+2. Instala las dependencias:
+
+```powershell
+npm install
+```
+
+3. Levanta las bases, de una en una:
+
+```powershell
+docker compose --profile postgres up -d --wait
+```
+
+```powershell
+docker compose --profile mongo up -d --wait
+```
+
+```powershell
+docker compose --profile neo4j up -d --wait
+```
+
+4. La primera vez, crea los esquemas y carga la semilla como explican `db/README.md` y `db/semilla/README.md`.
+5. Levanta la API y compruébala:
+
+```powershell
+docker compose --profile api up -d --wait --build
+```
+
+```powershell
+curl.exe http://127.0.0.1:3000/api/v1/salud
+```
+
+Para desarrollar, en lugar del contenedor puede usarse `npm run api` (reinicia al guardar). No uses los dos a la vez: ocupan el mismo puerto y solo debe haber una copia de la API.
+
+## Llegar desde el teléfono
+
+Abre el túnel y copia la dirección `https://….trycloudflare.com` que imprime. Mientras esté abierto, la API es accesible desde internet.
+
+```powershell
+cloudflared tunnel --url http://localhost:3000
+```
+
+## Comprobaciones
+
+```powershell
+npm run typecheck
+```
+
+Las pruebas de la API necesitan las tres bases levantadas:
+
+```powershell
+npm test
+```
+
+```powershell
+.\db\scripts\coherencia.ps1
+```

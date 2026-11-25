@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: API de Del Libro a la Pantalla
+  version: 0.1.0
+  description: >-
+    Contrato de la API (D-52). Solo describe las rutas ya construidas; la lista completa
+    planeada está en endpoints.md.
+servers:
+  - url: /api/v1
+paths:
+  /salud:
+    get:
+      operationId: salud
+      summary: Estado de la API y de cada base (EP-01)
+      security: []
+      responses:
+        '200':
+          description: >-
+            La API responde. Si alguna base no contesta, `estado` es `degradado` y la base aparece
+            como `caida`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Salud'
+              example:
+                estado: ok
+                api: ok
+                bases: { postgres: ok, mongo: ok, neo4j: ok }
+components:
+  securitySchemes:
+    sesion:
+      type: http
+      scheme: bearer
+      description: Token opaco de sesión (D-35).
+  schemas:
+    EstadoBase:
+      type: string
+      enum: [ok, caida]
+    Salud:
+      type: object
+      required: [estado, api, bases]
+      properties:
+        estado: { type: string, enum: [ok, degradado] }
+        api: { type: string, const: ok }
+        bases:
+          type: object
+          required: [postgres, mongo, neo4j]
+          properties:
+            postgres: { $ref: '#/components/schemas/EstadoBase' }
+            mongo: { $ref: '#/components/schemas/EstadoBase' }
+            neo4j: { $ref: '#/components/schemas/EstadoBase' }
+    Error:
+      type: object
+      description: Forma de todos los errores.
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [codigo, mensaje]
+          properties:
+            codigo:
+              type: string
+              enum:
+                - entrada_invalida
+                - sin_sesion
+                - sin_permiso
+                - no_encontrado
+                - conflicto
+                - demasiado_grande
+                - error_interno
+                - base_no_disponible
+            mensaje: { type: string }
+            campos:
+              type: object
+              additionalProperties: { type: string }

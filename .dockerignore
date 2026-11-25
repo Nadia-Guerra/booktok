@@ -1,0 +1,8 @@
+# Solo se envía a Docker lo que la imagen de la API necesita.
+**
+!package.json
+!package-lock.json
+!shared/package.json
+!shared/src/**
+!backend/package.json
+!backend/src/**

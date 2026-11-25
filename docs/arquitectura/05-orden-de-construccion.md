@@ -32,6 +32,8 @@ Tamaño relativo, no en días: **S** pequeño, **M** mediano, **L** grande.
 
 Todos los RF aparecen en algún bloque. El bloque 0 no es opcional, y el 8 tampoco.
 
+**Cambio posterior (D-59):** el servicio de Administración del bloque 2 no se construye para la demo mínima; el catálogo sale de la semilla.
+
 ### Dependencias
 
 ```mermaid

@@ -1,0 +1,26 @@
+{
+  "name": "@dlbp/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=../.env --watch src/servidor.ts",
+    "start": "node src/servidor.ts",
+    "test": "node --env-file=../.env --test --test-concurrency=1 \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@dlbp/shared": "0.1.0",
+    "express": "^5.3.0",
+    "mongodb": "^7.9.1",
+    "neo4j-driver": "^6.3.2",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "typescript": "~6.0.3"
+  }
+}

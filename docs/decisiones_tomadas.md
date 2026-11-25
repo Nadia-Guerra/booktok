@@ -62,6 +62,10 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 | D-56 | Una obra en borrador no se reseña, marca ni lista, y no aparece en los resultados del grafo | 2026-11-24 |
 | D-57 | Paginación de 20, reseña de hasta 3000 caracteres y contraseña de al menos 8 | 2026-11-24 |
 | D-58 | Un alta que falla a medias responde 503 con el id creado y se completa sin repetirla | 2026-11-24 |
+| D-59 | Primero 19 endpoints, luego 41 y, si sobra tiempo, los 51; el alta de obras espera | 2026-11-24 |
+| D-60 | La API usa Express 5 | 2026-11-24 |
+| D-61 | Las contraseñas se guardan con bcrypt | 2026-11-24 |
+| D-62 | El HTTPS de desarrollo y de la demo es un túnel rápido de Cloudflare | 2026-11-24 |
 
 ---
 
@@ -980,3 +984,48 @@ Termina con código 1 si falló algún paso. `-SinPruebas` omite el paso 4.
 **Alternativas descartadas.** Responder éxito con la obra en borrador (oculta el fallo) o que la app genere el id (contradice D-11).
 **Costo que se acepta.** Hace falta una forma de completar la publicación. Si se recorta ese endpoint, lo hace el script de reconciliación (D-10).
 **Dónde.** `api/endpoints.md` (flujo F8).
+
+---
+
+## D-59. Primero 19 endpoints, luego 41 y, si sobra tiempo, los 51; el alta de obras espera
+
+**Contexto.** La lista de `api/endpoints.md` tiene 51 endpoints y el plazo no alcanza con seguridad para todos con sus pantallas.
+**Decisión.**
+- **Demo:** los 19 de `api/endpoints.md` (sección 2.11).
+- **Si se puede:** 41, es decir, todos menos EP-24, 38, 42, 44, 45, 47, 48, 49, 50 y 51.
+- **Solo si sobra tiempo:** los 51.
+- Los 19 se construyen en seis etapas: cimientos, cuentas, catálogo, reseñas y estados, worker y seguir, descubrimiento.
+- El servicio de Administración (alta de obras) **no** se construye para la demo: el catálogo sale de la semilla.
+
+**Alternativa descartada.** Hacer el alta por script junto al catálogo, como proponía `arquitectura/05-orden-de-construccion.md` (bloque 2): es lo más largo del bloque y la demo no lo necesita.
+**Costo que se acepta.** La demo mínima no muestra cómo se registra una obra (RF-08, RF-10 y RF-11); llega con el tramo de los 41.
+**Dónde.** `api/endpoints.md`, `arquitectura/05-orden-de-construccion.md` y `AGENTS.md`.
+
+---
+
+## D-60. La API usa Express 5
+
+**Contexto.** D-32 eligió Express sin fijar versión.
+**Decisión.** Express 5.
+**Alternativa descartada.** Express 4: hay que envolver cada ruta asíncrona para que el error llegue al manejador.
+**Dónde.** `backend/package.json`.
+
+---
+
+## D-61. Las contraseñas se guardan con bcrypt
+
+**Contexto.** D-35 dejaba la elección entre Argon2id y bcrypt, y la semilla ya usa hashes `$2a$10$` (D-44).
+**Decisión.** bcrypt con coste 10.
+**Alternativa descartada.** Argon2id: obliga a regenerar los 8 hashes de la semilla y a recargar las bases.
+**Costo que se acepta.** bcrypt solo considera los primeros 72 bytes de la contraseña.
+**Dónde.** `backend/` (servicio de Cuentas).
+
+---
+
+## D-62. El HTTPS de desarrollo y de la demo es un túnel rápido de Cloudflare
+
+**Contexto.** D-30 pedía un túnel y dejaba abierta la herramienta.
+**Decisión.** `cloudflared` en modo rápido (`cloudflared tunnel --url http://localhost:3000`).
+**Alternativa descartada.** ngrok: exige crear una cuenta.
+**Costo que se acepta.** La dirección cambia en cada arranque, así que la app permite escribirla; mientras el túnel está abierto, la API es accesible desde internet para quien conozca la dirección.
+**Dónde.** `README.md` y la pantalla de configuración de la app.
