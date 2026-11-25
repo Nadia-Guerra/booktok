@@ -1,11 +1,13 @@
 // Utilidades comunes de las pruebas por HTTP.
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { readFileSync } from 'node:fs';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { cuerpoError, respuestaSesion } from '@dlbp/shared';
+import { cuerpoError, respuestaRegistro, respuestaSesion } from '@dlbp/shared';
 import { crearApp } from '../src/app.ts';
+import { pool } from '../src/bases/postgres.ts';
 
 export async function levantarApi() {
   const servidor: Server = crearApp().listen(0, '127.0.0.1');
@@ -31,7 +33,27 @@ export async function levantarApi() {
 
   const salir = (token: string) => pedir('DELETE', '/auth/sesion', { token });
 
-  return { pedir, entrarComo, salir, cerrar: () => servidor.close() };
+  const creados: string[] = [];
+
+  /** Registra un lector de prueba y abre su sesión. `borrarLectores` lo elimina al terminar. */
+  async function crearLector(nombre = 'Lector de prueba') {
+    const credenciales = { correo: `prueba-${randomUUID()}@ejemplo.test`, password: `clave-${randomUUID()}` };
+    const alta = await pedir('POST', '/auth/registro', { cuerpo: { ...credenciales, nombre } });
+    assert.equal(alta.status, 201);
+    const { usuario_id } = respuestaRegistro.parse(await alta.json());
+    creados.push(usuario_id);
+    const entrada = await pedir('POST', '/auth/sesion', { cuerpo: credenciales });
+    assert.equal(entrada.status, 201);
+    return { usuario_id, token: respuestaSesion.parse(await entrada.json()).token };
+  }
+
+  /** Borra solo lo creado por la prueba: la cascada quita reseñas, estados y seguimientos. */
+  async function borrarLectores() {
+    await pool.query(`DELETE FROM sync_outbox WHERE payload->>'usuario_id' = ANY($1)`, [creados]);
+    await pool.query('DELETE FROM usuario WHERE usuario_id = ANY($1::uuid[])', [creados]);
+  }
+
+  return { pedir, entrarComo, salir, crearLector, borrarLectores, cerrar: () => servidor.close() };
 }
 
 /** La contraseña de prueba solo vive en el README de la semilla: se lee de ahí y no se copia. */

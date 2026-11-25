@@ -207,8 +207,185 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
         '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /resenas:
+    get:
+      operationId: listarResenas
+      summary: Reseñas de una obra o de un usuario (EP-10, O17)
+      description: >-
+        Las recientes primero. Se indica `obra_id` o `usuario_id`, uno de los dos. Por obra es
+        pública. Por usuario exige sesión y seguirlo (salvo las propias y el administrador). Las
+        ocultas solo las ve el administrador.
+      security: [{}, { sesion: [] }]
+      parameters:
+        - { name: obra_id, in: query, schema: { type: string, format: uuid } }
+        - { name: usuario_id, in: query, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Una página. `siguiente` es nulo en la última.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [resenas, siguiente]
+                properties:
+                  resenas:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/MiResena'
+                        - type: object
+                          required: [autor, obra]
+                          properties:
+                            autor:
+                              type: object
+                              required: [usuario_id, nombre]
+                              properties:
+                                usuario_id: { type: string, format: uuid }
+                                nombre: { type: string }
+                            obra: { $ref: '#/components/schemas/ObraBreve' }
+                  siguiente: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /obras/{obra_id}/resena:
+    put:
+      operationId: publicarResena
+      summary: Publicar la reseña propia, o editarla si ya existe (EP-11, O7 y O8)
+      description: >-
+        Publicar marca la obra como terminada en la misma transacción. Se envía siempre el texto
+        completo: si falta, la reseña queda sin texto.
+      security: [{ sesion: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/ObraId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [calificacion]
+              properties:
+                calificacion: { type: integer, minimum: 1, maximum: 5 }
+                texto: { type: [string, 'null'], maxLength: 3000 }
+      responses:
+        '201':
+          description: Publicada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Publicacion' }
+        '200':
+          description: Editada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Publicacion' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /resenas/{resena_id}:
+    delete:
+      operationId: eliminarResena
+      summary: Eliminar una reseña (EP-13, O9 y O10)
+      description: La borra su autor o el administrador. El estado de la obra no cambia.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: resena_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Eliminada. }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/estados/{obra_id}:
+    put:
+      operationId: marcarEstado
+      summary: Marcar el estado de una obra (EP-14, O11)
+      security: [{ sesion: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/ObraId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [estado]
+              properties:
+                estado: { $ref: '#/components/schemas/EstadoLectura' }
+      responses:
+        '200':
+          description: Guardado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [obra_id, estado, actualizado_en]
+                properties:
+                  obra_id: { type: string, format: uuid }
+                  estado: { $ref: '#/components/schemas/EstadoLectura' }
+                  actualizado_en: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/estados:
+    get:
+      operationId: misEstados
+      summary: Mis obras y su estado (EP-15, O17)
+      description: Las cambiadas más recientemente primero.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: estado, in: query, schema: { $ref: '#/components/schemas/EstadoLectura' } }
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Una página. `siguiente` es nulo en la última.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [estados, siguiente]
+                properties:
+                  estados:
+                    type: array
+                    items:
+                      type: object
+                      required: [obra, estado, actualizado_en]
+                      properties:
+                        obra: { $ref: '#/components/schemas/ObraBreve' }
+                        estado: { $ref: '#/components/schemas/EstadoLectura' }
+                        actualizado_en: { type: string, format: date-time }
+                  siguiente: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
 components:
+  parameters:
+    ObraId:
+      { name: obra_id, in: path, required: true, schema: { type: string, format: uuid } }
+    Limite:
+      { name: limite, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+    Cursor:
+      name: cursor
+      in: query
+      description: El `siguiente` de la página anterior, sin modificar.
+      schema: { type: string }
   responses:
+    SinPermiso:
+      description: Hay sesión, pero no permiso.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NoEncontrado:
+      description: No existe, es de otro usuario o no es visible.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
     EntradaInvalida:
       description: Entrada inválida; `campos` dice qué falla.
       content:
@@ -361,6 +538,16 @@ components:
               oneOf:
                 - $ref: '#/components/schemas/ObraBreve'
                 - type: 'null'
+    EstadoLectura:
+      type: string
+      enum: [pendiente, en_curso, terminada]
+    Publicacion:
+      type: object
+      required: [resena_id, promedio, total_resenas]
+      properties:
+        resena_id: { type: string, format: uuid }
+        promedio: { type: [number, 'null'] }
+        total_resenas: { type: integer }
     EstadoBase:
       type: string
       enum: [ok, caida]

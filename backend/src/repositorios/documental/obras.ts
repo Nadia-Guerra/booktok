@@ -85,6 +85,16 @@ export async function buscarPorTitulo(texto: string, incluirBorradores: boolean,
     .map((r) => r.obra);
 }
 
+/** AP-05: si la obra existe y está publicada. */
+export async function estaPublicada(id: string): Promise<boolean> {
+  const filtro = { _id: id, estado_publicacion: 'publicada' as const };
+  const [libro, pelicula] = await Promise.all([
+    libros.countDocuments(filtro, { limit: 1 }),
+    peliculas.countDocuments(filtro, { limit: 1 }),
+  ]);
+  return libro + pelicula > 0;
+}
+
 /** AP-04: datos de presentación de varias obras, en el orden pedido. Omite las que no se pueden ver. */
 export async function obrasBreves(ids: string[], incluirBorradores: boolean): Promise<ObraBreve[]> {
   if (ids.length === 0) return [];

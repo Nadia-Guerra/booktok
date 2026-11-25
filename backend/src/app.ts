@@ -4,6 +4,7 @@ import type { RequestHandler, Router } from 'express';
 import { manejadorDeErrores, rutaNoEncontrada } from './errores.ts';
 import { rutasCatalogo } from './rutas/catalogo.ts';
 import { rutasCuentas } from './rutas/cuentas.ts';
+import { rutasResenas } from './rutas/resenas.ts';
 import { rutasSalud } from './rutas/salud.ts';
 
 // Registra método, ruta, estado y duración. Nunca cuerpos, cabeceras ni la cadena de consulta.
@@ -14,7 +15,7 @@ const registro: RequestHandler = (req, res, next) => {
   next();
 };
 
-export function crearApp(rutas: Router[] = [rutasSalud, rutasCuentas, rutasCatalogo]) {
+export function crearApp(rutas: Router[] = [rutasSalud, rutasCuentas, rutasCatalogo, rutasResenas]) {
   const app = express();
   app.disable('x-powered-by');
   app.use(registro);
