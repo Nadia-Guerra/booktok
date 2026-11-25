@@ -58,7 +58,7 @@ Abre el túnel y copia la dirección `https://….trycloudflare.com` que imprime
 cloudflared tunnel --url http://localhost:3000
 ```
 
-Arranca la app y abre el código QR con Expo Go (teléfono y computadora en la misma red). En la pantalla, pega la dirección del túnel.
+Arranca la app y abre el código QR con Expo Go (teléfono y computadora en la misma red). En la app, entra en **Perfil → Conexión con la API**, pega la dirección del túnel y toca **Guardar y probar**.
 
 ```powershell
 npm run app

@@ -66,6 +66,7 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 | D-60 | La API usa Express 5 | 2026-11-24 |
 | D-61 | Las contraseñas se guardan con bcrypt | 2026-11-24 |
 | D-62 | El HTTPS de desarrollo y de la demo es un túnel rápido de Cloudflare | 2026-11-24 |
+| D-63 | Librerías y diseño base de la app: NativeWind, Poppins, React Navigation y TanStack Query | 2026-11-25 |
 
 ---
 
@@ -1029,3 +1030,19 @@ Termina con código 1 si falló algún paso. `-SinPruebas` omite el paso 4.
 **Alternativa descartada.** ngrok: exige crear una cuenta.
 **Costo que se acepta.** La dirección cambia en cada arranque, así que la app permite escribirla; mientras el túnel está abierto, la API es accesible desde internet para quien conozca la dirección.
 **Dónde.** `README.md` y la pantalla de configuración de la app.
+
+---
+
+## D-63. Librerías y diseño base de la app
+
+**Contexto.** D-32 fijó Expo y TypeScript, pero no cómo se estiliza, navega ni se cargan datos en la app.
+**Decisión.**
+- Estilos con Tailwind a través de NativeWind 4 (Tailwind 3). Sin `StyleSheet` propio.
+- Fuente Poppins.
+- Navegación con React Navigation; lectura y caché de datos con TanStack Query; iconos de `@expo/vector-icons`.
+- Colores y nombres de fuente globales en `frontend/src/core/tema/tokens.js`; la familia, en `fuentes.ts`.
+- Código dividido en `core`, `api`, `hooks`, `componentes`, `vistas` y `navegacion`.
+
+**Alternativa descartada.** NativeWind 5 (Tailwind 4): todavía es una versión candidata.
+**Costo que se acepta.** Más dependencias que mantener; `tokens.js` es JavaScript porque también lo lee la configuración de Tailwind.
+**Dónde.** `frontend/`.
