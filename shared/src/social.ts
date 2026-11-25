@@ -21,3 +21,11 @@ export type SeguirEntrada = z.infer<typeof seguirEntrada>;
 export type RespuestaSeguir = z.infer<typeof respuestaSeguir>;
 export type ListaBreve = z.infer<typeof listaBreve>;
 export type PerfilDeOtro = z.infer<typeof perfilDeOtro>;
+
+export const usuarioBreve = z.object({ usuario_id: z.guid(), nombre: z.string() });
+
+/** EP-21: a quién sigo y quién me sigue, lo más reciente primero. */
+export const redPropia = z.object({ seguidos: z.array(usuarioBreve), seguidores: z.array(usuarioBreve) });
+
+export type UsuarioBreve = z.infer<typeof usuarioBreve>;
+export type RedPropia = z.infer<typeof redPropia>;

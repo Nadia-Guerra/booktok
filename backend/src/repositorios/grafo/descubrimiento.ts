@@ -9,10 +9,10 @@ const CG08 = consultaCypher('CG-08');
 const CG09 = consultaCypher('CG-09');
 
 /**
- * D-41: el texto de CG-01 es sintaxis Lucene. Se quitan sus caracteres especiales y se pasa a
+ * D-41: el texto de CG-01 y CG-02 es sintaxis Lucene. Se quitan sus caracteres especiales y se pasa a
  * minúsculas, para que `AND`, `OR` y `NOT` sean palabras corrientes.
  */
-function textoLucene(texto: string): string {
+export function textoLucene(texto: string): string {
   return texto
     .replace(/[+\-&|!(){}[\]^"~*?:\\/<>=]/g, ' ')
     .toLowerCase()

@@ -20,11 +20,13 @@ const ESTADOS: Record<CodigoError, number> = {
 export class ErrorApi extends Error {
   readonly codigo: CodigoError;
   readonly campos: Record<string, string> | undefined;
+  readonly obraId: string | undefined;
 
-  constructor(codigo: CodigoError, mensaje: string, campos?: Record<string, string>) {
+  constructor(codigo: CodigoError, mensaje: string, campos?: Record<string, string>, obraId?: string) {
     super(mensaje);
     this.codigo = codigo;
     this.campos = campos;
+    this.obraId = obraId;
   }
 }
 
@@ -84,7 +86,12 @@ export const manejadorDeErrores: ErrorRequestHandler = (e, req, res, next) => {
     console.error(`${req.method} ${req.path} -> ${error.codigo} (${name ?? 'error'} ${String(code ?? '')})\n${pila}`);
   }
   const cuerpo: CuerpoError = {
-    error: { codigo: error.codigo, mensaje: error.message, ...(error.campos && { campos: error.campos }) },
+    error: {
+      codigo: error.codigo,
+      mensaje: error.message,
+      ...(error.campos && { campos: error.campos }),
+      ...(error.obraId && { obra_id: error.obraId }),
+    },
   };
   res.status(ESTADOS[error.codigo]).json(cuerpo);
 };

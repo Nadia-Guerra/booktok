@@ -39,3 +39,11 @@ export async function resenaDe(usuarioId: string, obraId: string): Promise<MiRes
     ? { ...f, creado_en: f.creado_en.toISOString(), actualizado_en: f.actualizado_en.toISOString() }
     : null;
 }
+
+/** O5: la obra entra al relacional. Repetirlo no hace nada. */
+export async function registrar(obraId: string, tipo: TipoObra): Promise<void> {
+  await pool.query('INSERT INTO obra_resumen (obra_id, tipo) VALUES ($1, $2) ON CONFLICT (obra_id) DO NOTHING', [
+    obraId,
+    tipo,
+  ]);
+}

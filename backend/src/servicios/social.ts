@@ -1,5 +1,5 @@
 // Red social (RF-21 y RF-22; D-54).
-import type { PerfilDeOtro, RespuestaSeguir } from '@dlbp/shared';
+import type { PerfilDeOtro, RedPropia, RespuestaSeguir } from '@dlbp/shared';
 import { ErrorApi } from '../errores.ts';
 import * as social from '../repositorios/relacional/social.ts';
 import type { SesionActual } from './cuentas.ts';
@@ -30,4 +30,8 @@ export async function verUsuario(sesion: SesionActual, usuarioId: string): Promi
   const loSigo = await social.sigue(sesion.usuarioId, usuarioId);
   const veListas = loSigo || sesion.usuarioId === usuarioId;
   return { ...perfil, lo_sigo: loSigo, ...(veListas && { listas: await social.listasDe(usuarioId) }) };
+}
+
+export function miRed(sesion: SesionActual): Promise<RedPropia> {
+  return social.red(sesion.usuarioId);
 }

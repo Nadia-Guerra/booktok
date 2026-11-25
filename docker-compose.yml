@@ -19,6 +19,9 @@ services:
     container_name: dlbp-postgres
     profiles: ["postgres", "todas"]
     restart: unless-stopped
+    # Un proceso inicial propio recoge los huérfanos (por ejemplo, una comprobación de salud vencida):
+    # sin él, PostgreSQL es el proceso 1, los toma por suyos y corta todas las conexiones.
+    init: true
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?falta POSTGRES_USER en .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD en .env}

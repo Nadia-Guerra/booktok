@@ -21,6 +21,11 @@ rutasSocial.delete('/me/seguidos/:usuario_id', exigirSesion, async (req, res) =>
   res.status(204).end();
 });
 
+// EP-21
+rutasSocial.get('/me/seguimientos', exigirSesion, async (_req, res) => {
+  res.json(await social.miRed(sesionDe(res)));
+});
+
 // EP-22
 rutasSocial.get('/usuarios/:usuario_id', exigirSesion, async (req, res) => {
   const { usuario_id } = parametrosUsuario.parse(req.params);

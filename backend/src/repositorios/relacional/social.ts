@@ -1,4 +1,5 @@
 // Seguimiento y lo que se ve de otro usuario en PostgreSQL (O15, O16 y las lecturas de O17).
+import type { RedPropia } from '@dlbp/shared';
 import { anotarEvento, enTransaccion, pool } from '../../bases/postgres.ts';
 
 export async function sigue(seguidorId: string, seguidoId: string): Promise<boolean> {
@@ -56,4 +57,23 @@ export async function listasDe(usuarioId: string): Promise<{ lista_id: string; n
     [usuarioId],
   );
   return r.rows;
+}
+
+/** O17: a quién sigue un usuario y quién lo sigue, lo más reciente primero. */
+export async function red(usuarioId: string): Promise<RedPropia> {
+  const consulta = (propia: string, otra: string) =>
+    pool.query(
+      `SELECT u.usuario_id, u.nombre
+       FROM seguimiento s
+       JOIN usuario u ON u.usuario_id = s.${otra}
+       WHERE s.${propia} = $1
+       ORDER BY s.creado_en DESC, u.usuario_id`,
+      [usuarioId],
+    );
+  // Los nombres de columna son textos fijos de aquí, nunca de la petición.
+  const [seguidos, seguidores] = await Promise.all([
+    consulta('seguidor_id', 'seguido_id'),
+    consulta('seguido_id', 'seguidor_id'),
+  ]);
+  return { seguidos: seguidos.rows, seguidores: seguidores.rows };
 }

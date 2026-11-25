@@ -2,10 +2,12 @@
 import express from 'express';
 import type { RequestHandler, Router } from 'express';
 import { manejadorDeErrores, rutaNoEncontrada } from './errores.ts';
+import { rutasAdministracion } from './rutas/administracion.ts';
 import { rutasCatalogo } from './rutas/catalogo.ts';
 import { rutasComparativas } from './rutas/comparativas.ts';
 import { rutasCuentas } from './rutas/cuentas.ts';
 import { rutasDescubrimiento } from './rutas/descubrimiento.ts';
+import { rutasListas } from './rutas/listas.ts';
 import { rutasResenas } from './rutas/resenas.ts';
 import { rutasSalud } from './rutas/salud.ts';
 import { rutasSocial } from './rutas/social.ts';
@@ -18,7 +20,7 @@ const registro: RequestHandler = (req, res, next) => {
   next();
 };
 
-const RUTAS = [rutasSalud, rutasCuentas, rutasCatalogo, rutasResenas, rutasSocial, rutasDescubrimiento, rutasComparativas];
+const RUTAS = [rutasSalud, rutasCuentas, rutasCatalogo, rutasResenas, rutasSocial, rutasDescubrimiento, rutasComparativas, rutasListas, rutasAdministracion];
 
 export function crearApp(rutas: Router[] = RUTAS) {
   const app = express();
