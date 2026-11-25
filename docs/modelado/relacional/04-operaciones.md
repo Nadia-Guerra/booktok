@@ -162,6 +162,7 @@ WHERE s.token_hash = :hash
 | Perfil de un usuario | RF-22 | `usuario` | Clave primaria |
 | Estado que el usuario dio a una obra concreta (para mostrarlo en la ficha) | RF-15 | `estado_obra` | Clave primaria |
 | Reseña del usuario sobre una obra concreta (para editarla o saber si ya reseñó) | RF-14 | `resena` | UNIQUE (`usuario_id`, `obra_id`) |
+| Reseñas de una obra incluidas las ocultas, solo administrador (D-55; aún sin probar) | RF-18 | `resena` | I1 |
 
 Las listas y reseñas de otros usuarios las muestra la API a quien los sigue; la base no impone esa visibilidad.
 

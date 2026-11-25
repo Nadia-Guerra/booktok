@@ -57,6 +57,11 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 | D-51 | El catálogo del Entregable 5 se genera desde una fuente escrita a mano y la evidencia guardada | 2026-11-24 |
 | D-52 | La API es REST, versionada en `/api/v1` y documentada con OpenAPI | 2026-11-24 |
 | D-53 | El código se organiza en `backend/`, `frontend/` y `shared/` | 2026-11-24 |
+| D-54 | Qué se ve de otro usuario; sin buscador de usuarios ni listado de novedades | 2026-11-24 |
+| D-55 | El administrador ve las reseñas ocultas de una obra | 2026-11-24 |
+| D-56 | Una obra en borrador no se reseña, marca ni lista, y no aparece en los resultados del grafo | 2026-11-24 |
+| D-57 | Paginación de 20, reseña de hasta 3000 caracteres y contraseña de al menos 8 | 2026-11-24 |
+| D-58 | Un alta que falla a medias responde 503 con el id creado y se completa sin repetirla | 2026-11-24 |
 
 ---
 
@@ -916,3 +921,62 @@ Termina con código 1 si falló algún paso. `-SinPruebas` omite el paso 4.
 **Decisión.** `backend/` (API, worker y reconciliación), `frontend/` (app Android con Expo) y `shared/` (esquemas Zod y tipos que usan las dos, D-37). `db/` y `docs/` no cambian.
 **Alternativa descartada.** `api/`, `app/` y la carpeta compartida: habría que borrar las carpetas ya creadas y se aleja de la estructura que sugiere la guía (sección 10).
 **Dónde.** `AGENTS.md` y `arquitectura/05-orden-de-construccion.md` (bloque 0).
+
+---
+
+## D-54. Qué se ve de otro usuario, y no hay buscador de usuarios ni listado de novedades
+
+**Contexto.** Al recorrer los flujos de la aplicación (`api/endpoints.md`) se vio que ningún requerimiento permite buscar usuarios, que RF-22 reserva perfiles, reseñas y listas a quien sigue (aunque las reseñas ya son públicas en cada ficha) y que D-06 mencionaba un "feed" que ningún requerimiento pide.
+**Decisión.**
+- Cualquier usuario con sesión ve el perfil básico de otro (nombre y biografía), para poder decidir si lo sigue. Sus listas y su historial de reseñas, solo si lo sigue.
+- No hay buscador de usuarios: se llega a un perfil desde el nombre del autor de una reseña o de una comparativa.
+- No hay listado de novedades de los seguidos: RF-22 se cumple entrando a cada perfil.
+
+**Alternativas descartadas.** Un buscador de usuarios o un feed: son alcance nuevo.
+**Costo que se acepta.** Solo se puede seguir a quien haya publicado algo que se haya visto. Para la demo, la semilla debe dar ese camino.
+**Dónde.** `api/endpoints.md` (secciones 2.5 y 6).
+
+---
+
+## D-55. El administrador ve las reseñas ocultas de una obra
+
+**Contexto.** O17 solo lista reseñas no ocultas, así que una reseña ocultada por error no se podía volver a encontrar para mostrarla (RF-18).
+**Decisión.** Hay una consulta de las reseñas de una obra incluidas las ocultas, solo para el rol `admin`.
+**Alternativa descartada.** Dejar la moderación sin vuelta atrás desde la aplicación.
+**Dónde.** `modelado/relacional/04-operaciones.md` (O17) y `api/endpoints.md`.
+
+---
+
+## D-56. Una obra en borrador no se reseña, marca ni agrega a listas, y no aparece en los resultados del grafo
+
+**Contexto.** Los documentos ocultan los borradores del catálogo, pero no decían si se podía reseñar uno, y el grafo no sabe qué está publicado.
+**Decisión.**
+- La API responde 404 al reseñar, marcar el estado o agregar a una lista una obra en borrador, como ya se hace con las comparativas.
+- Los caminos y las recomendaciones que incluyan una obra en borrador se descartan de la respuesta antes de enviarla a un lector.
+
+**Alternativa descartada.** Mostrarlos sin título o permitir actividad sobre obras que el usuario no puede ver.
+**Costo que se acepta.** Una consulta a la ficha antes de esas escrituras y un filtro en la API.
+**Dónde.** `api/endpoints.md`.
+
+---
+
+## D-57. Paginación de 20, reseña de hasta 3000 caracteres y contraseña de al menos 8
+
+**Contexto.** Ningún documento fijaba el tamaño de página, el máximo del texto de una reseña ni las reglas de la contraseña.
+**Decisión.**
+- Los listados largos devuelven 20 elementos por defecto y se paginan con un cursor por fecha.
+- El texto de una reseña tiene como máximo 3000 caracteres, el mismo límite que una sinopsis. Lo valida la API; la columna sigue siendo `TEXT`.
+- La contraseña tiene al menos 8 caracteres. Lo valida la API.
+
+**Alternativas descartadas.** Paginar por número de página (se desplaza al publicarse reseñas nuevas); no poner límites.
+**Dónde.** `api/endpoints.md` y los esquemas de `shared/` cuando existan.
+
+---
+
+## D-58. Un alta que falla a medias responde 503 con el id creado y se completa sin repetirla
+
+**Contexto.** El alta de una obra escribe en las tres bases sin transacción común (D-24) y la API genera los ids (D-11): repetir el envío crearía otra obra.
+**Decisión.** Si la ficha ya se creó y un paso posterior falla, la API responde 503 con el `obra_id`, y la obra queda en `borrador`. La app no repite el alta: pide completar la publicación de ese id.
+**Alternativas descartadas.** Responder éxito con la obra en borrador (oculta el fallo) o que la app genere el id (contradice D-11).
+**Costo que se acepta.** Hace falta una forma de completar la publicación. Si se recorta ese endpoint, lo hace el script de reconciliación (D-10).
+**Dónde.** `api/endpoints.md` (flujo F8).
