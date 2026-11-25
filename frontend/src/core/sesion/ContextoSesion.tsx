@@ -14,12 +14,17 @@ type Sesion = {
   iniciar: (respuesta: RespuestaSesion) => Promise<void>;
   /** Olvida la sesión en el teléfono. */
   olvidar: () => Promise<void>;
+  /** Refleja un perfil recién editado. */
+  actualizar: (usuario: PerfilPropio) => void;
   reintentar: () => void;
 };
 
 const Contexto = createContext<Sesion | null>(null);
 
 const CLAVE_PERFIL = ['yo'] as const;
+
+/** Lo que ya está en pantalla se vuelve a pedir: la respuesta cambia según quién pregunta. */
+const sinPerfil = { predicate: (q: { queryKey: readonly unknown[] }) => q.queryKey[0] !== CLAVE_PERFIL[0] };
 
 export function ProveedorSesion({ children }: { children: ReactNode }) {
   const consultas = useQueryClient();
@@ -30,7 +35,9 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
     configurarSesion(null, () => {});
     setToken(null);
     await borrarToken();
-    consultas.clear(); // nada de una cuenta puede verse en la siguiente
+    // Nada de una cuenta puede verse en la siguiente.
+    consultas.removeQueries({ queryKey: CLAVE_PERFIL });
+    await consultas.resetQueries(sinPerfil);
   }, [consultas]);
 
   useEffect(() => {
@@ -45,12 +52,17 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
   const iniciar = useCallback(
     async ({ token: nuevo, usuario }: RespuestaSesion) => {
       await guardarToken(nuevo);
-      consultas.clear();
       configurarSesion(nuevo, () => void olvidar());
       consultas.setQueryData(CLAVE_PERFIL, usuario);
       setToken(nuevo);
+      void consultas.resetQueries(sinPerfil);
     },
     [consultas, olvidar],
+  );
+
+  const actualizar = useCallback(
+    (usuario: PerfilPropio) => consultas.setQueryData(CLAVE_PERFIL, usuario),
+    [consultas],
   );
 
   const sesion = useMemo<Sesion>(() => {
@@ -67,9 +79,10 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
       esAdmin: usuario?.rol === 'admin',
       iniciar,
       olvidar,
+      actualizar,
       reintentar: () => void perfil.refetch(),
     };
-  }, [token, perfil, iniciar, olvidar]);
+  }, [token, perfil, iniciar, olvidar, actualizar]);
 
   return <Contexto.Provider value={sesion}>{children}</Contexto.Provider>;
 }

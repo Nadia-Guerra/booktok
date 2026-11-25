@@ -14,6 +14,11 @@ const colores = {
   peligro: '#A4262C',
   exito: '#2E6B45',
   estrella: '#D9A14A',
+  // Fondos de las portadas y retratos generados cuando no hay imagen.
+  'portada-1': '#2F5D50',
+  'portada-2': '#7A3E48',
+  'portada-3': '#35507A',
+  'portada-4': '#8C5A2B',
 };
 
 // Nombres propios, no de la familia: para cambiar de fuente basta con editar fuentes.ts.

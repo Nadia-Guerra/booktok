@@ -11,6 +11,9 @@ export type PestanasParams = {
 export type RaizParams = {
   Pestanas: NavigatorScreenParams<PestanasParams> | undefined;
   Conexion: undefined;
+  Acceso: undefined;
+  EditarPerfil: undefined;
+  Ficha: { obraId: string };
 };
 
 export type PropsDeRaiz<R extends keyof RaizParams> = NativeStackScreenProps<RaizParams, R>;

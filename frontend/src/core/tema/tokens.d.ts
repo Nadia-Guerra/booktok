@@ -10,7 +10,11 @@ export type Color =
   | 'borde'
   | 'peligro'
   | 'exito'
-  | 'estrella';
+  | 'estrella'
+  | 'portada-1'
+  | 'portada-2'
+  | 'portada-3'
+  | 'portada-4';
 
 export const colores: Record<Color, string>;
 
