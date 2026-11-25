@@ -26,13 +26,157 @@ paths:
                 estado: ok
                 api: ok
                 bases: { postgres: ok, mongo: ok, neo4j: ok }
+  /auth/registro:
+    post:
+      operationId: registrar
+      summary: Registrar un lector (EP-02, O1)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correo, password, nombre]
+              properties:
+                correo:
+                  type: string
+                  format: email
+                  maxLength: 254
+                  description: Se recorta y se pasa a minúsculas.
+                password: { type: string, minLength: 8 }
+                nombre: { type: string, minLength: 1, maxLength: 100 }
+      responses:
+        '201':
+          description: Cuenta creada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [usuario_id]
+                properties:
+                  usuario_id: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /auth/sesion:
+    post:
+      operationId: iniciarSesion
+      summary: Iniciar sesión (EP-03, O2)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correo, password]
+              properties:
+                correo: { type: string, format: email }
+                password: { type: string, minLength: 1 }
+      responses:
+        '201':
+          description: Sesión abierta. El token solo se entrega aquí y vence a los 30 días.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, expira_en, usuario]
+                properties:
+                  token: { type: string }
+                  expira_en: { type: string, format: date-time }
+                  usuario: { $ref: '#/components/schemas/Perfil' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401':
+          description: El correo o la contraseña no coinciden (la respuesta es la misma en ambos casos).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    delete:
+      operationId: cerrarSesion
+      summary: Cerrar la sesión actual (EP-04, O23)
+      security: [{ sesion: [] }]
+      responses:
+        '204': { description: Sesión cerrada. }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me:
+    get:
+      operationId: verPerfilPropio
+      summary: Perfil propio (EP-05, O22 y O17)
+      security: [{ sesion: [] }]
+      responses:
+        '200':
+          description: Perfil del dueño de la sesión.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Perfil' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    patch:
+      operationId: editarPerfil
+      summary: Editar nombre y biografía (EP-06, O3)
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                nombre: { type: string, minLength: 1, maxLength: 100 }
+                biografia:
+                  type: [string, 'null']
+                  maxLength: 500
+                  description: Nula o vacía la borra.
+      responses:
+        '200':
+          description: Perfil ya actualizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Perfil' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
 components:
+  responses:
+    EntradaInvalida:
+      description: Entrada inválida; `campos` dice qué falla.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    SinSesion:
+      description: Falta el token, no es válido o la sesión venció.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflicto:
+      description: El dato ya existe (por ejemplo, el correo).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    BaseNoDisponible:
+      description: Una base no responde; se puede reintentar.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
   securitySchemes:
     sesion:
       type: http
       scheme: bearer
       description: Token opaco de sesión (D-35).
   schemas:
+    Perfil:
+      type: object
+      required: [usuario_id, correo, nombre, biografia, rol]
+      properties:
+        usuario_id: { type: string, format: uuid }
+        correo: { type: string, format: email }
+        nombre: { type: string }
+        biografia: { type: [string, 'null'] }
+        rol: { type: string, enum: [lector, admin] }
     EstadoBase:
       type: string
       enum: [ok, caida]
