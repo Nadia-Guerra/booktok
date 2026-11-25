@@ -2,6 +2,7 @@
 import express from 'express';
 import type { RequestHandler, Router } from 'express';
 import { manejadorDeErrores, rutaNoEncontrada } from './errores.ts';
+import { rutasCatalogo } from './rutas/catalogo.ts';
 import { rutasCuentas } from './rutas/cuentas.ts';
 import { rutasSalud } from './rutas/salud.ts';
 
@@ -13,7 +14,7 @@ const registro: RequestHandler = (req, res, next) => {
   next();
 };
 
-export function crearApp(rutas: Router[] = [rutasSalud, rutasCuentas]) {
+export function crearApp(rutas: Router[] = [rutasSalud, rutasCuentas, rutasCatalogo]) {
   const app = express();
   app.disable('x-powered-by');
   app.use(registro);

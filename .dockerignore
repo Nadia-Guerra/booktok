@@ -6,3 +6,4 @@
 !shared/src/**
 !backend/package.json
 !backend/src/**
+!db/grafo/consultas/*.cypher

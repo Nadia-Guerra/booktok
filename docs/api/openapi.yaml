@@ -140,6 +140,73 @@ paths:
         '400': { $ref: '#/components/responses/EntradaInvalida' }
         '401': { $ref: '#/components/responses/SinSesion' }
         '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /obras:
+    get:
+      operationId: buscarObras
+      summary: Buscar obras por título (EP-08, AP-03)
+      description: >-
+        Busca palabras completas, sin distinguir mayúsculas ni tildes; basta con que coincida una y
+        las obras con más coincidencias van primero. Devuelve como máximo 20, sin paginar. Los
+        borradores solo aparecen para el administrador. La búsqueda por persona aún no está disponible.
+      security: [{}, { sesion: [] }]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+        - name: por
+          in: query
+          schema: { type: string, enum: [titulo], default: titulo }
+      responses:
+        '200':
+          description: Resultados (puede ser una lista vacía).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [obras]
+                properties:
+                  obras:
+                    type: array
+                    items: { $ref: '#/components/schemas/ObraBreve' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /obras/{obra_id}:
+    get:
+      operationId: verFicha
+      summary: Ficha de un libro o de una película (EP-09)
+      description: >-
+        Pública. Con sesión añade `mi_estado` y `mi_resena` (la propia, aunque esté oculta). Un
+        borrador solo lo ve el administrador. Si se envía un token que ya no vale, responde 401.
+      security: [{}, { sesion: [] }]
+      parameters:
+        - name: obra_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: La forma depende de `tipo`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/FichaLibro'
+                  - $ref: '#/components/schemas/FichaPelicula'
+                discriminator:
+                  propertyName: tipo
+                  mapping:
+                    libro: '#/components/schemas/FichaLibro'
+                    pelicula: '#/components/schemas/FichaPelicula'
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404':
+          description: La obra no existe o es un borrador que quien pide no puede ver.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
 components:
   responses:
     EntradaInvalida:
@@ -177,6 +244,123 @@ components:
         nombre: { type: string }
         biografia: { type: [string, 'null'] }
         rol: { type: string, enum: [lector, admin] }
+    ObraBreve:
+      type: object
+      required: [obra_id, tipo, titulo, anio, portada_url]
+      properties:
+        obra_id: { type: string, format: uuid }
+        tipo: { type: string, enum: [libro, pelicula] }
+        titulo: { type: string }
+        anio: { type: integer }
+        portada_url: { type: [string, 'null'] }
+    Persona:
+      type: object
+      required: [persona_id, nombre, foto_url]
+      properties:
+        persona_id: { type: string, format: uuid }
+        nombre: { type: string }
+        foto_url: { type: [string, 'null'] }
+    MiResena:
+      type: object
+      required: [resena_id, calificacion, texto, oculta, creado_en, actualizado_en]
+      properties:
+        resena_id: { type: string, format: uuid }
+        calificacion: { type: integer, minimum: 1, maximum: 5 }
+        texto: { type: [string, 'null'] }
+        oculta: { type: boolean }
+        creado_en: { type: string, format: date-time }
+        actualizado_en: { type: string, format: date-time }
+    FichaComun:
+      type: object
+      required:
+        - obra_id
+        - tipo
+        - titulo
+        - sinopsis
+        - portada_url
+        - generos
+        - estado_publicacion
+        - promedio
+        - total_resenas
+      properties:
+        obra_id: { type: string, format: uuid }
+        tipo: { type: string, enum: [libro, pelicula] }
+        titulo: { type: string }
+        sinopsis: { type: string }
+        portada_url: { type: [string, 'null'] }
+        generos: { type: array, items: { type: string } }
+        estado_publicacion: { type: string, enum: [borrador, publicada] }
+        promedio: { type: [number, 'null'], description: Nulo si no hay reseñas visibles. }
+        total_resenas: { type: integer }
+        mi_estado:
+          type: [string, 'null']
+          enum: [pendiente, en_curso, terminada, null]
+          description: Solo con sesión.
+        mi_resena:
+          description: Solo con sesión.
+          oneOf:
+            - $ref: '#/components/schemas/MiResena'
+            - type: 'null'
+    FichaLibro:
+      allOf:
+        - $ref: '#/components/schemas/FichaComun'
+        - type: object
+          required: [anio_publicacion_original, ediciones, autores, adaptaciones]
+          properties:
+            anio_publicacion_original: { type: integer }
+            ediciones:
+              type: array
+              items:
+                type: object
+                required: [edicion_id, isbn, paginas, editorial, idioma, anio]
+                properties:
+                  edicion_id: { type: string, format: uuid }
+                  isbn: { type: [string, 'null'] }
+                  paginas: { type: integer }
+                  editorial: { type: string }
+                  idioma: { type: string }
+                  anio: { type: integer }
+            autores: { type: array, items: { $ref: '#/components/schemas/Persona' } }
+            adaptaciones: { type: array, items: { $ref: '#/components/schemas/ObraBreve' } }
+    FichaPelicula:
+      allOf:
+        - $ref: '#/components/schemas/FichaComun'
+        - type: object
+          required:
+            [anio_estreno, duracion_min, plataformas, datos_tecnicos, reparto, directores, libro_origen]
+          properties:
+            anio_estreno: { type: integer }
+            duracion_min: { type: integer }
+            plataformas:
+              type: array
+              items:
+                type: object
+                required: [nombre]
+                properties:
+                  nombre: { type: string }
+            datos_tecnicos:
+              type: object
+              required: [idioma_original, paises, productoras, clasificacion]
+              properties:
+                idioma_original: { type: string }
+                paises: { type: array, items: { type: string } }
+                productoras: { type: array, items: { type: string } }
+                clasificacion: { type: [string, 'null'] }
+            reparto:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/Persona'
+                  - type: object
+                    required: [personaje, orden]
+                    properties:
+                      personaje: { type: string }
+                      orden: { type: integer }
+            directores: { type: array, items: { $ref: '#/components/schemas/Persona' } }
+            libro_origen:
+              oneOf:
+                - $ref: '#/components/schemas/ObraBreve'
+                - type: 'null'
     EstadoBase:
       type: string
       enum: [ok, caida]
