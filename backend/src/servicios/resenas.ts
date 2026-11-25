@@ -17,6 +17,7 @@ import * as cuentas from '../repositorios/relacional/cuentas.ts';
 import * as relacional from '../repositorios/relacional/resenas.ts';
 import * as social from '../repositorios/relacional/social.ts';
 import type { SesionActual } from './cuentas.ts';
+import { avisarCambios } from './sincronizacion.ts';
 
 const noExisteLaObra = () => new ErrorApi('no_encontrado', 'La obra no existe');
 
@@ -31,12 +32,14 @@ export async function publicar(
   entrada: ResenaEntrada,
 ): Promise<RespuestaPublicacion & { creada: boolean }> {
   await exigirPublicada(obraId);
-  return relacional.publicarOEditar({
+  const publicada = await relacional.publicarOEditar({
     usuarioId: sesion.usuarioId,
     obraId,
     resenaIdNueva: randomUUID(),
     ...entrada,
   });
+  avisarCambios();
+  return publicada;
 }
 
 /** El autor borra la suya; el administrador, cualquiera (RN-09, RN-10). */
@@ -52,6 +55,7 @@ export async function marcarEstado(
 ): Promise<RespuestaEstado> {
   await exigirPublicada(obraId);
   const cuando = await relacional.marcarEstado(sesion.usuarioId, obraId, estado);
+  avisarCambios();
   return { obra_id: obraId, estado, actualizado_en: cuando.toISOString() };
 }
 

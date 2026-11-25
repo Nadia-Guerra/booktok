@@ -1,5 +1,5 @@
 // Lo que el relacional sabe de una obra para su ficha (O17).
-import type { EstadoLectura, MiResena } from '@dlbp/shared';
+import type { EstadoLectura, MiResena, TipoObra } from '@dlbp/shared';
 import { pool } from '../../bases/postgres.ts';
 
 /** Promedio y total de reseñas visibles. Los mantiene el trigger (RN-08): aquí solo se leen. */
@@ -11,6 +11,12 @@ export async function calificacion(obraId: string): Promise<{ promedio: number |
     promedio: fila?.promedio == null ? null : Number(fila.promedio),
     total_resenas: fila?.total_resenas ?? 0,
   };
+}
+
+/** El tipo según `obra_resumen`: el worker lo usa para descartar las lecturas de películas (D-16). */
+export async function tipoDe(obraId: string): Promise<TipoObra | undefined> {
+  const r = await pool.query('SELECT tipo FROM obra_resumen WHERE obra_id = $1', [obraId]);
+  return r.rows[0]?.tipo;
 }
 
 export async function estadoDe(usuarioId: string, obraId: string): Promise<EstadoLectura | null> {

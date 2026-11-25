@@ -8,6 +8,7 @@ import type { AddressInfo } from 'node:net';
 import { cuerpoError, respuestaRegistro, respuestaSesion } from '@dlbp/shared';
 import { crearApp } from '../src/app.ts';
 import { pool } from '../src/bases/postgres.ts';
+import { eliminarUsuario } from '../src/repositorios/grafo/sincronizacion.ts';
 
 export async function levantarApi() {
   const servidor: Server = crearApp().listen(0, '127.0.0.1');
@@ -49,8 +50,14 @@ export async function levantarApi() {
 
   /** Borra solo lo creado por la prueba: la cascada quita reseñas, estados y seguimientos. */
   async function borrarLectores() {
-    await pool.query(`DELETE FROM sync_outbox WHERE payload->>'usuario_id' = ANY($1)`, [creados]);
+    await pool.query(
+      `DELETE FROM sync_outbox
+       WHERE payload->>'usuario_id' = ANY($1) OR payload->>'seguidor_id' = ANY($1) OR payload->>'seguido_id' = ANY($1)`,
+      [creados],
+    );
     await pool.query('DELETE FROM usuario WHERE usuario_id = ANY($1::uuid[])', [creados]);
+    // Por si algún worker llegó a copiarlos al grafo.
+    for (const id of creados) await eliminarUsuario(id);
   }
 
   return { pedir, entrarComo, salir, crearLector, borrarLectores, cerrar: () => servidor.close() };

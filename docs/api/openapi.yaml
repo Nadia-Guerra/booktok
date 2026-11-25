@@ -364,6 +364,85 @@ paths:
         '400': { $ref: '#/components/responses/EntradaInvalida' }
         '401': { $ref: '#/components/responses/SinSesion' }
         '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/seguidos:
+    post:
+      operationId: seguir
+      summary: Seguir a un usuario (EP-19, O15)
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [usuario_id]
+              properties:
+                usuario_id: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Seguido
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [usuario_id]
+                properties:
+                  usuario_id: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/seguidos/{usuario_id}:
+    delete:
+      operationId: dejarDeSeguir
+      summary: Dejar de seguir (EP-20, O16)
+      security: [{ sesion: [] }]
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Ya no lo sigue (también si no lo seguía) }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /usuarios/{usuario_id}:
+    get:
+      operationId: verUsuario
+      summary: Perfil de un usuario (EP-22, O17)
+      security: [{ sesion: [] }]
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Perfil. `listas` solo viene si la sesión lo sigue o es su propio perfil (D-54)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [usuario_id, nombre, biografia, lo_sigo]
+                properties:
+                  usuario_id: { type: string, format: uuid }
+                  nombre: { type: string }
+                  biografia: { type: [string, 'null'] }
+                  lo_sigo: { type: boolean }
+                  listas:
+                    type: array
+                    items:
+                      type: object
+                      required: [lista_id, nombre]
+                      properties:
+                        lista_id: { type: string, format: uuid }
+                        nombre: { type: string }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
 components:
   parameters:
     ObraId:

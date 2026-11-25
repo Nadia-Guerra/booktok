@@ -42,6 +42,19 @@ function baseNoDisponible(e: unknown): boolean {
   return typeof message === 'string' && /connection (timeout|terminated)|timeout exceeded when trying to connect/i.test(message);
 }
 
+/**
+ * Para el worker (documento 04, 9.5): ¿falló la base destino y no el evento? Además de la red, cuenta
+ * Neo4j arrancando, sin conexiones libres, rechazando las credenciales o tan lento que vence la
+ * transacción (la primera consulta tras arrancar puede tardar mucho).
+ */
+export function destinoNoDisponible(e: unknown): boolean {
+  if (baseNoDisponible(e)) return true;
+  const { code, message } = (e ?? {}) as { code?: unknown; message?: unknown };
+  const delServidor = /^Neo\.(TransientError\.|ClientError\.Security\.|ClientError\.Transaction\.TransactionTimedOut)/;
+  if (typeof code === 'string' && delServidor.test(code)) return true;
+  return typeof message === 'string' && message.startsWith('Connection acquisition timed out');
+}
+
 function aErrorApi(e: unknown): ErrorApi {
   if (e instanceof ErrorApi) return e;
   if (e instanceof ZodError) {

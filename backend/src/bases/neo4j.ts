@@ -31,6 +31,17 @@ export async function leerGrafo<Fila>(consulta: string, parametros: Record<strin
   }
 }
 
+/** Ejecuta una escritura en una transacción administrada, que reintenta sola los errores transitorios. */
+export async function escribirGrafo<Fila>(consulta: string, parametros: Record<string, unknown>): Promise<Fila[]> {
+  const sesion = driver.session({ defaultAccessMode: neo4j.session.WRITE });
+  try {
+    const resultado = await sesion.executeWrite((tx) => tx.run(consulta, parametros), { timeout: 30_000 });
+    return resultado.records.map((r) => r.toObject() as Fila);
+  } finally {
+    await sesion.close();
+  }
+}
+
 export function cerrarNeo4j(): Promise<void> {
   return driver.close();
 }

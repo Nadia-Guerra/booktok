@@ -12,6 +12,7 @@ import type {
 import bcrypt from 'bcrypt';
 import { ErrorApi } from '../errores.ts';
 import * as cuentas from '../repositorios/relacional/cuentas.ts';
+import { avisarCambios } from './sincronizacion.ts';
 
 const COSTO_BCRYPT = 10; // D-61
 
@@ -35,6 +36,7 @@ export async function registrar(datos: RegistroEntrada): Promise<RespuestaRegist
     passwordHash: await bcrypt.hash(datos.password, COSTO_BCRYPT),
   });
   if (resultado === 'correo_en_uso') throw new ErrorApi('conflicto', 'Ese correo ya está registrado');
+  avisarCambios();
   return { usuario_id: usuarioId };
 }
 

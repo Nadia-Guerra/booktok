@@ -9,3 +9,4 @@ export * from './cuentas.ts';
 export * from './errores.ts';
 export * from './resenas.ts';
 export * from './salud.ts';
+export * from './social.ts';
