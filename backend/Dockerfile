@@ -13,6 +13,8 @@ RUN npm ci --omit=dev --no-audit --no-fund --workspace @dlbp/backend --workspace
 
 COPY shared/src shared/src
 COPY backend/src backend/src
+# El Cypher se lee de sus archivos: una sola copia para las pruebas de las bases y para la API.
+COPY db/grafo/consultas db/grafo/consultas
 
 USER node
 EXPOSE 3000

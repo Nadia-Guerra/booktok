@@ -48,6 +48,8 @@ curl.exe http://127.0.0.1:3000/api/v1/salud
 
 Para desarrollar, en lugar del contenedor puede usarse `npm run api` (reinicia al guardar). No uses los dos a la vez: ocupan el mismo puerto y solo debe haber una copia de la API.
 
+La API lleva dentro el *worker* que copia los cambios a las otras bases (`sync_outbox`). Si Neo4j no responde, los eventos esperan y se aplican cuando vuelve. Uno que falla por sí mismo cinco veces queda como `fallido`.
+
 ## Llegar desde el teléfono
 
 Abre el túnel y copia la dirección `https://….trycloudflare.com` que imprime. Mientras esté abierto, la API es accesible desde internet.
@@ -68,7 +70,11 @@ npm run app
 npm run typecheck
 ```
 
-Las pruebas de la API necesitan las tres bases levantadas:
+Las pruebas de la API necesitan las tres bases levantadas y la API detenida, porque su *worker* se llevaría los eventos de las pruebas:
+
+```powershell
+docker compose stop api
+```
 
 ```powershell
 npm test

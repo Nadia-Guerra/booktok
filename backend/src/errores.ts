@@ -20,11 +20,13 @@ const ESTADOS: Record<CodigoError, number> = {
 export class ErrorApi extends Error {
   readonly codigo: CodigoError;
   readonly campos: Record<string, string> | undefined;
+  readonly obraId: string | undefined;
 
-  constructor(codigo: CodigoError, mensaje: string, campos?: Record<string, string>) {
+  constructor(codigo: CodigoError, mensaje: string, campos?: Record<string, string>, obraId?: string) {
     super(mensaje);
     this.codigo = codigo;
     this.campos = campos;
+    this.obraId = obraId;
   }
 }
 
@@ -42,6 +44,19 @@ function baseNoDisponible(e: unknown): boolean {
   return typeof message === 'string' && /connection (timeout|terminated)|timeout exceeded when trying to connect/i.test(message);
 }
 
+/**
+ * ¿Falló la base y no la petición o el evento? (503, y en el worker, documento 04, 9.5). Además de la red, cuenta
+ * Neo4j arrancando, sin conexiones libres, rechazando las credenciales o tan lento que vence la
+ * transacción (la primera consulta tras arrancar puede tardar mucho).
+ */
+export function destinoNoDisponible(e: unknown): boolean {
+  if (baseNoDisponible(e)) return true;
+  const { code, message } = (e ?? {}) as { code?: unknown; message?: unknown };
+  const delServidor = /^Neo\.(TransientError\.|ClientError\.Security\.|ClientError\.Transaction\.TransactionTimedOut)/;
+  if (typeof code === 'string' && delServidor.test(code)) return true;
+  return typeof message === 'string' && message.startsWith('Connection acquisition timed out');
+}
+
 function aErrorApi(e: unknown): ErrorApi {
   if (e instanceof ErrorApi) return e;
   if (e instanceof ZodError) {
@@ -53,7 +68,7 @@ function aErrorApi(e: unknown): ErrorApi {
   const tipo = (e as { type?: unknown } | null)?.type;
   if (tipo === 'entity.parse.failed') return new ErrorApi('entrada_invalida', 'El cuerpo no es un JSON válido');
   if (tipo === 'entity.too.large') return new ErrorApi('demasiado_grande', 'El cuerpo es demasiado grande');
-  if (baseNoDisponible(e)) return new ErrorApi('base_no_disponible', 'Una base no responde. Intenta de nuevo en un momento');
+  if (destinoNoDisponible(e)) return new ErrorApi('base_no_disponible', 'Una base no responde. Intenta de nuevo en un momento');
   return new ErrorApi('error_interno', 'Ocurrió un error inesperado');
 }
 
@@ -71,7 +86,12 @@ export const manejadorDeErrores: ErrorRequestHandler = (e, req, res, next) => {
     console.error(`${req.method} ${req.path} -> ${error.codigo} (${name ?? 'error'} ${String(code ?? '')})\n${pila}`);
   }
   const cuerpo: CuerpoError = {
-    error: { codigo: error.codigo, mensaje: error.message, ...(error.campos && { campos: error.campos }) },
+    error: {
+      codigo: error.codigo,
+      mensaje: error.message,
+      ...(error.campos && { campos: error.campos }),
+      ...(error.obraId && { obra_id: error.obraId }),
+    },
   };
   res.status(ESTADOS[error.codigo]).json(cuerpo);
 };

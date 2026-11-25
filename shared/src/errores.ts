@@ -16,6 +16,8 @@ export const cuerpoError = z.object({
     codigo: codigoError,
     mensaje: z.string(),
     campos: z.record(z.string(), z.string()).optional(),
+    // D-58: solo en un alta que quedó a medias, para completarla sin repetirla.
+    obra_id: z.guid().optional(),
   }),
 });
 

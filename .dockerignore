@@ -7,3 +7,4 @@
 !backend/package.json
 !backend/src/**
 !frontend/package.json
+!db/grafo/consultas/*.cypher

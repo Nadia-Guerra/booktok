@@ -76,7 +76,8 @@ Cada 30 días (valor propuesto) se purgan los eventos `procesado`, para mantener
 ### 4.4 Por qué el orden no se rompe
 
 - **Un solo proceso** aplica los eventos de uno en uno, así que "seguir" y "dejar de seguir" no pueden cruzarse por haberse procesado en paralelo.
-- `evento_id` se asigna al insertar el evento, no al confirmar la transacción. Dos transacciones distintas podrían confirmarse en orden inverso a sus ids. Eso no importa, porque solo cuenta el orden de los eventos que afectan **al mismo dato**, y ese lo serializa el bloqueo de fila que las operaciones ya piden: el de `estado_obra` en O7 y O11, y el de la fila de `seguimiento` en O15 y O16. *(Razonamiento a comprobar con una prueba de concurrencia al implementar.)*
+- `evento_id` se asigna al insertar el evento, no al confirmar la transacción. Dos transacciones distintas podrían confirmarse en orden inverso a sus ids. Eso no importa, porque solo cuenta el orden de los eventos que afectan **al mismo dato**, y ese lo serializa el bloqueo de fila que las operaciones ya piden: el de `estado_obra` en O7 y O11, y el de la fila de `seguimiento` en O15 y O16. Comprobado el 2026-11-24 con operaciones simultáneas sobre un mismo seguimiento y un mismo estado (`backend/test/orden-eventos.test.ts`).
+- Por la misma razón, si un evento falla el *worker* no pasa al siguiente: lo reintenta con la espera de 9.5 hasta que sale o queda `fallido`.
 
 ### 4.5 Ejemplo: publicar una reseña (RF-13)
 

@@ -26,13 +26,1387 @@ paths:
                 estado: ok
                 api: ok
                 bases: { postgres: ok, mongo: ok, neo4j: ok }
+  /auth/registro:
+    post:
+      operationId: registrar
+      summary: Registrar un lector (EP-02, O1)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correo, password, nombre]
+              properties:
+                correo:
+                  type: string
+                  format: email
+                  maxLength: 254
+                  description: Se recorta y se pasa a minúsculas.
+                password: { type: string, minLength: 8 }
+                nombre: { type: string, minLength: 1, maxLength: 100 }
+      responses:
+        '201':
+          description: Cuenta creada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [usuario_id]
+                properties:
+                  usuario_id: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /auth/sesion:
+    post:
+      operationId: iniciarSesion
+      summary: Iniciar sesión (EP-03, O2)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correo, password]
+              properties:
+                correo: { type: string, format: email }
+                password: { type: string, minLength: 1 }
+      responses:
+        '201':
+          description: Sesión abierta. El token solo se entrega aquí y vence a los 30 días.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, expira_en, usuario]
+                properties:
+                  token: { type: string }
+                  expira_en: { type: string, format: date-time }
+                  usuario: { $ref: '#/components/schemas/Perfil' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401':
+          description: El correo o la contraseña no coinciden (la respuesta es la misma en ambos casos).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    delete:
+      operationId: cerrarSesion
+      summary: Cerrar la sesión actual (EP-04, O23)
+      security: [{ sesion: [] }]
+      responses:
+        '204': { description: Sesión cerrada. }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me:
+    get:
+      operationId: verPerfilPropio
+      summary: Perfil propio (EP-05, O22 y O17)
+      security: [{ sesion: [] }]
+      responses:
+        '200':
+          description: Perfil del dueño de la sesión.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Perfil' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    patch:
+      operationId: editarPerfil
+      summary: Editar nombre y biografía (EP-06, O3)
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                nombre: { type: string, minLength: 1, maxLength: 100 }
+                biografia:
+                  type: [string, 'null']
+                  maxLength: 500
+                  description: Nula o vacía la borra.
+      responses:
+        '200':
+          description: Perfil ya actualizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Perfil' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    delete:
+      operationId: eliminarCuenta
+      summary: Eliminar mi cuenta (EP-07, O4)
+      description: >-
+        Borra reseñas, estados, listas, seguimientos y sesiones, y recalcula los promedios. Las
+        comparativas y el grafo los limpia después el worker. El administrador no puede (403).
+      security: [{ sesion: [] }]
+      responses:
+        '204': { description: Cuenta eliminada. }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /obras:
+    get:
+      operationId: buscarObras
+      summary: Buscar obras por título o por persona (EP-08, AP-03, CG-01)
+      description: >-
+        Busca palabras completas, sin distinguir mayúsculas ni tildes; basta con que coincida una.
+        Por título, las obras con más coincidencias van primero. Por persona, hay una fila por obra,
+        persona y vínculo, ordenadas por el nombre de la persona. Devuelve como máximo 20, sin
+        paginar. Los borradores solo aparecen para el administrador.
+      security: [{}, { sesion: [] }]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+        - name: por
+          in: query
+          schema: { type: string, enum: [titulo, persona], default: titulo }
+      responses:
+        '200':
+          description: Resultados (puede ser una lista vacía).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [obras]
+                properties:
+                  obras:
+                    type: array
+                    items:
+                      allOf:
+                        - { $ref: '#/components/schemas/ObraBreve' }
+                        - type: object
+                          description: Solo al buscar por persona.
+                          properties:
+                            persona: { $ref: '#/components/schemas/Persona' }
+                            vinculo: { type: string, enum: ['escribió', 'dirigida_por', 'actuó_en'] }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /obras/{obra_id}:
+    get:
+      operationId: verFicha
+      summary: Ficha de un libro o de una película (EP-09)
+      description: >-
+        Pública. Con sesión añade `mi_estado` y `mi_resena` (la propia, aunque esté oculta). Un
+        borrador solo lo ve el administrador. Si se envía un token que ya no vale, responde 401.
+      security: [{}, { sesion: [] }]
+      parameters:
+        - name: obra_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: La forma depende de `tipo`.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/FichaLibro'
+                  - $ref: '#/components/schemas/FichaPelicula'
+                discriminator:
+                  propertyName: tipo
+                  mapping:
+                    libro: '#/components/schemas/FichaLibro'
+                    pelicula: '#/components/schemas/FichaPelicula'
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404':
+          description: La obra no existe o es un borrador que quien pide no puede ver.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /resenas:
+    get:
+      operationId: listarResenas
+      summary: Reseñas de una obra o de un usuario (EP-10, O17)
+      description: >-
+        Las recientes primero. Se indica `obra_id` o `usuario_id`, uno de los dos. Por obra es
+        pública. Por usuario exige sesión y seguirlo (salvo las propias y el administrador). Las
+        ocultas solo las ve el administrador.
+      security: [{}, { sesion: [] }]
+      parameters:
+        - { name: obra_id, in: query, schema: { type: string, format: uuid } }
+        - { name: usuario_id, in: query, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Una página. `siguiente` es nulo en la última.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [resenas, siguiente]
+                properties:
+                  resenas:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/MiResena'
+                        - type: object
+                          required: [autor, obra]
+                          properties:
+                            autor:
+                              type: object
+                              required: [usuario_id, nombre]
+                              properties:
+                                usuario_id: { type: string, format: uuid }
+                                nombre: { type: string }
+                            obra: { $ref: '#/components/schemas/ObraBreve' }
+                  siguiente: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /obras/{obra_id}/resena:
+    put:
+      operationId: publicarResena
+      summary: Publicar la reseña propia, o editarla si ya existe (EP-11, O7 y O8)
+      description: >-
+        Publicar marca la obra como terminada en la misma transacción. Se envía siempre el texto
+        completo: si falta, la reseña queda sin texto.
+      security: [{ sesion: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/ObraId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [calificacion]
+              properties:
+                calificacion: { type: integer, minimum: 1, maximum: 5 }
+                texto: { type: [string, 'null'], maxLength: 3000 }
+      responses:
+        '201':
+          description: Publicada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Publicacion' }
+        '200':
+          description: Editada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Publicacion' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /resenas/{resena_id}:
+    patch:
+      operationId: moderarResena
+      summary: Ocultar o mostrar una reseña (EP-12, O10)
+      description: Solo el administrador. Una reseña oculta no cuenta en el promedio.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: resena_id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Moderacion' }
+      responses:
+        '200':
+          description: Cómo quedó la reseña y el promedio de su obra.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [resena_id, oculta, promedio, total_resenas]
+                properties:
+                  resena_id: { type: string, format: uuid }
+                  oculta: { type: boolean }
+                  promedio: { type: [number, 'null'] }
+                  total_resenas: { type: integer }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    delete:
+      operationId: eliminarResena
+      summary: Eliminar una reseña (EP-13, O9 y O10)
+      description: La borra su autor o el administrador. El estado de la obra no cambia.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: resena_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Eliminada. }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/estados/{obra_id}:
+    put:
+      operationId: marcarEstado
+      summary: Marcar el estado de una obra (EP-14, O11)
+      security: [{ sesion: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/ObraId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [estado]
+              properties:
+                estado: { $ref: '#/components/schemas/EstadoLectura' }
+      responses:
+        '200':
+          description: Guardado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [obra_id, estado, actualizado_en]
+                properties:
+                  obra_id: { type: string, format: uuid }
+                  estado: { $ref: '#/components/schemas/EstadoLectura' }
+                  actualizado_en: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/estados:
+    get:
+      operationId: misEstados
+      summary: Mis obras y su estado (EP-15, O17)
+      description: Las cambiadas más recientemente primero.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: estado, in: query, schema: { $ref: '#/components/schemas/EstadoLectura' } }
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Una página. `siguiente` es nulo en la última.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [estados, siguiente]
+                properties:
+                  estados:
+                    type: array
+                    items:
+                      type: object
+                      required: [obra, estado, actualizado_en]
+                      properties:
+                        obra: { $ref: '#/components/schemas/ObraBreve' }
+                        estado: { $ref: '#/components/schemas/EstadoLectura' }
+                        actualizado_en: { type: string, format: date-time }
+                  siguiente: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/seguidos:
+    post:
+      operationId: seguir
+      summary: Seguir a un usuario (EP-19, O15)
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [usuario_id]
+              properties:
+                usuario_id: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Seguido
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [usuario_id]
+                properties:
+                  usuario_id: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/seguidos/{usuario_id}:
+    delete:
+      operationId: dejarDeSeguir
+      summary: Dejar de seguir (EP-20, O16)
+      security: [{ sesion: [] }]
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Ya no lo sigue (también si no lo seguía) }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /usuarios/{usuario_id}:
+    get:
+      operationId: verUsuario
+      summary: Perfil de un usuario (EP-22, O17)
+      security: [{ sesion: [] }]
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Perfil. `listas` solo viene si la sesión lo sigue o es su propio perfil (D-54)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [usuario_id, nombre, biografia, lo_sigo]
+                properties:
+                  usuario_id: { type: string, format: uuid }
+                  nombre: { type: string }
+                  biografia: { type: [string, 'null'] }
+                  lo_sigo: { type: boolean }
+                  listas:
+                    type: array
+                    items:
+                      type: object
+                      required: [lista_id, nombre]
+                      properties:
+                        lista_id: { type: string, format: uuid }
+                        nombre: { type: string }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /exploracion/caminos:
+    get:
+      operationId: caminos
+      summary: Caminos entre dos personas u obras (EP-16, CG-06)
+      description: >-
+        Todos los caminos más cortos, de hasta 6 saltos. Lista vacía si no hay conexión. Un camino
+        que pase por una obra en borrador no se muestra, salvo al administrador.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: origen, in: query, required: true, schema: { type: string, format: uuid } }
+        - name: destino
+          in: query
+          required: true
+          description: Distinto de `origen`.
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: "`relaciones[i]` une `nodos[i]` con `nodos[i + 1]`."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [caminos]
+                properties:
+                  caminos:
+                    type: array
+                    items:
+                      type: object
+                      required: [nodos, relaciones]
+                      properties:
+                        nodos:
+                          type: array
+                          items:
+                            oneOf:
+                              - allOf:
+                                  - { $ref: '#/components/schemas/Persona' }
+                                  - type: object
+                                    required: [tipo]
+                                    properties:
+                                      tipo: { type: string, enum: [persona] }
+                              - { $ref: '#/components/schemas/ObraBreve' }
+                        relaciones:
+                          type: array
+                          items: { type: string, enum: ['escribió', 'adaptado_a', 'dirigida_por', 'actuó_en'] }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /personas/{persona_id}/autores-relacionados:
+    get:
+      operationId: autoresRelacionados
+      summary: Autores que adaptó un director (EP-17, CG-07)
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: persona_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Lista vacía si la persona no dirigió ninguna adaptación.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [autores]
+                properties:
+                  autores:
+                    type: array
+                    items:
+                      allOf:
+                        - { $ref: '#/components/schemas/Persona' }
+                        - type: object
+                          required: [obras]
+                          properties:
+                            obras:
+                              type: array
+                              items:
+                                type: object
+                                required: [libro, pelicula]
+                                properties:
+                                  libro: { $ref: '#/components/schemas/ObraBreve' }
+                                  pelicula: { $ref: '#/components/schemas/ObraBreve' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/recomendaciones:
+    get:
+      operationId: recomendaciones
+      summary: Libros y películas recomendados (EP-18, O18, CG-08, CG-09)
+      description: >-
+        `libros`: del mismo director que adaptó alguno que te gustó (terminado y con 4 o más).
+        `peliculas`: de libros que leyeron las personas que sigues, aunque ya las hayas visto (D-20).
+      security: [{ sesion: [] }]
+      responses:
+        '200':
+          description: Las dos listas pueden ir vacías.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [libros, peliculas]
+                properties:
+                  libros:
+                    type: array
+                    items:
+                      type: object
+                      required: [obra, motivos]
+                      properties:
+                        obra: { $ref: '#/components/schemas/ObraBreve' }
+                        motivos:
+                          type: array
+                          items:
+                            type: object
+                            required: [libro_partida, director]
+                            properties:
+                              libro_partida: { $ref: '#/components/schemas/ObraBreve' }
+                              director: { $ref: '#/components/schemas/Persona' }
+                  peliculas:
+                    type: array
+                    items:
+                      type: object
+                      required: [obra, libro, seguidos]
+                      properties:
+                        obra: { $ref: '#/components/schemas/ObraBreve' }
+                        libro: { $ref: '#/components/schemas/ObraBreve' }
+                        seguidos: { type: integer, minimum: 1 }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /comparativas:
+    get:
+      operationId: listarComparativas
+      summary: Comparativas de una adaptación o de una persona (EP-23, AP-19, AP-21, AP-23)
+      description: >-
+        Con `libro_id` y `pelicula_id`, con `usuario_id`, o con los tres; las recientes primero. Las
+        de una adaptación son públicas. Solo con `usuario_id` hay que seguir a esa persona (D-54). Las
+        ocultas solo las ven su autor y el administrador.
+      security: [{}, { sesion: [] }]
+      parameters:
+        - { name: libro_id, in: query, schema: { type: string, format: uuid } }
+        - { name: pelicula_id, in: query, schema: { type: string, format: uuid } }
+        - { name: usuario_id, in: query, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Una página. `siguiente` es nulo en la última.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [comparativas, siguiente]
+                properties:
+                  comparativas:
+                    type: array
+                    items: { $ref: '#/components/schemas/Comparativa' }
+                  siguiente: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    post:
+      operationId: crearComparativa
+      summary: Publicar una comparativa (EP-25, AP-05, CG-10, AP-18)
+      description: >-
+        Solo sobre un libro y una película publicados y unidos por una adaptación, y una por persona
+        y pareja. Si el grafo no responde, no se guarda (503).
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComparativaNueva' }
+      responses:
+        '201':
+          description: Creada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [comparativa_id]
+                properties:
+                  comparativa_id: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /comparativas/{comparativa_id}:
+    put:
+      operationId: editarComparativa
+      summary: Editar mi comparativa (EP-26, AP-24)
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: comparativa_id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComparativaCambios' }
+      responses:
+        '200':
+          description: Cómo quedó.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Comparativa' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    patch:
+      operationId: moderarComparativa
+      summary: Ocultar o mostrar una comparativa (EP-27, AP-26)
+      description: Solo el administrador.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: comparativa_id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Moderacion' }
+      responses:
+        '200':
+          description: Cómo quedó.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [comparativa_id, oculta]
+                properties:
+                  comparativa_id: { type: string, format: uuid }
+                  oculta: { type: boolean }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    delete:
+      operationId: eliminarComparativa
+      summary: Eliminar una comparativa (EP-28, AP-25 y AP-27)
+      description: La borra su autor o el administrador.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: comparativa_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Eliminada. }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/seguimientos:
+    get:
+      operationId: miRed
+      summary: A quién sigo y quién me sigue (EP-21, O17)
+      security: [{ sesion: [] }]
+      responses:
+        '200':
+          description: Lo más reciente primero.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [seguidos, seguidores]
+                properties:
+                  seguidos: { type: array, items: { $ref: '#/components/schemas/UsuarioBreve' } }
+                  seguidores: { type: array, items: { $ref: '#/components/schemas/UsuarioBreve' } }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/listas:
+    get:
+      operationId: misListas
+      summary: Mis listas (EP-29, O17)
+      security: [{ sesion: [] }]
+      responses:
+        '200':
+          description: Las recientes primero.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [listas]
+                properties:
+                  listas:
+                    type: array
+                    items:
+                      type: object
+                      required: [lista_id, nombre, total_obras]
+                      properties:
+                        lista_id: { type: string, format: uuid }
+                        nombre: { type: string }
+                        total_obras: { type: integer }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    post:
+      operationId: crearLista
+      summary: Crear una lista (EP-30, O12)
+      description: Se permiten nombres repetidos.
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string, minLength: 1, maxLength: 100 }
+      responses:
+        '201':
+          description: Creada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [lista_id]
+                properties:
+                  lista_id: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /listas/{lista_id}:
+    get:
+      operationId: verLista
+      summary: Ver una lista (EP-31, O17, AP-04)
+      description: Solo su dueño y quien lo sigue (D-54).
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: lista_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Las obras en su orden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleLista'
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    patch:
+      operationId: cambiarLista
+      summary: Renombrar o reordenar (EP-32, O12 y O14)
+      description: Solo el dueño. `obra_ids` debe traer exactamente las obras de la lista; si no, no cambia nada.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: lista_id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                nombre: { type: string, minLength: 1, maxLength: 100 }
+                obra_ids: { type: array, items: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Cómo quedó.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleLista'
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    delete:
+      operationId: eliminarLista
+      summary: Eliminar una lista (EP-33, O12)
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: lista_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Eliminada. }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /listas/{lista_id}/obras:
+    post:
+      operationId: agregarObra
+      summary: Agregar una obra al final (EP-34, AP-05, O13)
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: lista_id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [obra_id]
+              properties:
+                obra_id: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Agregada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [lista_id, obra_id]
+                properties:
+                  lista_id: { type: string, format: uuid }
+                  obra_id: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /listas/{lista_id}/obras/{obra_id}:
+    delete:
+      operationId: quitarObra
+      summary: Quitar una obra (EP-35, O13)
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: lista_id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/ObraId' }
+      responses:
+        '204': { description: Ya no está (también si no estaba). }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /admin/personas:
+    get:
+      operationId: buscarPersonas
+      summary: Buscar personas por nombre (EP-36, CG-02)
+      description: >-
+        Solo el administrador. Palabras completas, como máximo 20. Se busca antes de registrar (D-15).
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, maxLength: 200 } }
+      responses:
+        '200':
+          description: Puede ir vacía.
+          content:
+            application/json:
+              schema: { type: object, required: [personas], properties: { personas: { type: array, items: { $ref: '#/components/schemas/Persona' } } } }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    post:
+      operationId: crearPersona
+      summary: Registrar una persona (EP-37, CG-13)
+      description: >-
+        Solo el administrador.
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PersonaNueva' }
+      responses:
+        '201':
+          description: Registrada.
+          content:
+            application/json:
+              schema: { type: object, required: [persona_id], properties: { persona_id: { type: string, format: uuid } } }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /admin/libros:
+    post:
+      operationId: crearLibro
+      summary: Dar de alta un libro (EP-39, AP-07, O5, CG-11, CG-14)
+      description: >-
+        Queda en borrador hasta tener su primera película (D-24). Si falla con la ficha ya creada responde 503 con `obra_id` (D-58).
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LibroNuevo' }
+      responses:
+        '201':
+          description: Creado en borrador.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Alta' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /admin/peliculas:
+    post:
+      operationId: crearPelicula
+      summary: Dar de alta una adaptación (EP-40)
+      description: >-
+        Publica el libro, si ya puede, y luego la película. Si falla con la ficha ya creada responde 503 con `obra_id` (D-58).
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PeliculaNueva' }
+      responses:
+        '201':
+          description: Creada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Alta' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /admin/obras/{obra_id}/publicacion:
+    post:
+      operationId: completarPublicacion
+      summary: Completar un alta interrumpida (EP-41)
+      description: >-
+        Repite los pasos que faltan. No inventa relaciones: si faltan, responde 409 y dice cuáles.
+      security: [{ sesion: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/ObraId' }
+      responses:
+        '200':
+          description: Publicada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Alta' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /admin/libros/{obra_id}/ediciones:
+    post:
+      operationId: agregarEdicion
+      summary: Agregar una edición (EP-43, AP-11)
+      description: >-
+        El ISBN no se repite ni dentro del libro ni entre libros; máximo 50 ediciones.
+      security: [{ sesion: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/ObraId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EdicionNueva' }
+      responses:
+        '201':
+          description: Agregada.
+          content:
+            application/json:
+              schema: { type: object, required: [edicion_id], properties: { edicion_id: { type: string, format: uuid } } }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /admin/peliculas/{obra_id}/plataformas:
+    post:
+      operationId: agregarPlataforma
+      summary: Agregar una plataforma (EP-46, AP-14)
+      description: >-
+        No se repite dentro de la película (distingue mayúsculas); máximo 30.
+      security: [{ sesion: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/ObraId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlataformaNueva' }
+      responses:
+        '201':
+          description: Agregada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlataformaNueva' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
 components:
+  parameters:
+    ObraId:
+      { name: obra_id, in: path, required: true, schema: { type: string, format: uuid } }
+    Limite:
+      { name: limite, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+    Cursor:
+      name: cursor
+      in: query
+      description: El `siguiente` de la página anterior, sin modificar.
+      schema: { type: string }
+  responses:
+    SinPermiso:
+      description: Hay sesión, pero no permiso.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NoEncontrado:
+      description: No existe, es de otro usuario o no es visible.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    EntradaInvalida:
+      description: Entrada inválida; `campos` dice qué falla.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    SinSesion:
+      description: Falta el token, no es válido o la sesión venció.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflicto:
+      description: El dato ya existe (por ejemplo, el correo).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    BaseNoDisponible:
+      description: Una base no responde; se puede reintentar.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
   securitySchemes:
     sesion:
       type: http
       scheme: bearer
       description: Token opaco de sesión (D-35).
   schemas:
+    PersonaNueva:
+      type: object
+      required: [nombre]
+      properties:
+        nombre: { type: string, minLength: 1, maxLength: 150 }
+        foto_url: { type: string, maxLength: 500, pattern: '^https://' }
+    EdicionNueva:
+      type: object
+      required: [paginas, editorial, idioma, anio]
+      properties:
+        isbn: { type: string, pattern: '^[0-9]{13}$' }
+        paginas: { type: integer, minimum: 1, maximum: 10000 }
+        editorial: { type: string, maxLength: 100 }
+        idioma: { type: string, maxLength: 40 }
+        anio: { type: integer, minimum: 1, maximum: 2100 }
+    PlataformaNueva:
+      type: object
+      required: [nombre]
+      properties:
+        nombre: { type: string, minLength: 1, maxLength: 100 }
+    FichaNueva:
+      type: object
+      required: [titulo, sinopsis, generos]
+      properties:
+        titulo: { type: string, maxLength: 200 }
+        sinopsis: { type: string, maxLength: 3000 }
+        portada_url: { type: string, maxLength: 500, pattern: '^https://' }
+        generos: { type: array, minItems: 1, maxItems: 5, uniqueItems: true, items: { type: string, maxLength: 40 } }
+    LibroNuevo:
+      allOf:
+        - { $ref: '#/components/schemas/FichaNueva' }
+        - type: object
+          required: [anio_publicacion_original, autores]
+          properties:
+            anio_publicacion_original: { type: integer, minimum: -3000, maximum: 2100 }
+            autores: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uuid } }
+            ediciones: { type: array, maxItems: 50, items: { $ref: '#/components/schemas/EdicionNueva' } }
+    PeliculaNueva:
+      allOf:
+        - { $ref: '#/components/schemas/FichaNueva' }
+        - type: object
+          required: [anio_estreno, duracion_min, datos_tecnicos, libro_id, directores, reparto]
+          properties:
+            anio_estreno: { type: integer, minimum: 1888, maximum: 2100 }
+            duracion_min: { type: integer, minimum: 1, maximum: 1000 }
+            plataformas: { type: array, maxItems: 30, items: { $ref: '#/components/schemas/PlataformaNueva' } }
+            datos_tecnicos:
+              type: object
+              required: [idioma_original, paises]
+              properties:
+                idioma_original: { type: string, maxLength: 40 }
+                paises: { type: array, minItems: 1, maxItems: 10, items: { type: string, maxLength: 60 } }
+                productoras: { type: array, maxItems: 20, items: { type: string, maxLength: 100 } }
+                clasificacion: { type: string, maxLength: 20 }
+            libro_id: { type: string, format: uuid }
+            directores: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uuid } }
+            reparto:
+              type: array
+              minItems: 1
+              maxItems: 300
+              items:
+                type: object
+                required: [persona_id, personaje, orden]
+                properties:
+                  persona_id: { type: string, format: uuid }
+                  personaje: { type: string, maxLength: 150 }
+                  orden: { type: integer, minimum: 1 }
+    Alta:
+      type: object
+      required: [obra_id, estado_publicacion]
+      properties:
+        obra_id: { type: string, format: uuid }
+        estado_publicacion: { type: string, enum: [borrador, publicada] }
+        libro:
+          type: object
+          description: Solo en películas, su libro de origen y cómo quedó.
+          properties:
+            obra_id: { type: string, format: uuid }
+            estado_publicacion: { type: string, enum: [borrador, publicada] }
+    UsuarioBreve:
+      type: object
+      required: [usuario_id, nombre]
+      properties:
+        usuario_id: { type: string, format: uuid }
+        nombre: { type: string }
+    DetalleLista:
+      type: object
+      required: [lista_id, nombre, propietario, obras]
+      properties:
+        lista_id: { type: string, format: uuid }
+        nombre: { type: string }
+        propietario: { $ref: '#/components/schemas/UsuarioBreve' }
+        obras: { type: array, items: { $ref: '#/components/schemas/ObraBreve' } }
+    Moderacion:
+      type: object
+      required: [oculta]
+      properties:
+        oculta: { type: boolean }
+    ComparativaCambios:
+      type: object
+      required: [veredicto, aspectos]
+      properties:
+        veredicto:
+          type: object
+          required: [preferencia]
+          properties:
+            preferencia: { type: string, enum: [libro, pelicula, empate] }
+            comentario: { type: string, maxLength: 2000 }
+        aspectos:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            type: object
+            required: [nombre]
+            properties:
+              nombre: { type: string, minLength: 1, maxLength: 60 }
+              puntuacion: { type: integer, minimum: 1, maximum: 5 }
+              comentario: { type: string, maxLength: 1000 }
+    ComparativaNueva:
+      allOf:
+        - { $ref: '#/components/schemas/ComparativaCambios' }
+        - type: object
+          required: [libro_id, pelicula_id]
+          properties:
+            libro_id: { type: string, format: uuid }
+            pelicula_id: { type: string, format: uuid }
+    Comparativa:
+      allOf:
+        - { $ref: '#/components/schemas/ComparativaCambios' }
+        - type: object
+          required: [comparativa_id, libro, pelicula, autor, oculta, creado_en, actualizado_en]
+          properties:
+            comparativa_id: { type: string, format: uuid }
+            libro: { $ref: '#/components/schemas/ObraBreve' }
+            pelicula: { $ref: '#/components/schemas/ObraBreve' }
+            autor:
+              type: object
+              required: [usuario_id, nombre]
+              properties:
+                usuario_id: { type: string, format: uuid }
+                nombre: { type: string }
+            oculta: { type: boolean }
+            creado_en: { type: string, format: date-time }
+            actualizado_en: { type: string, format: date-time }
+    Perfil:
+      type: object
+      required: [usuario_id, correo, nombre, biografia, rol]
+      properties:
+        usuario_id: { type: string, format: uuid }
+        correo: { type: string, format: email }
+        nombre: { type: string }
+        biografia: { type: [string, 'null'] }
+        rol: { type: string, enum: [lector, admin] }
+    ObraBreve:
+      type: object
+      required: [obra_id, tipo, titulo, anio, portada_url]
+      properties:
+        obra_id: { type: string, format: uuid }
+        tipo: { type: string, enum: [libro, pelicula] }
+        titulo: { type: string }
+        anio: { type: integer }
+        portada_url: { type: [string, 'null'] }
+    Persona:
+      type: object
+      required: [persona_id, nombre, foto_url]
+      properties:
+        persona_id: { type: string, format: uuid }
+        nombre: { type: string }
+        foto_url: { type: [string, 'null'] }
+    MiResena:
+      type: object
+      required: [resena_id, calificacion, texto, oculta, creado_en, actualizado_en]
+      properties:
+        resena_id: { type: string, format: uuid }
+        calificacion: { type: integer, minimum: 1, maximum: 5 }
+        texto: { type: [string, 'null'] }
+        oculta: { type: boolean }
+        creado_en: { type: string, format: date-time }
+        actualizado_en: { type: string, format: date-time }
+    FichaComun:
+      type: object
+      required:
+        - obra_id
+        - tipo
+        - titulo
+        - sinopsis
+        - portada_url
+        - generos
+        - estado_publicacion
+        - promedio
+        - total_resenas
+      properties:
+        obra_id: { type: string, format: uuid }
+        tipo: { type: string, enum: [libro, pelicula] }
+        titulo: { type: string }
+        sinopsis: { type: string }
+        portada_url: { type: [string, 'null'] }
+        generos: { type: array, items: { type: string } }
+        estado_publicacion: { type: string, enum: [borrador, publicada] }
+        promedio: { type: [number, 'null'], description: Nulo si no hay reseñas visibles. }
+        total_resenas: { type: integer }
+        mi_estado:
+          type: [string, 'null']
+          enum: [pendiente, en_curso, terminada, null]
+          description: Solo con sesión.
+        mi_resena:
+          description: Solo con sesión.
+          oneOf:
+            - $ref: '#/components/schemas/MiResena'
+            - type: 'null'
+    FichaLibro:
+      allOf:
+        - $ref: '#/components/schemas/FichaComun'
+        - type: object
+          required: [anio_publicacion_original, ediciones, autores, adaptaciones]
+          properties:
+            anio_publicacion_original: { type: integer }
+            ediciones:
+              type: array
+              items:
+                type: object
+                required: [edicion_id, isbn, paginas, editorial, idioma, anio]
+                properties:
+                  edicion_id: { type: string, format: uuid }
+                  isbn: { type: [string, 'null'] }
+                  paginas: { type: integer }
+                  editorial: { type: string }
+                  idioma: { type: string }
+                  anio: { type: integer }
+            autores: { type: array, items: { $ref: '#/components/schemas/Persona' } }
+            adaptaciones: { type: array, items: { $ref: '#/components/schemas/ObraBreve' } }
+    FichaPelicula:
+      allOf:
+        - $ref: '#/components/schemas/FichaComun'
+        - type: object
+          required:
+            [anio_estreno, duracion_min, plataformas, datos_tecnicos, reparto, directores, libro_origen]
+          properties:
+            anio_estreno: { type: integer }
+            duracion_min: { type: integer }
+            plataformas:
+              type: array
+              items:
+                type: object
+                required: [nombre]
+                properties:
+                  nombre: { type: string }
+            datos_tecnicos:
+              type: object
+              required: [idioma_original, paises, productoras, clasificacion]
+              properties:
+                idioma_original: { type: string }
+                paises: { type: array, items: { type: string } }
+                productoras: { type: array, items: { type: string } }
+                clasificacion: { type: [string, 'null'] }
+            reparto:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/Persona'
+                  - type: object
+                    required: [personaje, orden]
+                    properties:
+                      personaje: { type: string }
+                      orden: { type: integer }
+            directores: { type: array, items: { $ref: '#/components/schemas/Persona' } }
+            libro_origen:
+              oneOf:
+                - $ref: '#/components/schemas/ObraBreve'
+                - type: 'null'
+    EstadoLectura:
+      type: string
+      enum: [pendiente, en_curso, terminada]
+    Publicacion:
+      type: object
+      required: [resena_id, promedio, total_resenas]
+      properties:
+        resena_id: { type: string, format: uuid }
+        promedio: { type: [number, 'null'] }
+        total_resenas: { type: integer }
     EstadoBase:
       type: string
       enum: [ok, caida]
@@ -73,3 +1447,7 @@ components:
             campos:
               type: object
               additionalProperties: { type: string }
+            obra_id:
+              type: string
+              format: uuid
+              description: Solo en un alta que quedó a medias (D-58).
