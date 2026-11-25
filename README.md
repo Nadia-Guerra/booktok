@@ -5,12 +5,12 @@ Reseñas de libros y de sus adaptaciones al cine. App Android, API REST y tres b
 | Carpeta | Contenido |
 |---|---|
 | `backend/` | API (Express 5, TypeScript sobre Node 24) |
-| `frontend/` | App Android (Expo). Se desarrolla en la rama `feat/frontend` |
+| `frontend/` | App Android (Expo) |
 | `shared/` | Esquemas Zod y tipos que usan las dos |
 
 ## Requisitos
 
-Node 24, Docker Desktop y `cloudflared`.
+Node 24, Docker Desktop, `cloudflared` y, en el teléfono, la app Expo Go.
 
 ## Puesta en marcha
 
@@ -54,6 +54,12 @@ Abre el túnel y copia la dirección `https://….trycloudflare.com` que imprime
 
 ```powershell
 cloudflared tunnel --url http://localhost:3000
+```
+
+Arranca la app y abre el código QR con Expo Go (teléfono y computadora en la misma red). En la pantalla, pega la dirección del túnel.
+
+```powershell
+npm run app
 ```
 
 ## Comprobaciones

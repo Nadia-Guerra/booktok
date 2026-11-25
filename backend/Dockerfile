@@ -7,6 +7,8 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 COPY shared/package.json shared/
 COPY backend/package.json backend/
+# npm exige conocer todos los workspaces del lockfile, aunque la app no se instale aquí.
+COPY frontend/package.json frontend/
 RUN npm ci --omit=dev --no-audit --no-fund --workspace @dlbp/backend --workspace @dlbp/shared
 
 COPY shared/src shared/src
