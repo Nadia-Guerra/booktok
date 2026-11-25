@@ -10,8 +10,7 @@ export const estadoPublicacion = z.enum(['borrador', 'publicada']);
 
 export const busquedaConsulta = z.object({
   q: z.string('Escribe qué buscar').trim().min(1, 'Escribe qué buscar').max(200, 'La búsqueda es demasiado larga'),
-  // La búsqueda por persona llega con el grafo en la etapa de descubrimiento.
-  por: z.literal('titulo', 'Por ahora solo se busca por título').default('titulo'),
+  por: z.enum(['titulo', 'persona'], 'Se busca por titulo o por persona').default('titulo'),
 });
 
 /** Datos de presentación de una obra (AP-03, AP-04). */
@@ -22,8 +21,6 @@ export const obraBreve = z.object({
   anio: z.number().int(),
   portada_url: z.string().nullable(),
 });
-
-export const respuestaBusqueda = z.object({ obras: z.array(obraBreve) });
 
 export const edicion = z.object({
   edicion_id: z.guid(),
@@ -39,6 +36,17 @@ export const personaBreve = z.object({
   nombre: z.string(),
   foto_url: z.string().nullable(),
 });
+
+/** Cómo se une una persona con una obra en el grafo. */
+export const vinculo = z.enum(['escribió', 'dirigida_por', 'actuó_en']);
+
+/** `persona` y `vinculo` solo vienen al buscar por persona (EP-08). */
+export const resultadoBusqueda = obraBreve.extend({
+  persona: personaBreve.optional(),
+  vinculo: vinculo.optional(),
+});
+
+export const respuestaBusqueda = z.object({ obras: z.array(resultadoBusqueda) });
 
 export const actorReparto = personaBreve.extend({
   personaje: z.string(),
@@ -100,6 +108,8 @@ export type TipoObra = z.infer<typeof tipoObra>;
 export type EstadoLectura = z.infer<typeof estadoLectura>;
 export type EstadoPublicacion = z.infer<typeof estadoPublicacion>;
 export type ObraBreve = z.infer<typeof obraBreve>;
+export type Vinculo = z.infer<typeof vinculo>;
+export type ResultadoBusqueda = z.infer<typeof resultadoBusqueda>;
 export type RespuestaBusqueda = z.infer<typeof respuestaBusqueda>;
 export type Edicion = z.infer<typeof edicion>;
 export type PersonaBreve = z.infer<typeof personaBreve>;

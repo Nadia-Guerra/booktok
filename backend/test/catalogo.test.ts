@@ -76,7 +76,7 @@ test('EP-08: los borradores solo salen para el administrador', async () => {
 });
 
 test('EP-08: la entrada inválida da 400', async () => {
-  for (const consulta of ['', '?q=', '?q=%20%20', '?q=a&q=b', '?q[$ne]=1', '?q=dune&por=persona']) {
+  for (const consulta of ['', '?q=', '?q=%20%20', '?q=a&q=b', '?q[$ne]=1', '?q=dune&por=editorial']) {
     const e = await esperarError(await api.pedir('GET', `/obras${consulta}`), 400);
     assert.equal(e.codigo, 'entrada_invalida', consulta);
   }

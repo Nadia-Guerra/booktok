@@ -1,8 +1,9 @@
 // Catálogo en lectura (RF-05 a RF-07, RF-23): une la ficha, el promedio y las relaciones del grafo.
 // Los borradores solo los ve el administrador (D-24, D-56).
-import type { Ficha, ObraBreve } from '@dlbp/shared';
+import type { Ficha, ObraBreve, ResultadoBusqueda } from '@dlbp/shared';
 import { ErrorApi } from '../errores.ts';
 import * as documental from '../repositorios/documental/obras.ts';
+import { obrasPorPersona } from '../repositorios/grafo/descubrimiento.ts';
 import * as grafo from '../repositorios/grafo/obras.ts';
 import * as relacional from '../repositorios/relacional/obras.ts';
 import type { SesionActual } from './cuentas.ts';
@@ -16,6 +17,19 @@ export function buscarPorTitulo(texto: string, sesion?: SesionActual): Promise<O
   const palabras = texto.replace(/["\\-]/g, ' ').trim();
   if (!palabras) return Promise.resolve([]);
   return documental.buscarPorTitulo(palabras, esAdmin(sesion), MAXIMO_RESULTADOS);
+}
+
+/** EP-08 por persona: lo que alguien escribió, dirigió o actuó (CG-01), con los datos de AP-04. */
+export async function buscarPorPersona(texto: string, sesion?: SesionActual): Promise<ResultadoBusqueda[]> {
+  const filas = await obrasPorPersona(texto);
+  const obras = await documental.obrasBreves([...new Set(filas.map((f) => f.obra_id))], esAdmin(sesion));
+  const porId = new Map(obras.map((o) => [o.obra_id, o]));
+  return filas
+    .flatMap(({ obra_id, vinculo, persona_id, nombre, foto_url }) => {
+      const obra = porId.get(obra_id); // las que no se pueden ver no salen (D-56)
+      return obra ? { ...obra, persona: { persona_id, nombre, foto_url }, vinculo } : [];
+    })
+    .slice(0, MAXIMO_RESULTADOS);
 }
 
 export async function verFicha(obraId: string, sesion?: SesionActual): Promise<Ficha> {

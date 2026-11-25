@@ -10,8 +10,9 @@ const parametrosObra = z.object({ obra_id: identificador });
 
 // EP-08
 rutasCatalogo.get('/obras', sesionOpcional, async (req, res) => {
-  const { q } = busquedaConsulta.parse(req.query);
-  res.json({ obras: await catalogo.buscarPorTitulo(q, sesionSiHay(res)) });
+  const { q, por } = busquedaConsulta.parse(req.query);
+  const buscar = por === 'persona' ? catalogo.buscarPorPersona : catalogo.buscarPorTitulo;
+  res.json({ obras: await buscar(q, sesionSiHay(res)) });
 });
 
 // EP-09

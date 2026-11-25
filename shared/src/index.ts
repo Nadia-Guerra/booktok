@@ -6,6 +6,7 @@ z.config(z.locales.es());
 
 export * from './catalogo.ts';
 export * from './cuentas.ts';
+export * from './descubrimiento.ts';
 export * from './errores.ts';
 export * from './resenas.ts';
 export * from './salud.ts';

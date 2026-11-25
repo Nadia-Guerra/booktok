@@ -143,11 +143,12 @@ paths:
   /obras:
     get:
       operationId: buscarObras
-      summary: Buscar obras por título (EP-08, AP-03)
+      summary: Buscar obras por título o por persona (EP-08, AP-03, CG-01)
       description: >-
-        Busca palabras completas, sin distinguir mayúsculas ni tildes; basta con que coincida una y
-        las obras con más coincidencias van primero. Devuelve como máximo 20, sin paginar. Los
-        borradores solo aparecen para el administrador. La búsqueda por persona aún no está disponible.
+        Busca palabras completas, sin distinguir mayúsculas ni tildes; basta con que coincida una.
+        Por título, las obras con más coincidencias van primero. Por persona, hay una fila por obra,
+        persona y vínculo, ordenadas por el nombre de la persona. Devuelve como máximo 20, sin
+        paginar. Los borradores solo aparecen para el administrador.
       security: [{}, { sesion: [] }]
       parameters:
         - name: q
@@ -156,7 +157,7 @@ paths:
           schema: { type: string, minLength: 1, maxLength: 200 }
         - name: por
           in: query
-          schema: { type: string, enum: [titulo], default: titulo }
+          schema: { type: string, enum: [titulo, persona], default: titulo }
       responses:
         '200':
           description: Resultados (puede ser una lista vacía).
@@ -168,7 +169,14 @@ paths:
                 properties:
                   obras:
                     type: array
-                    items: { $ref: '#/components/schemas/ObraBreve' }
+                    items:
+                      allOf:
+                        - { $ref: '#/components/schemas/ObraBreve' }
+                        - type: object
+                          description: Solo al buscar por persona.
+                          properties:
+                            persona: { $ref: '#/components/schemas/Persona' }
+                            vinculo: { type: string, enum: ['escribió', 'dirigida_por', 'actuó_en'] }
         '400': { $ref: '#/components/responses/EntradaInvalida' }
         '401': { $ref: '#/components/responses/SinSesion' }
         '503': { $ref: '#/components/responses/BaseNoDisponible' }
@@ -442,6 +450,131 @@ paths:
         '400': { $ref: '#/components/responses/EntradaInvalida' }
         '401': { $ref: '#/components/responses/SinSesion' }
         '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /exploracion/caminos:
+    get:
+      operationId: caminos
+      summary: Caminos entre dos personas u obras (EP-16, CG-06)
+      description: >-
+        Todos los caminos más cortos, de hasta 6 saltos. Lista vacía si no hay conexión. Un camino
+        que pase por una obra en borrador no se muestra, salvo al administrador.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: origen, in: query, required: true, schema: { type: string, format: uuid } }
+        - name: destino
+          in: query
+          required: true
+          description: Distinto de `origen`.
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: "`relaciones[i]` une `nodos[i]` con `nodos[i + 1]`."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [caminos]
+                properties:
+                  caminos:
+                    type: array
+                    items:
+                      type: object
+                      required: [nodos, relaciones]
+                      properties:
+                        nodos:
+                          type: array
+                          items:
+                            oneOf:
+                              - allOf:
+                                  - { $ref: '#/components/schemas/Persona' }
+                                  - type: object
+                                    required: [tipo]
+                                    properties:
+                                      tipo: { type: string, enum: [persona] }
+                              - { $ref: '#/components/schemas/ObraBreve' }
+                        relaciones:
+                          type: array
+                          items: { type: string, enum: ['escribió', 'adaptado_a', 'dirigida_por', 'actuó_en'] }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /personas/{persona_id}/autores-relacionados:
+    get:
+      operationId: autoresRelacionados
+      summary: Autores que adaptó un director (EP-17, CG-07)
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: persona_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Lista vacía si la persona no dirigió ninguna adaptación.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [autores]
+                properties:
+                  autores:
+                    type: array
+                    items:
+                      allOf:
+                        - { $ref: '#/components/schemas/Persona' }
+                        - type: object
+                          required: [obras]
+                          properties:
+                            obras:
+                              type: array
+                              items:
+                                type: object
+                                required: [libro, pelicula]
+                                properties:
+                                  libro: { $ref: '#/components/schemas/ObraBreve' }
+                                  pelicula: { $ref: '#/components/schemas/ObraBreve' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /me/recomendaciones:
+    get:
+      operationId: recomendaciones
+      summary: Libros y películas recomendados (EP-18, O18, CG-08, CG-09)
+      description: >-
+        `libros`: del mismo director que adaptó alguno que te gustó (terminado y con 4 o más).
+        `peliculas`: de libros que leyeron las personas que sigues, aunque ya las hayas visto (D-20).
+      security: [{ sesion: [] }]
+      responses:
+        '200':
+          description: Las dos listas pueden ir vacías.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [libros, peliculas]
+                properties:
+                  libros:
+                    type: array
+                    items:
+                      type: object
+                      required: [obra, motivos]
+                      properties:
+                        obra: { $ref: '#/components/schemas/ObraBreve' }
+                        motivos:
+                          type: array
+                          items:
+                            type: object
+                            required: [libro_partida, director]
+                            properties:
+                              libro_partida: { $ref: '#/components/schemas/ObraBreve' }
+                              director: { $ref: '#/components/schemas/Persona' }
+                  peliculas:
+                    type: array
+                    items:
+                      type: object
+                      required: [obra, libro, seguidos]
+                      properties:
+                        obra: { $ref: '#/components/schemas/ObraBreve' }
+                        libro: { $ref: '#/components/schemas/ObraBreve' }
+                        seguidos: { type: integer, minimum: 1 }
+        '401': { $ref: '#/components/responses/SinSesion' }
         '503': { $ref: '#/components/responses/BaseNoDisponible' }
 components:
   parameters:
