@@ -5,6 +5,7 @@ import { z } from 'zod';
 z.config(z.locales.es());
 
 export * from './catalogo.ts';
+export * from './comparativas.ts';
 export * from './cuentas.ts';
 export * from './descubrimiento.ts';
 export * from './errores.ts';

@@ -8,6 +8,7 @@ import type {
   RespuestaEstado,
   RespuestaEstados,
   RespuestaPublicacion,
+  RespuestaResenaOculta,
   RespuestaResenas,
 } from '@dlbp/shared';
 import { ErrorApi } from '../errores.ts';
@@ -42,6 +43,13 @@ export async function publicar(
   return publicada;
 }
 
+/** Ocultar o volver a mostrar (RF-18). La ruta ya comprobó que es el administrador. */
+export async function moderar(resenaId: string, oculta: boolean): Promise<RespuestaResenaOculta> {
+  const resumen = await relacional.ocultar(resenaId, oculta);
+  if (!resumen) throw new ErrorApi('no_encontrado', 'La reseña no existe');
+  return { resena_id: resenaId, oculta, ...resumen };
+}
+
 /** El autor borra la suya; el administrador, cualquiera (RN-09, RN-10). */
 export async function eliminar(sesion: SesionActual, resenaId: string): Promise<void> {
   const autor = sesion.rol === 'admin' ? null : sesion.usuarioId;
@@ -60,7 +68,7 @@ export async function marcarEstado(
 }
 
 /** El historial de otro usuario solo lo ven sus seguidores y el administrador (D-54). */
-async function exigirAccesoAlHistorial(usuarioId: string, sesion?: SesionActual) {
+export async function exigirAccesoAlHistorial(usuarioId: string, sesion?: SesionActual) {
   if (!sesion) throw new ErrorApi('sin_sesion', 'Inicia sesión para continuar');
   if (!(await cuentas.buscarPerfil(usuarioId))) throw new ErrorApi('no_encontrado', 'El usuario no existe');
   if (sesion.rol === 'admin' || sesion.usuarioId === usuarioId) return;

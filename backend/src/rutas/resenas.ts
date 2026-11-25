@@ -1,8 +1,15 @@
-import { estadoEntrada, estadosConsulta, identificador, resenaEntrada, resenasConsulta } from '@dlbp/shared';
+import {
+  estadoEntrada,
+  estadosConsulta,
+  identificador,
+  moderacionEntrada,
+  resenaEntrada,
+  resenasConsulta,
+} from '@dlbp/shared';
 import { Router } from 'express';
 import { z } from 'zod';
 import * as resenas from '../servicios/resenas.ts';
-import { exigirSesion, sesionDe, sesionOpcional, sesionSiHay } from './sesion.ts';
+import { exigirAdmin, exigirSesion, sesionDe, sesionOpcional, sesionSiHay } from './sesion.ts';
 
 export const rutasResenas = Router();
 
@@ -20,6 +27,13 @@ rutasResenas.put('/obras/:obra_id/resena', exigirSesion, async (req, res) => {
   const entrada = resenaEntrada.parse(req.body ?? {});
   const { creada, ...cuerpo } = await resenas.publicar(sesionDe(res), obra_id, entrada);
   res.status(creada ? 201 : 200).json(cuerpo);
+});
+
+// EP-12
+rutasResenas.patch('/resenas/:resena_id', exigirAdmin, async (req, res) => {
+  const { resena_id } = parametrosResena.parse(req.params);
+  const { oculta } = moderacionEntrada.parse(req.body ?? {});
+  res.json(await resenas.moderar(resena_id, oculta));
 });
 
 // EP-13

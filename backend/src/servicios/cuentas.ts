@@ -73,3 +73,11 @@ export async function editarPerfil(usuarioId: string, cambios: PerfilCambios): P
   if (!perfil) throw new ErrorApi('no_encontrado', 'La cuenta ya no existe');
   return perfil;
 }
+
+/** RF-04. Las comparativas y el nodo del grafo los limpia después el worker. */
+export async function eliminarCuenta(sesion: SesionActual): Promise<void> {
+  // El administrador no se borra desde la app: se crea por script y sin él nadie podría moderar.
+  if (sesion.rol === 'admin') throw new ErrorApi('sin_permiso', 'La cuenta de administrador no se elimina desde la app');
+  if (!(await cuentas.eliminarCuenta(sesion.usuarioId))) throw new ErrorApi('no_encontrado', 'La cuenta ya no existe');
+  avisarCambios();
+}

@@ -16,6 +16,14 @@ export const exigirSesion: RequestHandler = async (req, res, next) => {
   next();
 };
 
+/** 401 sin sesión y 403 si no es el administrador (RN-09). El rol se lee en cada petición (O22). */
+export const exigirAdmin: RequestHandler = async (req, res, next) => {
+  const sesion = await sesionDeLaCabecera(req);
+  if (sesion.rol !== 'admin') throw new ErrorApi('sin_permiso', 'Solo el administrador puede hacer esto');
+  res.locals.sesion = sesion;
+  next();
+};
+
 /**
  * Para las rutas públicas cuya respuesta cambia según quién pide. Sin cabecera se atiende como
  * visitante; con un token que ya no vale responde 401, para que la app sepa que debe volver a entrar.

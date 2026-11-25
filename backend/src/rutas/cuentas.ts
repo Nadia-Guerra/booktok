@@ -32,3 +32,9 @@ rutasCuentas.patch('/me', exigirSesion, async (req, res) => {
   const cambios = perfilCambios.parse(req.body ?? {});
   res.json(await cuentas.editarPerfil(sesionDe(res).usuarioId, cambios));
 });
+
+// EP-07
+rutasCuentas.delete('/me', exigirSesion, async (_req, res) => {
+  await cuentas.eliminarCuenta(sesionDe(res));
+  res.status(204).end();
+});

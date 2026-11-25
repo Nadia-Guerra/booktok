@@ -140,6 +140,19 @@ paths:
         '400': { $ref: '#/components/responses/EntradaInvalida' }
         '401': { $ref: '#/components/responses/SinSesion' }
         '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    delete:
+      operationId: eliminarCuenta
+      summary: Eliminar mi cuenta (EP-07, O4)
+      description: >-
+        Borra reseñas, estados, listas, seguimientos y sesiones, y recalcula los promedios. Las
+        comparativas y el grafo los limpia después el worker. El administrador no puede (403).
+      security: [{ sesion: [] }]
+      responses:
+        '204': { description: Cuenta eliminada. }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
   /obras:
     get:
       operationId: buscarObras
@@ -295,6 +308,36 @@ paths:
         '404': { $ref: '#/components/responses/NoEncontrado' }
         '503': { $ref: '#/components/responses/BaseNoDisponible' }
   /resenas/{resena_id}:
+    patch:
+      operationId: moderarResena
+      summary: Ocultar o mostrar una reseña (EP-12, O10)
+      description: Solo el administrador. Una reseña oculta no cuenta en el promedio.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: resena_id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Moderacion' }
+      responses:
+        '200':
+          description: Cómo quedó la reseña y el promedio de su obra.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [resena_id, oculta, promedio, total_resenas]
+                properties:
+                  resena_id: { type: string, format: uuid }
+                  oculta: { type: boolean }
+                  promedio: { type: [number, 'null'] }
+                  total_resenas: { type: integer }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
     delete:
       operationId: eliminarResena
       summary: Eliminar una reseña (EP-13, O9 y O10)
@@ -576,6 +619,129 @@ paths:
                         seguidos: { type: integer, minimum: 1 }
         '401': { $ref: '#/components/responses/SinSesion' }
         '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /comparativas:
+    get:
+      operationId: listarComparativas
+      summary: Comparativas de una adaptación o de una persona (EP-23, AP-19, AP-21, AP-23)
+      description: >-
+        Con `libro_id` y `pelicula_id`, con `usuario_id`, o con los tres; las recientes primero. Las
+        de una adaptación son públicas. Solo con `usuario_id` hay que seguir a esa persona (D-54). Las
+        ocultas solo las ven su autor y el administrador.
+      security: [{}, { sesion: [] }]
+      parameters:
+        - { name: libro_id, in: query, schema: { type: string, format: uuid } }
+        - { name: pelicula_id, in: query, schema: { type: string, format: uuid } }
+        - { name: usuario_id, in: query, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/Limite' }
+        - { $ref: '#/components/parameters/Cursor' }
+      responses:
+        '200':
+          description: Una página. `siguiente` es nulo en la última.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [comparativas, siguiente]
+                properties:
+                  comparativas:
+                    type: array
+                    items: { $ref: '#/components/schemas/Comparativa' }
+                  siguiente: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    post:
+      operationId: crearComparativa
+      summary: Publicar una comparativa (EP-25, AP-05, CG-10, AP-18)
+      description: >-
+        Solo sobre un libro y una película publicados y unidos por una adaptación, y una por persona
+        y pareja. Si el grafo no responde, no se guarda (503).
+      security: [{ sesion: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComparativaNueva' }
+      responses:
+        '201':
+          description: Creada.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [comparativa_id]
+                properties:
+                  comparativa_id: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+  /comparativas/{comparativa_id}:
+    put:
+      operationId: editarComparativa
+      summary: Editar mi comparativa (EP-26, AP-24)
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: comparativa_id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComparativaCambios' }
+      responses:
+        '200':
+          description: Cómo quedó.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Comparativa' }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    patch:
+      operationId: moderarComparativa
+      summary: Ocultar o mostrar una comparativa (EP-27, AP-26)
+      description: Solo el administrador.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: comparativa_id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Moderacion' }
+      responses:
+        '200':
+          description: Cómo quedó.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [comparativa_id, oculta]
+                properties:
+                  comparativa_id: { type: string, format: uuid }
+                  oculta: { type: boolean }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
+    delete:
+      operationId: eliminarComparativa
+      summary: Eliminar una comparativa (EP-28, AP-25 y AP-27)
+      description: La borra su autor o el administrador.
+      security: [{ sesion: [] }]
+      parameters:
+        - { name: comparativa_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Eliminada. }
+        '400': { $ref: '#/components/responses/EntradaInvalida' }
+        '401': { $ref: '#/components/responses/SinSesion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '503': { $ref: '#/components/responses/BaseNoDisponible' }
 components:
   parameters:
     ObraId:
@@ -624,6 +790,58 @@ components:
       scheme: bearer
       description: Token opaco de sesión (D-35).
   schemas:
+    Moderacion:
+      type: object
+      required: [oculta]
+      properties:
+        oculta: { type: boolean }
+    ComparativaCambios:
+      type: object
+      required: [veredicto, aspectos]
+      properties:
+        veredicto:
+          type: object
+          required: [preferencia]
+          properties:
+            preferencia: { type: string, enum: [libro, pelicula, empate] }
+            comentario: { type: string, maxLength: 2000 }
+        aspectos:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            type: object
+            required: [nombre]
+            properties:
+              nombre: { type: string, minLength: 1, maxLength: 60 }
+              puntuacion: { type: integer, minimum: 1, maximum: 5 }
+              comentario: { type: string, maxLength: 1000 }
+    ComparativaNueva:
+      allOf:
+        - { $ref: '#/components/schemas/ComparativaCambios' }
+        - type: object
+          required: [libro_id, pelicula_id]
+          properties:
+            libro_id: { type: string, format: uuid }
+            pelicula_id: { type: string, format: uuid }
+    Comparativa:
+      allOf:
+        - { $ref: '#/components/schemas/ComparativaCambios' }
+        - type: object
+          required: [comparativa_id, libro, pelicula, autor, oculta, creado_en, actualizado_en]
+          properties:
+            comparativa_id: { type: string, format: uuid }
+            libro: { $ref: '#/components/schemas/ObraBreve' }
+            pelicula: { $ref: '#/components/schemas/ObraBreve' }
+            autor:
+              type: object
+              required: [usuario_id, nombre]
+              properties:
+                usuario_id: { type: string, format: uuid }
+                nombre: { type: string }
+            oculta: { type: boolean }
+            creado_en: { type: string, format: date-time }
+            actualizado_en: { type: string, format: date-time }
     Perfil:
       type: object
       required: [usuario_id, correo, nombre, biografia, rol]

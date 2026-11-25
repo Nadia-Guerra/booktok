@@ -84,3 +84,40 @@ export async function actualizarPerfil(usuarioId: string, c: PerfilCambios): Pro
   );
   return r.rows[0];
 }
+
+/** Nombre de varios usuarios, para firmar lo que viene de MongoDB. Los que ya no existen no salen. */
+export async function nombresDe(ids: string[]): Promise<Map<string, string>> {
+  const r = await pool.query('SELECT usuario_id, nombre FROM usuario WHERE usuario_id = ANY($1::uuid[])', [ids]);
+  return new Map(r.rows.map((f) => [f.usuario_id, f.nombre]));
+}
+
+// Dos borrados de cuenta a la vez se interbloquean al recalcular los promedios (D-38) y agotan los
+// reintentos. Hacen fila aquí, lo que basta porque solo hay una copia de la API (D-04).
+let turno: Promise<unknown> = Promise.resolve();
+
+function enFila<T>(trabajo: () => Promise<T>): Promise<T> {
+  const mio = turno.then(trabajo);
+  turno = mio.catch(() => {});
+  return mio;
+}
+
+/**
+ * O4: evento `usuario_eliminado` y borrado en la misma transacción. La cascada quita reseñas,
+ * estados, listas, seguimientos y sesiones, y el trigger recalcula los promedios. Devuelve si existía.
+ */
+export async function eliminarCuenta(usuarioId: string): Promise<boolean> {
+  const noExistia = new Error('la cuenta ya no existe');
+  try {
+    await enFila(() =>
+      enTransaccion(async (cliente) => {
+        await anotarEvento(cliente, 'usuario_eliminado', { usuario_id: usuarioId });
+        const r = await cliente.query('DELETE FROM usuario WHERE usuario_id = $1', [usuarioId]);
+        if (r.rowCount !== 1) throw noExistia; // revierte también el evento
+      }),
+    );
+    return true;
+  } catch (e) {
+    if (e === noExistia) return false;
+    throw e;
+  }
+}

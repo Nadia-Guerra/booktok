@@ -43,7 +43,7 @@ function baseNoDisponible(e: unknown): boolean {
 }
 
 /**
- * Para el worker (documento 04, 9.5): ¿falló la base destino y no el evento? Además de la red, cuenta
+ * ¿Falló la base y no la petición o el evento? (503, y en el worker, documento 04, 9.5). Además de la red, cuenta
  * Neo4j arrancando, sin conexiones libres, rechazando las credenciales o tan lento que vence la
  * transacción (la primera consulta tras arrancar puede tardar mucho).
  */
@@ -66,7 +66,7 @@ function aErrorApi(e: unknown): ErrorApi {
   const tipo = (e as { type?: unknown } | null)?.type;
   if (tipo === 'entity.parse.failed') return new ErrorApi('entrada_invalida', 'El cuerpo no es un JSON válido');
   if (tipo === 'entity.too.large') return new ErrorApi('demasiado_grande', 'El cuerpo es demasiado grande');
-  if (baseNoDisponible(e)) return new ErrorApi('base_no_disponible', 'Una base no responde. Intenta de nuevo en un momento');
+  if (destinoNoDisponible(e)) return new ErrorApi('base_no_disponible', 'Una base no responde. Intenta de nuevo en un momento');
   return new ErrorApi('error_interno', 'Ocurrió un error inesperado');
 }
 

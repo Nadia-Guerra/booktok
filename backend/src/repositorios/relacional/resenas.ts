@@ -187,3 +187,19 @@ export async function listarEstados(
   );
   return r.rows;
 }
+
+/** O10, ocultar o mostrar. El trigger recalcula el promedio con las reseñas no ocultas. */
+export function ocultar(resenaId: string, oculta: boolean) {
+  return enTransaccion(async (cliente) => {
+    const r = await cliente.query('UPDATE resena SET oculta = $2 WHERE resena_id = $1 RETURNING obra_id', [
+      resenaId,
+      oculta,
+    ]);
+    if (!r.rows[0]) return undefined;
+    const obra = await cliente.query('SELECT promedio, total_resenas FROM obra_resumen WHERE obra_id = $1', [
+      r.rows[0].obra_id,
+    ]);
+    const { promedio, total_resenas } = obra.rows[0];
+    return { promedio: promedio === null ? null : Number(promedio), total_resenas: total_resenas as number };
+  });
+}
