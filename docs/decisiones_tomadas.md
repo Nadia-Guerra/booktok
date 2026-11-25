@@ -52,6 +52,11 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 | D-46 | Las pruebas sobre la semilla son de solo lectura y la coherencia entre bases compara fuera de las bases | 2026-11-23 |
 | D-47 | La caché de páginas de Neo4j baja de 256 a 128 MB tras medir el consumo (ajusta D-36) | 2026-11-24 |
 | D-48 | `reconstruir.ps1` borra solo los volúmenes del proyecto, levanta una base cada vez, prueba sobre bases vacías y carga la semilla al final | 2026-11-24 |
+| D-49 | CG-06 con origen igual a destino falla en el motor: la API lo rechaza antes de llamarla | 2026-11-24 |
+| D-50 | La evidencia del catálogo no toca la semilla y las operaciones integradas marcan lo simulado | 2026-11-24 |
+| D-51 | El catálogo del Entregable 5 se genera desde una fuente escrita a mano y la evidencia guardada | 2026-11-24 |
+| D-52 | La API es REST, versionada en `/api/v1` y documentada con OpenAPI | 2026-11-24 |
+| D-53 | El código se organiza en `backend/`, `frontend/` y `shared/` | 2026-11-24 |
 
 ---
 
@@ -886,3 +891,28 @@ Termina con código 1 si falló algún paso. `-SinPruebas` omite el paso 4.
 **Por qué.** Se generó con 81 operaciones y 514 casos; se comprobó que las cifras coinciden con los archivos de evidencia (148 relacionales, 178 documentales, 153 de grafo y 35 integrados), que los 44 enlaces y las 81 anclas existen y que las 178 citas a la evidencia del Entregable 4 apuntan a casos que están en sus archivos.
 **Costo que se acepta.** El propósito, los parámetros y el resultado esperado son texto escrito a mano en el JSON: si un documento de diseño cambia, hay que actualizarlos (el generador no lo detecta). Las citas a la evidencia previa también son texto; la revisión de este escalón las verificó una vez, pero no se repite sola. Los resultados obtenidos de varios pasos en el grafo muestran el último paso del caso.
 **Dónde.** `docs/entregables/catalogo-operaciones.json`, `docs/entregables/entregable-5-catalogo.md`, `db/scripts/generar-catalogo.ps1`.
+
+---
+
+## D-52. La API es REST, versionada en `/api/v1` y documentada con OpenAPI
+
+**Contexto.** El Entregable 6 pide "API REST o GraphQL, según la decisión justificada del equipo". D-32 fijó Node con Express, pero no el estilo de la API ni cómo se documenta su contrato.
+**Decisión.** API REST con JSON, bajo el prefijo `/api/v1`. El contrato se documenta en OpenAPI, en `docs/api/openapi.yaml`, y se escribe junto con cada ruta, no al final.
+**Alternativa descartada.** GraphQL: un solo endpoint con resolvers y esquema como contrato.
+**Por qué.**
+- Encaja con lo ya decidido: Express para las rutas, Zod para validar la entrada (D-37) y las capas de rutas, servicios y repositorios.
+- Las operaciones del dominio son un conjunto cerrado y conocido (RF-01 a RF-27), con un solo cliente (D-28): no hace falta que el cliente componga consultas.
+- GraphQL añadiría una librería de servidor y otra de cliente, resolvers que habría que optimizar para no encadenar consultas a tres bases y un modelo de errores distinto, en un plazo que no lo permite.
+- La autorización por rol y propiedad (RN-09, RN-10) se aplica ruta por ruta.
+**Costo que se acepta.** Algunas pantallas reciben más campos de los que muestran, y el contrato OpenAPI hay que mantenerlo a mano junto al código. El prefijo `/api/v1` recoge la advertencia de D-28: las apps instaladas siguen llamando a la API.
+**Si se quisiera cambiar más adelante.** Cambiaría la capa de rutas y el cliente de la app; servicios y repositorios no dependen del estilo de la API.
+**Dónde.** `AGENTS.md`, `docs/api/openapi.yaml` (se crea al implementar el Entregable 6).
+
+---
+
+## D-53. El código se organiza en `backend/`, `frontend/` y `shared/`
+
+**Contexto.** `arquitectura/05-orden-de-construccion.md` hablaba de `api/`, `app/` y una carpeta compartida, mientras que el repositorio ya tenía las carpetas vacías `backend/` y `frontend/`.
+**Decisión.** `backend/` (API, worker y reconciliación), `frontend/` (app Android con Expo) y `shared/` (esquemas Zod y tipos que usan las dos, D-37). `db/` y `docs/` no cambian.
+**Alternativa descartada.** `api/`, `app/` y la carpeta compartida: habría que borrar las carpetas ya creadas y se aleja de la estructura que sugiere la guía (sección 10).
+**Dónde.** `AGENTS.md` y `arquitectura/05-orden-de-construccion.md` (bloque 0).
