@@ -1,0 +1,1111 @@
+{
+  "nota": "Fuente de las fichas de entregable-5-catalogo.md (propósito, bases, parámetros y resultado esperado de cada operación). Los casos y los resultados obtenidos NO se escriben aquí: los lee db/scripts/generar-catalogo.ps1 de db/evidencias/catalogo/. Regenerar con .\\db\\scripts\\generar-catalogo.ps1",
+  "relacional": {
+    "diseno": "docs/modelado/relacional/04-operaciones.md",
+    "evidencia": "db/evidencias/catalogo/relacional.txt",
+    "ejecutor": "db/relacional/pruebas/07-catalogo.sql"
+  },
+  "operaciones": [
+    {
+      "id": "O1",
+      "grupo": "relacional",
+      "titulo": "Registrar usuario",
+      "rf": "RF-01",
+      "actor": "Visitante",
+      "bases": "PostgreSQL (fuente). El evento `usuario_creado` hará que el grafo cree el nodo `Usuario` (CG-16) cuando exista el worker.",
+      "proposito": "Crear la cuenta de un lector y dejar, en la misma transacción, el evento `usuario_creado`.",
+      "entrada": "`usuario_id` (UUID en minúsculas que genera la API), `correo` (único, en minúsculas, hasta 254 caracteres), `nombre` (obligatorio, hasta 100) y `password_hash` (el hash, nunca la contraseña). La API normaliza el correo y calcula el hash. La base valida: UNIQUE del correo, CHECK de minúsculas, NOT NULL y longitudes.",
+      "salida": "Una fila en `usuario` con rol `lector` y una fila `usuario_creado` en `sync_outbox` con el `usuario_id` en el `payload`. Sin cuerpo de respuesta: o se confirma o falla con `23505 uq_usuario_correo`, `23514 ck_usuario_correo_minusculas`, `23502` (nulo) o `22001` (demasiado largo), y entonces no queda ni usuario ni evento.",
+      "previa": "`relacional/01-integridad.txt`: pruebas 1, 1b y E7."
+    },
+    {
+      "id": "O2",
+      "grupo": "relacional",
+      "titulo": "Iniciar sesión",
+      "rf": "RF-02",
+      "actor": "Visitante",
+      "bases": "PostgreSQL.",
+      "proposito": "Autenticar a un usuario y abrir una sesión: leer el usuario por correo y guardar el hash del token aleatorio que recibirá la app (D-35).",
+      "entrada": "`correo` (se busca ya normalizado), hash SHA-256 del token (64 hexadecimales; el token en claro no se guarda) y vigencia (propuesta: 30 días). La API compara la contraseña con `password_hash`. La base exige `expira_en > creado_en` y un token único.",
+      "salida": "Una fila en `sesion` y el `usuario_id`. Con un correo inexistente no hay usuario y la API responde lo mismo que con una contraseña incorrecta, para no revelar qué correos existen. Errores de base: `23514 ck_sesion_vigencia` y `23505 pk_sesion`.",
+      "previa": "`relacional/01-integridad.txt`: pruebas 16, 17a y 17b."
+    },
+    {
+      "id": "O3",
+      "grupo": "relacional",
+      "titulo": "Editar perfil",
+      "rf": "RF-03",
+      "actor": "Lector",
+      "bases": "PostgreSQL.",
+      "proposito": "Cambiar el nombre y la biografía del usuario que tiene la sesión.",
+      "entrada": "`:sesion` (el `usuario_id` de la sesión), `nombre` (obligatorio, hasta 100 caracteres) y `biografia` (opcional, hasta 500). Solo se actualiza la fila de `:sesion`.",
+      "salida": "Número de filas actualizadas: 1, o 0 si el usuario no existe. Errores de base: `23502` (nombre nulo) y `22001` (texto demasiado largo).",
+      "previa": ""
+    },
+    {
+      "id": "O4",
+      "grupo": "relacional",
+      "titulo": "Eliminar cuenta",
+      "rf": "RF-04",
+      "actor": "Lector",
+      "bases": "PostgreSQL hace la cascada y el trigger del promedio. La limpieza de MongoDB (AP-28) y de Neo4j (CG-17) la hará el worker al procesar el evento; aquí se demuestra completa en INT-07.",
+      "proposito": "Borrar la cuenta con todo lo suyo, corregir el promedio de las obras que había reseñado y dejar el evento `usuario_eliminado`, todo en una transacción.",
+      "entrada": "`:sesion` (el `usuario_id` de la sesión). El evento se escribe antes del borrado y la transacción falla si el usuario no existe.",
+      "salida": "El usuario desaparece y con él, por cascada, sus reseñas, estados, listas con sus elementos, seguimientos en ambos sentidos y sesiones. El trigger recalcula `promedio` y `total_resenas` de cada obra afectada (también cuando la reseña borrada estaba oculta). Queda un evento `usuario_eliminado` pendiente. Si algo falla, no se borra nada y tampoco queda evento.",
+      "previa": "`relacional/01-integridad.txt`: pruebas 10-antes, 10a, 10b, 11a a 11c y 16."
+    },
+    {
+      "id": "O5",
+      "grupo": "relacional",
+      "titulo": "Registrar obra",
+      "rf": "RF-08",
+      "actor": "Administrador",
+      "bases": "PostgreSQL. Es el segundo paso del alta de una obra (la ficha vive en MongoDB y el nodo en Neo4j): ver INT-01.",
+      "proposito": "Dar de alta en `obra_resumen` la referencia (id y tipo) de una obra cuya ficha ya existe como borrador, de forma idempotente.",
+      "entrada": "`obra_id` (el UUID de la ficha) y `tipo` (`libro` o `pelicula`). Un alta repetida no hace nada ni falla.",
+      "salida": "Número de filas insertadas: 1, o 0 si ya existía. La obra nace con `total_resenas = 0` y `promedio` nulo. Errores: `22P02` (tipo fuera de la lista) y `23502` (id nulo).",
+      "previa": ""
+    },
+    {
+      "id": "O7",
+      "grupo": "relacional",
+      "titulo": "Publicar reseña",
+      "rf": "RF-12, RF-13",
+      "actor": "Lector",
+      "bases": "PostgreSQL (una sola transacción). El evento `obra_leida` llevará la lectura al grafo (CG-19) cuando exista el worker: ver INT-02.",
+      "proposito": "Guardar la reseña, recalcular el promedio de la obra, marcarla como terminada y dejar el evento `obra_leida`, todo o nada.",
+      "entrada": "`:sesion`, `obra_id`, `calificacion` (entero de 1 a 5) y `texto` (opcional). La base valida: una reseña por usuario y obra (RN-01), calificación de 1 a 5 (RN-02) y que la obra exista.",
+      "salida": "Reseña creada; `promedio` y `total_resenas` de la obra actualizados por el trigger; `estado_obra = terminada`; evento `obra_leida` solo si el estado anterior no era `terminada`. Devuelve el estado anterior. En cualquier fallo (`23505 uq_resena_usuario_obra`, `23514 ck_resena_calificacion`, `23503 fk_resena_obra`) no queda reseña, estado, promedio ni evento.",
+      "previa": "`relacional/02-transaccion.txt`: pruebas 14a a 14c. `relacional/03-concurrencia.txt`: 15a y 15b. `relacional/01-integridad.txt`: 2, 3a, 3b y 7a."
+    },
+    {
+      "id": "O8",
+      "grupo": "relacional",
+      "titulo": "Editar reseña",
+      "rf": "RF-14",
+      "actor": "Lector",
+      "bases": "PostgreSQL.",
+      "proposito": "Cambiar la calificación y el texto de una reseña propia; el promedio se recalcula.",
+      "entrada": "`:sesion`, `resena_id`, `calificacion` (1 a 5) y `texto`. Solo se edita si `usuario_id = :sesion` (RN-10). La obra de una reseña no se puede cambiar.",
+      "salida": "Filas actualizadas (1, o 0 si la reseña no existe o es de otro usuario). `actualizado_en` avanza y el trigger recalcula la obra. `23514 ck_resena_calificacion` si la calificación sale de rango.",
+      "previa": "`relacional/01-integridad.txt`: prueba 12c."
+    },
+    {
+      "id": "O9",
+      "grupo": "relacional",
+      "titulo": "Eliminar reseña",
+      "rf": "RF-14",
+      "actor": "Lector",
+      "bases": "PostgreSQL.",
+      "proposito": "Borrar una reseña propia; el promedio se recalcula y el estado de la obra no cambia.",
+      "entrada": "`:sesion` y `resena_id`. Solo se borra si `usuario_id = :sesion` (RN-10).",
+      "salida": "Filas borradas (1, o 0 si no existe o es ajena). El trigger recalcula `promedio` y `total_resenas`; con la última reseña vigente la obra queda en 0 reseñas y promedio nulo. El estado sigue siendo `terminada`.",
+      "previa": "`relacional/01-integridad.txt`: prueba 12f."
+    },
+    {
+      "id": "O10",
+      "grupo": "relacional",
+      "titulo": "Moderar reseña",
+      "rf": "RF-18",
+      "actor": "Administrador",
+      "bases": "PostgreSQL. La moderación de comparativas es de MongoDB (AP-26 y AP-27).",
+      "proposito": "Ocultar, mostrar o eliminar una reseña; solo cuentan en el promedio las no ocultas.",
+      "entrada": "`resena_id` y la acción: `ocultar`, `mostrar` o `eliminar`. La comprobación del rol `admin` (RN-09) es de la API.",
+      "salida": "Filas afectadas (1, o 0 si no existe). El trigger recalcula el promedio y el total con las reseñas no ocultas.",
+      "previa": "`relacional/01-integridad.txt`: pruebas 12d, 12e y 13."
+    },
+    {
+      "id": "O11",
+      "grupo": "relacional",
+      "titulo": "Marcar estado de una obra",
+      "rf": "RF-15",
+      "actor": "Lector",
+      "bases": "PostgreSQL. Los eventos llevarán `leyó` al grafo (CG-19) solo para libros (D-16).",
+      "proposito": "Fijar el estado de lectura de una obra (`pendiente`, `en_curso` o `terminada`) y emitir el evento que corresponda al cambio.",
+      "entrada": "`:sesion`, `obra_id` y `estado` (de la lista cerrada). Lee el estado anterior con bloqueo de fila.",
+      "salida": "Fila de `estado_obra` creada o actualizada. Evento `obra_leida` al pasar a `terminada` desde otro estado; `obra_no_leida` al salir de `terminada`; ninguno en cualquier otro cambio. Errores: `22P02` (estado fuera de la lista) y `23503 fk_estado_obra`.",
+      "previa": "`relacional/01-integridad.txt`: pruebas 8a y E7."
+    },
+    {
+      "id": "O12",
+      "grupo": "relacional",
+      "titulo": "Crear, renombrar y eliminar lista",
+      "rf": "RF-19",
+      "actor": "Lector",
+      "bases": "PostgreSQL.",
+      "proposito": "Gestionar las listas propias del usuario.",
+      "entrada": "`:sesion`, `lista_id` (UUID) y `nombre` (obligatorio, hasta 100 caracteres; puede repetirse dentro del mismo usuario). Renombrar y eliminar exigen `usuario_id = :sesion`.",
+      "salida": "Crear: lista nueva. Renombrar y eliminar: filas afectadas (1, o 0 si la lista es ajena o no existe). Eliminar borra también sus elementos por cascada. Errores: `22001` y `23502`.",
+      "previa": ""
+    },
+    {
+      "id": "O13",
+      "grupo": "relacional",
+      "titulo": "Agregar y quitar obra de una lista",
+      "rf": "RF-20",
+      "actor": "Lector",
+      "bases": "PostgreSQL.",
+      "proposito": "Poner una obra al final de una lista propia o quitarla.",
+      "entrada": "`:sesion`, `lista_id` y `obra_id`. La lista debe ser del usuario. La obra no puede repetirse en la lista (RN-04) y debe existir.",
+      "salida": "Agregar: la obra queda en la posición `última + 1` (1 en una lista vacía). Quitar: no renumera las demás. Ambas devuelven las filas afectadas (0 si la lista es ajena o la obra no estaba). Errores: `23505 pk_elemento_lista` y `23503 fk_elemento_obra`.",
+      "previa": "`relacional/01-integridad.txt`: pruebas 6, 7c y E4."
+    },
+    {
+      "id": "O14",
+      "grupo": "relacional",
+      "titulo": "Reordenar lista",
+      "rf": "RF-20",
+      "actor": "Lector",
+      "bases": "PostgreSQL.",
+      "proposito": "Reasignar las posiciones de una lista a 1…n en el orden recibido, sin que se vea un estado intermedio.",
+      "entrada": "`:sesion`, `lista_id` y el arreglo de `obra_id` en el nuevo orden. Debe contener exactamente los elementos de la lista.",
+      "salida": "Número de filas reordenadas. Si el orden recibido no coincide con los elementos (falta uno, sobra uno o la lista es ajena) la transacción falla y las posiciones quedan como estaban.",
+      "previa": ""
+    },
+    {
+      "id": "O15",
+      "grupo": "relacional",
+      "titulo": "Seguir usuario",
+      "rf": "RF-21",
+      "actor": "Lector",
+      "bases": "PostgreSQL (fuente). El evento `seguimiento_creado` creará `sigue` en el grafo (CG-18).",
+      "proposito": "Registrar que un usuario sigue a otro y dejar el evento, en una transacción.",
+      "entrada": "`:sesion` (quien sigue) y `seguido_id`. La base valida: no seguirse a sí mismo y no seguir dos veces (RN-03), y que el seguido exista.",
+      "salida": "Una fila en `seguimiento` y un evento `seguimiento_creado`. Errores: `23514 ck_seguimiento_no_propio`, `23505 pk_seguimiento` y `23503 fk_seguimiento_seguido`; en todos, sin evento.",
+      "previa": "`relacional/01-integridad.txt`: pruebas 4 y 5."
+    },
+    {
+      "id": "O16",
+      "grupo": "relacional",
+      "titulo": "Dejar de seguir",
+      "rf": "RF-21",
+      "actor": "Lector",
+      "bases": "PostgreSQL (fuente). El evento `seguimiento_eliminado` borrará `sigue` en el grafo (CG-18).",
+      "proposito": "Borrar un seguimiento y dejar el evento solo si realmente existía.",
+      "entrada": "`:sesion` y `seguido_id`.",
+      "salida": "Filas borradas: 1 con evento `seguimiento_eliminado`, o 0 sin evento si no existía. No hay error posible por restricción.",
+      "previa": ""
+    },
+    {
+      "id": "O17",
+      "grupo": "relacional",
+      "titulo": "Consultas de lectura",
+      "rf": "RF-06, RF-07, RF-15, RF-19, RF-20, RF-22",
+      "actor": "Lector, visitante",
+      "bases": "PostgreSQL. La API une el promedio a la ficha de MongoDB (INT-02).",
+      "proposito": "Las once lecturas que sirven las pantallas: promedio de una obra, reseñas de una obra, reseñas de un usuario, obras por estado, listas de un usuario, obras de una lista en orden, a quién sigue un usuario, quién lo sigue, perfil, estado de una obra concreta y reseña propia sobre una obra.",
+      "entrada": "`obra_id`, `usuario_id` o `lista_id` según la consulta. Las reseñas ocultas no se listan.",
+      "salida": "Filas con el formato de la tabla de la sección 8 de `04-operaciones.md`. Sin coincidencias, resultado vacío (nunca error). `promedio` es nulo cuando `total_resenas = 0`.",
+      "previa": "`relacional/05-consultas.txt`: Q-O17a a Q-O17h. `semilla/consultas-relacional.txt`: S-O17a a S-O17j. Planes: `relacional/04-indices.txt`."
+    },
+    {
+      "id": "O18",
+      "grupo": "relacional",
+      "titulo": "Libros de partida para recomendar",
+      "rf": "RF-26 (paso 1)",
+      "actor": "Lector",
+      "bases": "PostgreSQL. La API pasa el resultado a Neo4j (CG-08): ver INT-04.",
+      "proposito": "Devolver los libros que le gustaron al usuario (RN-11): terminados, con calificación de 4 o más y reseña no oculta.",
+      "entrada": "`:sesion` y `:limite` (propuesto: 20).",
+      "salida": "Lista de `obra_id` de libros, la mejor calificación y la reseña más reciente primero, con tope de `:limite`. Vacía si el usuario no tiene ninguno. Excluye películas, estados distintos de `terminada`, calificaciones menores de 4 y reseñas ocultas.",
+      "previa": "`relacional/05-consultas.txt`: Q-O18a a Q-O18c. `semilla/consultas-relacional.txt`: S-O18a a S-O18h."
+    },
+    {
+      "id": "O19",
+      "grupo": "relacional",
+      "titulo": "Propagar eventos al grafo",
+      "rf": "RNF-02",
+      "actor": "Sistema",
+      "bases": "PostgreSQL (`sync_outbox`) y Neo4j (CG-16 a CG-19). **SIMULADO:** el worker no existe; los casos ejecutan solo la parte de PostgreSQL (tomar el lote, marcar `procesado` o `fallido`).",
+      "proposito": "Tomar los eventos pendientes en orden, aplicarlos al grafo de forma idempotente y marcarlos.",
+      "entrada": "Tamaño de lote (50, D-34 y 9.2) y límite de intentos (5).",
+      "salida": "Lote de eventos `pendiente` por `evento_id`. Un evento aplicado queda `procesado` con su fecha. Un fallo suma 1 a `intentos` y guarda el error; al quinto queda `fallido` y no bloquea a los siguientes. Con la bandeja vacía, lote vacío.",
+      "previa": "`relacional/04-indices.txt`: I-09, I-12 e I-13 (índice parcial I6)."
+    },
+    {
+      "id": "O20",
+      "grupo": "relacional",
+      "titulo": "Datos para reconciliación",
+      "rf": "RNF-03",
+      "actor": "Sistema",
+      "bases": "PostgreSQL. El script de reconciliación los compara con MongoDB y Neo4j (`coherencia.ps1`).",
+      "proposito": "Entregar a la reconciliación lo que PostgreSQL sabe: seguimientos, estados `terminada` de libros, ids de obras y usuarios, eventos `fallido` y la verificación del promedio.",
+      "entrada": "Ninguna.",
+      "salida": "Listas de pares o ids (seguimientos, `terminada` de libros, obras, usuarios, eventos `fallido`) y, para la verificación del promedio, las obras cuyo `promedio` o `total_resenas` no coincide con el recálculo desde las reseñas no ocultas (vacío si todo cuadra).",
+      "previa": "`relacional/05-consultas.txt`: Q-O20a y Q-O20b. `semilla/consultas-relacional.txt`: S-O20a a S-O20c."
+    },
+    {
+      "id": "O21",
+      "grupo": "relacional",
+      "titulo": "Purgar eventos procesados y sesiones vencidas",
+      "rf": "—",
+      "actor": "Sistema",
+      "bases": "PostgreSQL.",
+      "proposito": "Mantener pequeñas la bandeja y la tabla de sesiones.",
+      "entrada": "Sin parámetros. Reglas: eventos `procesado` con más de 30 días; sesiones con `expira_en` anterior a ahora.",
+      "salida": "Cuántos eventos y cuántas sesiones borró. No toca eventos `pendiente` ni `fallido`, ni el borde exacto de 30 días, ni una sesión que vence justo ahora.",
+      "previa": ""
+    },
+    {
+      "id": "O22",
+      "grupo": "relacional",
+      "titulo": "Validar la sesión de una petición",
+      "rf": "RF-02, RNF-06, RNF-07",
+      "actor": "Lector, administrador",
+      "bases": "PostgreSQL.",
+      "proposito": "Saber a qué usuario y con qué rol pertenece el token de una petición.",
+      "entrada": "Hash SHA-256 del token. Consulta por clave primaria.",
+      "salida": "`usuario_id` y `rol` actuales si la sesión existe y `expira_en > ahora`; sin filas en caso contrario. Un cambio de rol surte efecto de inmediato. No renueva la vigencia.",
+      "previa": "`relacional/05-consultas.txt`: Q-O22a a Q-O22d. `semilla/consultas-relacional.txt`: S-O22a a S-O22d."
+    },
+    {
+      "id": "O23",
+      "grupo": "relacional",
+      "titulo": "Cerrar sesión",
+      "rf": "RF-02",
+      "actor": "Lector, administrador",
+      "bases": "PostgreSQL.",
+      "proposito": "Invalidar la sesión de la petición actual.",
+      "entrada": "Hash del token de la petición.",
+      "salida": "Filas borradas (1, o 0 si el token no existe). Las demás sesiones del mismo usuario siguen válidas.",
+      "previa": ""
+    },
+    {
+      "id": "AP-01",
+      "grupo": "documental",
+      "titulo": "Ficha completa de un libro",
+      "rf": "RF-06",
+      "actor": "Visitante, lector, administrador",
+      "bases": "MongoDB. La API añade el promedio desde PostgreSQL (INT-02).",
+      "proposito": "Leer en una sola consulta todo lo descriptivo de un libro (RNF-04).",
+      "entrada": "`obra_id` (UUID en minúsculas, D-11). Visitantes y lectores solo ven fichas `publicada`; el administrador ve también los borradores.",
+      "salida": "El documento de `libros`: `titulo`, `sinopsis`, `portada_url` (si tiene), `generos`, `anio_publicacion_original`, `ediciones` y `estado_publicacion`. Sin documento si el id no existe.",
+      "previa": "`documental/02-indices.txt`: 9-AP01. `semilla/consultas-documental.txt`: S-AP01a a S-AP01c."
+    },
+    {
+      "id": "AP-02",
+      "grupo": "documental",
+      "titulo": "Ficha completa de una película",
+      "rf": "RF-07",
+      "actor": "Visitante, lector, administrador",
+      "bases": "MongoDB. La API añade el promedio desde PostgreSQL.",
+      "proposito": "Leer en una sola consulta la ficha de una película con su reparto copiado.",
+      "entrada": "`obra_id`. Mismas reglas de visibilidad que AP-01.",
+      "salida": "El documento de `peliculas`: datos descriptivos, `plataformas`, `datos_tecnicos`, `reparto` (`persona_id`, `nombre`, `personaje`, `orden`, `foto_url` opcional) y `estado_publicacion`. Sin documento si el id no existe.",
+      "previa": "`documental/02-indices.txt`: 9-AP02. `semilla/consultas-documental.txt`: S-AP02a a S-AP02d."
+    },
+    {
+      "id": "AP-03",
+      "grupo": "documental",
+      "titulo": "Buscar obras por título",
+      "rf": "RF-05",
+      "actor": "Visitante, lector, administrador",
+      "bases": "MongoDB. La búsqueda por autor, director o actor es de Neo4j (CG-01); ver INT-04 y el inventario.",
+      "proposito": "Encontrar libros y películas cuyo título contenga las palabras escritas.",
+      "entrada": "Texto de búsqueda (índice de texto IX-01 e IX-02, sin distinguir mayúsculas ni tildes; solo palabras completas). El administrador ve también borradores.",
+      "salida": "Por resultado: `_id`, tipo, `titulo`, año y `portada_url`. Un fragmento de palabra o un texto vacío no devuelve nada (limitación conocida).",
+      "previa": "`documental/02-indices.txt`: 7a a 7d, 8 y 9-AP03. `semilla/consultas-documental.txt`: S-AP03a a S-AP03g."
+    },
+    {
+      "id": "AP-04",
+      "grupo": "documental",
+      "titulo": "Datos de presentación de varias obras",
+      "rf": "RF-23 a RF-27, RF-20",
+      "actor": "Visitante, lector",
+      "bases": "MongoDB. Los ids los entregan Neo4j o PostgreSQL (INT-04).",
+      "proposito": "Convertir una lista de ids en título, año y portada para mostrar resultados.",
+      "entrada": "Lista de `obra_id`. Visitantes y lectores solo reciben fichas publicadas.",
+      "salida": "Por obra: `obra_id`, tipo, `titulo`, año y `portada_url`. Un id inexistente se omite; una lista vacía devuelve vacío.",
+      "previa": "`documental/02-indices.txt`: 9-AP04. `semilla/consultas-documental.txt`: S-AP04a y S-AP04b."
+    },
+    {
+      "id": "AP-05",
+      "grupo": "documental",
+      "titulo": "Existencia y estado de una obra",
+      "rf": "RF-08, RF-10, RF-11, RN-06",
+      "actor": "Sistema",
+      "bases": "MongoDB.",
+      "proposito": "Comprobar que una obra existe en la colección esperada y si está en borrador o publicada (alta idempotente, relaciones del grafo, comparativas).",
+      "entrada": "`obra_id` y la colección esperada (`libros` o `peliculas`).",
+      "salida": "`existe` con su `estado_publicacion`, o `no existe`.",
+      "previa": "`semilla/consultas-documental.txt`: S-AP05a a S-AP05d."
+    },
+    {
+      "id": "AP-07",
+      "grupo": "documental",
+      "titulo": "Crear la ficha de un libro como borrador",
+      "rf": "RF-08",
+      "actor": "Administrador",
+      "bases": "MongoDB. Es el primer paso del alta (INT-01).",
+      "proposito": "Registrar un libro nuevo que todavía no se ve en el catálogo.",
+      "entrada": "`_id` (UUID de la API), `titulo`, `sinopsis`, `generos` (al menos uno, sin repetir), `anio_publicacion_original` (−3000 a 2100), `ediciones` (hasta 50; puede ir vacío), `portada_url` opcional (https, hasta 500), `estado_publicacion = borrador`, `creado_en` y `actualizado_en`. El validador (nivel estricto) rechaza campos faltantes, tipos distintos y campos no definidos.",
+      "salida": "Documento insertado; el visitante no lo ve. Un documento inválido falla con el código 121 (validador) y un `_id` repetido con el 11000.",
+      "previa": "`documental/01-validacion.txt`: 1, 2a, 3a, 4, 5a, 5b, 6a, 7a y 11a."
+    },
+    {
+      "id": "AP-08",
+      "grupo": "documental",
+      "titulo": "Crear la ficha de una película como borrador",
+      "rf": "RF-08",
+      "actor": "Administrador",
+      "bases": "MongoDB. El reparto se llena después desde el grafo (AP-17).",
+      "proposito": "Registrar una película nueva en borrador.",
+      "entrada": "`_id`, `titulo`, `sinopsis`, `generos`, `anio_estreno` (1888 a 2100), `duracion_min` (1 a 1000), `plataformas`, `datos_tecnicos` (`idioma_original` y `paises` obligatorios; `productoras` y `clasificacion` opcionales), `reparto` vacío y `estado_publicacion = borrador`.",
+      "salida": "Documento insertado. Código 121 si algún campo no cumple el validador.",
+      "previa": "`documental/01-validacion.txt`: 1, 2b, 6b, 6c, 11b, 11c y 9c."
+    },
+    {
+      "id": "AP-09",
+      "grupo": "documental",
+      "titulo": "Publicar una ficha",
+      "rf": "RF-08, D-24",
+      "actor": "Sistema",
+      "bases": "MongoDB. Antes, la API comprueba el mínimo de D-24 en Neo4j (CG-03, CG-04, CG-05, CG-20): ver INT-01.",
+      "proposito": "Último paso del alta: pasar la ficha de `borrador` a `publicada`, de forma que repetirlo no tenga efecto.",
+      "entrada": "`obra_id`; el filtro exige `estado_publicacion = borrador`.",
+      "salida": "Una ficha modificada; si ya estaba publicada o no existe, 0 coincidencias sin error. **El validador no comprueba el mínimo de D-24**: lo impone la API.",
+      "previa": ""
+    },
+    {
+      "id": "AP-10",
+      "grupo": "documental",
+      "titulo": "Corregir los datos descriptivos de una ficha",
+      "rf": "RF-08",
+      "actor": "Administrador",
+      "bases": "MongoDB. El grafo no guarda el título (D-18): no hay nada que propagar.",
+      "proposito": "Cambiar título, sinopsis, portada, géneros, año, duración o datos técnicos.",
+      "entrada": "`obra_id` y solo los campos que cambian. Se aplican las mismas reglas del validador (título no vacío, `portada_url` con https, sin campos nuevos).",
+      "salida": "Coincidencias y documentos modificados. Con el mismo valor no se modifica nada; con un valor inválido, código 121.",
+      "previa": "`documental/01-validacion.txt`: 17a, 24a, 24b y 24c."
+    },
+    {
+      "id": "AP-11",
+      "grupo": "documental",
+      "titulo": "Agregar una edición a un libro",
+      "rf": "RF-09",
+      "actor": "Administrador",
+      "bases": "MongoDB.",
+      "proposito": "Añadir una edición sin cambiar el esquema.",
+      "entrada": "`obra_id` y la edición: `edicion_id` (UUID), `isbn` (opcional, 13 dígitos sin guiones), `paginas` (1 a 10000), `editorial`, `idioma` y `anio`. El filtro condicional rechaza un ISBN que el libro ya tiene; el índice único *sparse* IX-03 rechaza uno que tenga otro libro.",
+      "salida": "Una edición más (máximo 50). ISBN repetido en el mismo libro: 0 modificados; en otro libro: error 11000; edición inválida: 121.",
+      "previa": "`documental/01-validacion.txt`: 8, 12a y 15. `documental/02-indices.txt`: 1, 4 y 9-AP11."
+    },
+    {
+      "id": "AP-12",
+      "grupo": "documental",
+      "titulo": "Corregir una edición de un libro",
+      "rf": "RF-08",
+      "actor": "Administrador",
+      "bases": "MongoDB.",
+      "proposito": "Cambiar campos de una edición concreta, incluido su ISBN.",
+      "entrada": "`obra_id`, `edicion_id` y los campos que cambian. Un ISBN nuevo se filtra con `$ne` para no repetir uno del mismo libro.",
+      "salida": "Coincidencias y modificados. Edición inexistente: 0 coincidencias; ISBN de la misma ficha: 0; de otro libro: 11000; valor inválido: 121.",
+      "previa": "`documental/01-validacion.txt`: 18 y 19a a 19c."
+    },
+    {
+      "id": "AP-13",
+      "grupo": "documental",
+      "titulo": "Quitar una edición de un libro",
+      "rf": "RF-08",
+      "actor": "Administrador",
+      "bases": "MongoDB.",
+      "proposito": "Eliminar una edición de la ficha.",
+      "entrada": "`obra_id` y `edicion_id`.",
+      "salida": "Coincidencias y modificados. Quitar la última deja `ediciones` vacío y la ficha sigue siendo válida. Una edición inexistente deja la ficha como estaba.",
+      "previa": ""
+    },
+    {
+      "id": "AP-14",
+      "grupo": "documental",
+      "titulo": "Agregar una plataforma a una película",
+      "rf": "RF-09",
+      "actor": "Administrador",
+      "bases": "MongoDB.",
+      "proposito": "Añadir una plataforma sin cambiar el esquema.",
+      "entrada": "`obra_id` y `nombre` (único dentro de la película; sin otros campos, D-26). Hasta 30 plataformas.",
+      "salida": "Coincidencias y modificados. Un nombre repetido (filtro condicional): 0; sin nombre o con un campo `url`: 121; la número 31: 121.",
+      "previa": "`documental/01-validacion.txt`: 9b, 9c, 12b y 16."
+    },
+    {
+      "id": "AP-15",
+      "grupo": "documental",
+      "titulo": "Corregir el nombre de una plataforma",
+      "rf": "RF-08",
+      "actor": "Administrador",
+      "bases": "MongoDB.",
+      "proposito": "Renombrar una plataforma de una película.",
+      "entrada": "`obra_id`, `nombre` actual y `nombre` nuevo (no puede estar ya en la película).",
+      "salida": "Coincidencias y modificados. Nombre nuevo repetido, plataforma inexistente o mismo nombre: 0 coincidencias; nombre vacío: 121.",
+      "previa": "`documental/01-validacion.txt`: 20, 21 y 21b."
+    },
+    {
+      "id": "AP-16",
+      "grupo": "documental",
+      "titulo": "Quitar una plataforma de una película",
+      "rf": "RF-08",
+      "actor": "Administrador",
+      "bases": "MongoDB.",
+      "proposito": "Eliminar una plataforma de la ficha.",
+      "entrada": "`obra_id` y `nombre` de la plataforma.",
+      "salida": "Coincidencias y modificados. Quitar la última deja el arreglo vacío y la ficha válida; un nombre inexistente no cambia nada.",
+      "previa": ""
+    },
+    {
+      "id": "AP-17",
+      "grupo": "documental",
+      "titulo": "Reemplazar el reparto de la ficha",
+      "rf": "RF-10, D-27",
+      "actor": "Sistema",
+      "bases": "MongoDB (copia). La fuente es Neo4j: el reparto se lee con CG-20 y, si cambia una foto, con CG-24 y CG-25.",
+      "proposito": "Regenerar la copia del reparto con el que hay en el grafo.",
+      "entrada": "`obra_id` de la película y el arreglo completo `[{persona_id, nombre, personaje, orden, foto_url?}]` (hasta 300). `orden` ≥ 1; `persona_id` UUID; `foto_url` con https y hasta 500 caracteres.",
+      "salida": "Coincidencias y modificados. Reparto vacío, de 1 o de 300 personas: aceptado; de 301, con `orden` 0, foto con http o `persona_id` inválido: 121; película inexistente: 0.",
+      "previa": "`documental/01-validacion.txt`: 9d, 12c, 25a, 25b y 26."
+    },
+    {
+      "id": "AP-18",
+      "grupo": "documental",
+      "titulo": "Publicar una reseña comparativa",
+      "rf": "RF-16",
+      "actor": "Lector",
+      "bases": "MongoDB escribe. Antes, la API valida el usuario en PostgreSQL, las dos obras con AP-05 y la relación `adaptado_a` con CG-10 (RN-06): ver INT-06.",
+      "proposito": "Guardar la comparación de un libro con su adaptación.",
+      "entrada": "`_id` (UUID), `usuario_id`, `libro_id`, `pelicula_id`, `veredicto` (`preferencia` en `libro`, `pelicula` o `empate`; `comentario` opcional), `aspectos` (de 1 a 10, `nombre` libre, `puntuacion` de 1 a 5 y `comentario` opcionales), `oculta`, `creado_en` y `actualizado_en`. Una por usuario y pareja (RN-05, índice IX-04).",
+      "salida": "Documento insertado. Pareja repetida del mismo usuario: 11000; 11 aspectos, preferencia o puntuación fuera de rango, sin aspectos u `oculta` como texto: 121.",
+      "previa": "`documental/01-validacion.txt`: 1, 2c, 10a a 10g y 13. `documental/02-indices.txt`: 5 y 6."
+    },
+    {
+      "id": "AP-19",
+      "grupo": "documental",
+      "titulo": "Comparativa de un usuario sobre una pareja",
+      "rf": "RN-05",
+      "actor": "Lector",
+      "bases": "MongoDB.",
+      "proposito": "Saber si el usuario ya comparó esa pareja y abrir su comparativa para editarla.",
+      "entrada": "`usuario_id`, `libro_id` y `pelicula_id`.",
+      "salida": "El documento completo, o nada si no existe. Su autor ve también la suya si está oculta.",
+      "previa": "`documental/02-indices.txt`: 9-AP19."
+    },
+    {
+      "id": "AP-20",
+      "grupo": "documental",
+      "titulo": "Consultar una comparativa",
+      "rf": "RF-16, RF-17, RF-18",
+      "actor": "Visitante, lector, administrador",
+      "bases": "MongoDB.",
+      "proposito": "Leer una comparativa por su id.",
+      "entrada": "`comparativa_id`. Las ocultas solo las ven su autor y el administrador (supuesto 6): se aplica con el filtro `oculta = false` (o `usuario_id` propio).",
+      "salida": "El documento completo si es visible para quien consulta; nada en caso contrario o si no existe.",
+      "previa": "`documental/02-indices.txt`: 9-AP20."
+    },
+    {
+      "id": "AP-21",
+      "grupo": "documental",
+      "titulo": "Comparativas de una adaptación",
+      "rf": "RF-16, RF-17",
+      "actor": "Visitante, lector, administrador",
+      "bases": "MongoDB. La API añade el nombre del autor desde PostgreSQL.",
+      "proposito": "Listar las comparativas de una pareja libro–película, las más recientes primero.",
+      "entrada": "`libro_id`, `pelicula_id`, y `oculta = false` salvo para el administrador; paginado (índice IX-05).",
+      "salida": "`comparativa_id`, `usuario_id`, `veredicto`, `aspectos` y `creado_en`, de la más reciente a la más antigua. Una pareja sin comparativas devuelve vacío.",
+      "previa": "`documental/02-indices.txt`: 9-AP21 a 9-AP21c. `semilla/consultas-documental.txt`: S-AP21a a S-AP21f."
+    },
+    {
+      "id": "AP-23",
+      "grupo": "documental",
+      "titulo": "Comparativas de un usuario",
+      "rf": "RF-22",
+      "actor": "Lector, administrador",
+      "bases": "MongoDB.",
+      "proposito": "Listar las comparativas de un usuario (su perfil y «mis comparativas»), las más recientes primero.",
+      "entrada": "`usuario_id`, y `oculta = false` si quien consulta no es el autor ni el administrador; paginado (prefijo de IX-04).",
+      "salida": "`comparativa_id`, `libro_id`, `pelicula_id`, `veredicto` y `creado_en`. Un usuario sin comparativas devuelve vacío.",
+      "previa": "`documental/02-indices.txt`: 9-AP23. `semilla/consultas-documental.txt`: S-AP23a a S-AP23e."
+    },
+    {
+      "id": "AP-24",
+      "grupo": "documental",
+      "titulo": "Editar una comparativa propia",
+      "rf": "RF-17, RN-10",
+      "actor": "Lector",
+      "bases": "MongoDB.",
+      "proposito": "Cambiar el veredicto y los aspectos de una comparativa propia.",
+      "entrada": "`comparativa_id`, `usuario_id` de la sesión (el filtro exige que sea el autor), `veredicto`, `aspectos` y `actualizado_en`. No cambian `usuario_id`, `libro_id` ni `pelicula_id`.",
+      "salida": "Coincidencias y modificados. De otro usuario: 0 coincidencias; puntuación 7 o preferencia fuera de la lista: 121; mismos valores: 0 modificados.",
+      "previa": "`documental/01-validacion.txt`: 17b."
+    },
+    {
+      "id": "AP-25",
+      "grupo": "documental",
+      "titulo": "Eliminar una comparativa propia",
+      "rf": "RF-17, RN-10",
+      "actor": "Lector",
+      "bases": "MongoDB.",
+      "proposito": "Borrar la propia comparativa; la pareja queda libre para volver a compararla.",
+      "entrada": "`comparativa_id` y `usuario_id` de la sesión.",
+      "salida": "Documentos borrados (1, o 0 si es ajena o no existe).",
+      "previa": ""
+    },
+    {
+      "id": "AP-26",
+      "grupo": "documental",
+      "titulo": "Ocultar o mostrar una comparativa",
+      "rf": "RF-18",
+      "actor": "Administrador",
+      "bases": "MongoDB.",
+      "proposito": "Moderar una comparativa sin borrarla.",
+      "entrada": "`comparativa_id` y `oculta` (booleano). No modifica `actualizado_en` (supuesto 5).",
+      "salida": "Coincidencias y modificados. Ocultar una que ya lo está: 0 modificados; `oculta` como texto: 121; id inexistente: 0 coincidencias.",
+      "previa": "`documental/01-validacion.txt`: prueba 14."
+    },
+    {
+      "id": "AP-27",
+      "grupo": "documental",
+      "titulo": "Eliminar una comparativa por moderación",
+      "rf": "RF-18",
+      "actor": "Administrador",
+      "bases": "MongoDB.",
+      "proposito": "Borrar cualquier comparativa, oculta o no.",
+      "entrada": "`comparativa_id`.",
+      "salida": "Documentos borrados (1, o 0 si no existe).",
+      "previa": ""
+    },
+    {
+      "id": "AP-28",
+      "grupo": "documental",
+      "titulo": "Eliminar las comparativas de un usuario",
+      "rf": "RF-04",
+      "actor": "Sistema",
+      "bases": "MongoDB. Lo dispara el evento `usuario_eliminado`: ver INT-07.",
+      "proposito": "Limpiar las comparativas de una cuenta eliminada; repetirlo no falla.",
+      "entrada": "`usuario_id` (prefijo del índice IX-04).",
+      "salida": "Documentos borrados; 0 si el usuario no tiene o ya se borraron. No toca las de otros usuarios.",
+      "previa": "`documental/02-indices.txt`: 9-AP28 y 9-AP28b."
+    },
+    {
+      "id": "AP-29",
+      "grupo": "documental",
+      "titulo": "Fichas publicadas para la reconciliación",
+      "rf": "RNF-03",
+      "actor": "Sistema",
+      "bases": "MongoDB.",
+      "proposito": "Recorrer por lotes las fichas publicadas para compararlas con `obra_resumen` y con los nodos.",
+      "entrada": "`estado_publicacion = publicada`, salto y tamaño de lote.",
+      "salida": "`obra_id` y tipo de cada ficha publicada, ordenadas por id. Un lote más allá del final o una colección vacía devuelve vacío.",
+      "previa": ""
+    },
+    {
+      "id": "AP-30",
+      "grupo": "documental",
+      "titulo": "Borradores antiguos",
+      "rf": "RF-08, RNF-03, D-10",
+      "actor": "Sistema",
+      "bases": "MongoDB.",
+      "proposito": "Encontrar altas incompletas que la reconciliación debe completar.",
+      "entrada": "`estado_publicacion = borrador` y un umbral de antigüedad sobre `creado_en`. **El umbral no está definido** (supuesto 7): los casos usan fechas de prueba.",
+      "salida": "`obra_id`, tipo y `creado_en` de los borradores creados antes del umbral (comparación estricta). Ninguno si no hay.",
+      "previa": ""
+    },
+    {
+      "id": "AP-32",
+      "grupo": "documental",
+      "titulo": "Reparto de todas las películas",
+      "rf": "RNF-03",
+      "actor": "Sistema",
+      "bases": "MongoDB. Se compara con Neo4j (CG-21).",
+      "proposito": "Leer el reparto de todas las películas publicadas para compararlo con `actuó_en`.",
+      "entrada": "Películas publicadas; por lotes.",
+      "salida": "`obra_id` y `reparto` de cada una. La ficha en borrador no entra; una colección vacía devuelve vacío.",
+      "previa": ""
+    },
+    {
+      "id": "AP-33",
+      "grupo": "documental",
+      "titulo": "Usuarios que tienen comparativas",
+      "rf": "RNF-03",
+      "actor": "Sistema",
+      "bases": "MongoDB.",
+      "proposito": "Listar los usuarios con comparativas para detectar huérfanos frente a PostgreSQL.",
+      "entrada": "Ninguna.",
+      "salida": "Los valores distintos de `usuario_id`; se resuelve solo con el índice IX-04, sin leer documentos. Sin comparativas, vacío.",
+      "previa": "`documental/02-indices.txt`: 9-AP33 y 9-AP33b."
+    },
+    {
+      "id": "CG-01",
+      "grupo": "grafo",
+      "titulo": "Buscar obras por el nombre de una persona",
+      "rf": "RF-05",
+      "actor": "Visitante, lector, administrador",
+      "bases": "Neo4j. La API completa los títulos con AP-04.",
+      "proposito": "Encontrar las obras que una persona escribió, dirigió o donde actuó.",
+      "entrada": "`$texto`: consulta Lucene del índice de texto `persona_nombre_texto` (D-41). La API debe sanearla: con sintaxis mal formada o vacía Neo4j falla.",
+      "salida": "Por obra: `obra_id`, `tipo` (`libro` o `pelicula`), `vinculo` (`escribió`, `dirigida_por` o `actuó_en`) y la persona (`persona_id`, `nombre`, `foto_url`). Sin coincidencias, vacío.",
+      "consultas": [
+        "CG-01.cypher"
+      ],
+      "previa": "`grafo/03-consultas.txt`: Q-00.2 a Q-00.5. `semilla/grafo-01-consultas.txt`."
+    },
+    {
+      "id": "CG-02",
+      "grupo": "grafo",
+      "titulo": "Buscar personas por nombre",
+      "rf": "RF-10, D-15",
+      "actor": "Administrador",
+      "bases": "Neo4j.",
+      "proposito": "Reutilizar una persona existente antes de registrar otra.",
+      "entrada": "`$texto`: consulta Lucene ya saneada, nunca vacía.",
+      "salida": "`persona_id`, `nombre` y `foto_url` (nulo si no tiene), por nombre. Sin coincidencias, vacío; un fragmento de palabra no encuentra nada.",
+      "consultas": [
+        "CG-02.cypher"
+      ],
+      "previa": "`grafo/03-consultas.txt`: Q-00.6. `grafo/01-restricciones.txt`: R-18 y R-19."
+    },
+    {
+      "id": "CG-03",
+      "grupo": "grafo",
+      "titulo": "Adaptaciones de un libro",
+      "rf": "RF-23",
+      "actor": "Visitante, lector, sistema",
+      "bases": "Neo4j. La API la usa también antes de publicar un libro (D-24).",
+      "proposito": "Listar las películas que adaptan un libro.",
+      "entrada": "`$libro_id`.",
+      "salida": "`obra_id` de cada película, ordenado. Vacío si el libro no tiene adaptaciones o el id no es de un libro.",
+      "consultas": [
+        "CG-03.cypher"
+      ],
+      "previa": "`grafo/02-cardinalidad.txt`: K-01.2 y K-07.3."
+    },
+    {
+      "id": "CG-04",
+      "grupo": "grafo",
+      "titulo": "Libro de origen de una película",
+      "rf": "RF-23, RN-07",
+      "actor": "Visitante, lector, sistema",
+      "bases": "Neo4j. La API la usa antes de registrar una adaptación y antes de publicar una película.",
+      "proposito": "Obtener el libro del que parte una película.",
+      "entrada": "`$pelicula_id`.",
+      "salida": "`obra_id` del libro (uno solo, RN-07); vacío si la película aún no lo tiene.",
+      "consultas": [
+        "CG-04.cypher"
+      ],
+      "previa": "`grafo/02-cardinalidad.txt`: K-01.4. `grafo/04-concurrencia-d23.txt`."
+    },
+    {
+      "id": "CG-05",
+      "grupo": "grafo",
+      "titulo": "Autores de un libro y directores de una película",
+      "rf": "RF-06, RF-07",
+      "actor": "Visitante, lector, sistema",
+      "bases": "Neo4j.",
+      "proposito": "Mostrar las personas principales de una ficha; la API la usa también para comprobar el mínimo de D-24.",
+      "entrada": "`$obra_id` de un libro o de una película.",
+      "salida": "`persona_id`, `nombre` y `foto_url` de cada autor (libro) o director (película). Vacío si no hay o el id no existe.",
+      "consultas": [
+        "CG-05.cypher"
+      ],
+      "previa": "`grafo/03-consultas.txt`: Q-00.7 y Q-00.8. `grafo/02-cardinalidad.txt`: K-07.4 y K-07.5."
+    },
+    {
+      "id": "CG-06",
+      "grupo": "grafo",
+      "titulo": "Todos los caminos más cortos entre dos nodos",
+      "rf": "RF-24, D-17",
+      "actor": "Lector",
+      "bases": "Neo4j.",
+      "proposito": "Mostrar cómo se conectan dos personas u obras (por ejemplo, de un autor a un actor a través de una adaptación).",
+      "entrada": "`$origen_id` y `$destino_id` (un `persona_id` o un `obra_id`), con tope de 6 saltos fijo en la consulta. **Deben ser distintos**: con el mismo id el motor falla (D-49) y la API lo rechaza antes.",
+      "salida": "Por camino: `nodos` (tipo, id y, en personas, nombre y foto) y `relaciones` (tipos en orden). Sin conexión o con un origen inexistente, vacío.",
+      "consultas": [
+        "CG-06.cypher"
+      ],
+      "previa": "`grafo/03-consultas.txt`: Q-00.9 a Q-00.14. `semilla/grafo-01-consultas.txt`."
+    },
+    {
+      "id": "CG-07",
+      "grupo": "grafo",
+      "titulo": "Autores adaptados por un mismo director",
+      "rf": "RF-25",
+      "actor": "Lector",
+      "bases": "Neo4j.",
+      "proposito": "Dado un director, listar los autores cuyos libros adaptó.",
+      "entrada": "`$director_id`.",
+      "salida": "Por libro adaptado: `persona_id`, `nombre`, `foto_url` del autor, `libro_id` y `pelicula_id`. Vacío si la persona no dirigió ninguna adaptación.",
+      "consultas": [
+        "CG-07.cypher"
+      ],
+      "previa": "`grafo/03-consultas.txt`: Q-00.15 y Q-00.16. `grafo/02-cardinalidad.txt`: K-05."
+    },
+    {
+      "id": "CG-08",
+      "grupo": "grafo",
+      "titulo": "Recomendar libros por adaptaciones del mismo director",
+      "rf": "RF-26 (paso 2)",
+      "actor": "Lector",
+      "bases": "Neo4j. Los libros de partida los entrega PostgreSQL (O18) y las fichas MongoDB (AP-04): ver INT-04.",
+      "proposito": "Recomendar libros a dos saltos de los que le gustaron al usuario.",
+      "entrada": "`$libros_partida` (hasta 20 `obra_id` de libros) y `$usuario_id`, para excluir lo que ya leyó.",
+      "salida": "Una fila por (libro recomendado, libro de partida, director): `obra_id`, `partida_id`, `persona_id`, `nombre`, `foto_url` (D-45). Excluye los libros de partida y los ya leídos. Lista vacía, ids de películas o nada que recomendar: vacío.",
+      "consultas": [
+        "CG-08.cypher"
+      ],
+      "previa": "`semilla/grafo-01-consultas.txt`."
+    },
+    {
+      "id": "CG-09",
+      "grupo": "grafo",
+      "titulo": "Recomendar películas por lo que leen los seguidos",
+      "rf": "RF-27",
+      "actor": "Lector",
+      "bases": "Neo4j.",
+      "proposito": "Recomendar películas basadas en libros que leyeron las personas que el usuario sigue.",
+      "entrada": "`$usuario_id`.",
+      "salida": "Una fila por película: `obra_id`, `libro_id` y `seguidos` (a cuántos de los seguidos les consta la lectura), de más a menos. **No excluye** las películas ya vistas (D-20). Vacío si no sigue a nadie.",
+      "consultas": [
+        "CG-09.cypher"
+      ],
+      "previa": "`semilla/grafo-01-consultas.txt`."
+    },
+    {
+      "id": "CG-10",
+      "grupo": "grafo",
+      "titulo": "Comprobar que un libro y una película están unidos por una adaptación",
+      "rf": "RN-06",
+      "actor": "Sistema",
+      "bases": "Neo4j. La API la usa antes de crear una comparativa (INT-06).",
+      "proposito": "Validar la pareja de una reseña comparativa.",
+      "entrada": "`$libro_id` y `$pelicula_id`.",
+      "salida": "Un booleano `unidas`.",
+      "consultas": [
+        "CG-10.cypher"
+      ],
+      "previa": "`grafo/03-consultas.txt`: Q-00.17 y Q-00.18."
+    },
+    {
+      "id": "CG-11",
+      "grupo": "grafo",
+      "titulo": "Crear el nodo de una obra",
+      "rf": "RF-08",
+      "actor": "Sistema",
+      "bases": "Neo4j. Es un paso del alta de una obra (INT-01).",
+      "proposito": "Crear el nodo `Libro` o `Película` de una ficha, de forma idempotente.",
+      "entrada": "`$obra_id` (UUID; no nulo) y el tipo, que elige el archivo (`CG-11-libro` o `CG-11-pelicula`).",
+      "salida": "El `obra_id`. Repetirlo no duplica el nodo; un libro y una película pueden compartir id (D-21). Un id nulo falla (`SemanticError`).",
+      "consultas": [
+        "CG-11-libro.cypher",
+        "CG-11-pelicula.cypher"
+      ],
+      "previa": "`grafo/02-cardinalidad.txt`: K-10. `grafo/01-restricciones.txt`: R-05 y R-06."
+    },
+    {
+      "id": "CG-13",
+      "grupo": "grafo",
+      "titulo": "Registrar una persona",
+      "rf": "RF-10",
+      "actor": "Administrador",
+      "bases": "Neo4j.",
+      "proposito": "Crear el nodo `Persona` de un autor, director o actor.",
+      "entrada": "`$persona_id` (UUID de la API), `$nombre` (1 a 150 caracteres) y `$foto_url` (opcional, https). Community no valida valores: lo hace la API (D-22).",
+      "salida": "El `persona_id`. Sin foto, la propiedad no existe. Si el id ya existe no cambia nada (`ON CREATE`). Un id nulo falla.",
+      "consultas": [
+        "CG-13.cypher"
+      ],
+      "previa": "`grafo/01-restricciones.txt`: R-08, R-09 y R-20."
+    },
+    {
+      "id": "CG-14",
+      "grupo": "grafo",
+      "titulo": "Relacionar una persona con una obra",
+      "rf": "RF-10, D-19",
+      "actor": "Administrador",
+      "bases": "Neo4j.",
+      "proposito": "Registrar que una persona escribió un libro, dirigió una película o actuó en ella.",
+      "entrada": "`$persona_id`, `$obra_id` y el vínculo (`escribió`, `dirigida_por` o `actuó_en`); en `actuó_en`, también `$personaje` y `$orden`. Que `orden` no se repita lo valida la API.",
+      "salida": "`creada = true`, o ninguna fila si la relación ya existe, falta un nodo, el id es de otro tipo o el reparto ya tiene 300 personas.",
+      "consultas": [
+        "CG-14-escribio.cypher",
+        "CG-14-dirigio.cypher",
+        "CG-14-actuo.cypher"
+      ],
+      "previa": "`grafo/02-cardinalidad.txt`: K-02 a K-05 y K-08. `grafo/01-restricciones.txt`: R-11 y R-12."
+    },
+    {
+      "id": "CG-15",
+      "grupo": "grafo",
+      "titulo": "Registrar que una película es adaptación de un libro",
+      "rf": "RF-11, RN-07, D-23",
+      "actor": "Administrador",
+      "bases": "Neo4j. Se usa con el protocolo de bloqueo de D-23/D-42.",
+      "proposito": "Crear `adaptado_a`. RN-07 (una película, un solo libro) no la impone la consulta: la API ejecuta antes `CG-15-bloqueo` y CG-04 en la misma transacción.",
+      "entrada": "`$libro_id` y `$pelicula_id` (y `$pelicula_id` para el bloqueo).",
+      "salida": "`creada = true`; idempotente por par; ninguna fila si falta un nodo. Sin el protocolo, CG-15 por sí sola permite un segundo libro de origen.",
+      "consultas": [
+        "CG-15.cypher",
+        "CG-15-bloqueo.cypher"
+      ],
+      "previa": "`grafo/02-cardinalidad.txt`: K-06 y K-10. `grafo/04-concurrencia-d23.txt`: D23-a1 a D23-a5."
+    },
+    {
+      "id": "CG-16",
+      "grupo": "grafo",
+      "titulo": "Crear el nodo de un usuario",
+      "rf": "RF-01",
+      "actor": "Sistema",
+      "bases": "Neo4j. Lo dispara el evento `usuario_creado`.",
+      "proposito": "Anclar la cuenta en el grafo, de forma idempotente.",
+      "entrada": "`$usuario_id` (UUID; no nulo).",
+      "salida": "El `usuario_id`. Repetirlo no duplica el nodo; un `CREATE` con un id existente choca con la restricción de unicidad.",
+      "consultas": [
+        "CG-16.cypher"
+      ],
+      "previa": "`grafo/02-cardinalidad.txt`: K-10. `grafo/01-restricciones.txt`: R-04."
+    },
+    {
+      "id": "CG-17",
+      "grupo": "grafo",
+      "titulo": "Eliminar un usuario y sus relaciones",
+      "rf": "RF-04",
+      "actor": "Sistema",
+      "bases": "Neo4j. Lo dispara el evento `usuario_eliminado` (INT-07).",
+      "proposito": "Borrar el nodo con sus `sigue` y `leyó` en ambos sentidos.",
+      "entrada": "`$usuario_id`.",
+      "salida": "Sin filas. Repetirlo, o con un usuario inexistente, no falla. No toca los nodos de obra ni de otros usuarios.",
+      "consultas": [
+        "CG-17.cypher"
+      ],
+      "previa": "`grafo/01-restricciones.txt`: R-14."
+    },
+    {
+      "id": "CG-18",
+      "grupo": "grafo",
+      "titulo": "Crear o eliminar un seguimiento",
+      "rf": "RF-21",
+      "actor": "Sistema",
+      "bases": "Neo4j. Lo disparan los eventos `seguimiento_creado` y `seguimiento_eliminado`.",
+      "proposito": "Reflejar `sigue` en el grafo.",
+      "entrada": "`$seguidor_id` y `$seguido_id`. El grafo no impide seguirse a sí mismo: lo hace el CHECK del relacional (RN-03).",
+      "salida": "Crear: `creada = true` (idempotente por par; ninguna fila si falta un usuario). Eliminar: sin filas, sin error si no existía.",
+      "consultas": [
+        "CG-18-crear.cypher",
+        "CG-18-eliminar.cypher"
+      ],
+      "previa": "`grafo/02-cardinalidad.txt`: K-09 y K-10. `grafo/01-restricciones.txt`: R-15."
+    },
+    {
+      "id": "CG-19",
+      "grupo": "grafo",
+      "titulo": "Crear o eliminar una lectura de libro",
+      "rf": "RF-13, RF-15, D-16",
+      "actor": "Sistema",
+      "bases": "Neo4j. Lo disparan los eventos `obra_leida` y `obra_no_leida`.",
+      "proposito": "Reflejar `leyó`, que solo apunta a libros.",
+      "entrada": "`$usuario_id` y `$obra_id` del libro.",
+      "salida": "Crear: `creada = true` (idempotente); con el id de una película no crea nada. Eliminar: sin filas, sin error si no existía.",
+      "consultas": [
+        "CG-19-crear.cypher",
+        "CG-19-eliminar.cypher"
+      ],
+      "previa": "`grafo/01-restricciones.txt`: R-13. `grafo/02-cardinalidad.txt`: K-09."
+    },
+    {
+      "id": "CG-20",
+      "grupo": "grafo",
+      "titulo": "Reparto de una película",
+      "rf": "RF-10, D-24",
+      "actor": "Sistema",
+      "bases": "Neo4j (fuente). Se copia a MongoDB con AP-17 (INT-01).",
+      "proposito": "Leer el reparto para regenerar la copia de la ficha y para comprobar el mínimo antes de publicar.",
+      "entrada": "`$pelicula_id`.",
+      "salida": "`persona_id`, `nombre`, `foto_url` (nulo si no tiene), `personaje` y `orden`, ordenado por `orden`. Vacío si no hay reparto o el id no es de una película.",
+      "consultas": [
+        "CG-20.cypher"
+      ],
+      "previa": "`grafo/03-consultas.txt`: Q-00.19. `semilla/grafo-01-consultas.txt`."
+    },
+    {
+      "id": "CG-21",
+      "grupo": "grafo",
+      "titulo": "Reparto de todas las películas",
+      "rf": "RNF-03",
+      "actor": "Sistema",
+      "bases": "Neo4j. Se compara con AP-32.",
+      "proposito": "Lectura masiva para la reconciliación.",
+      "entrada": "Ninguna (por lotes con `SKIP`/`LIMIT` añadidos por la API).",
+      "salida": "Una fila por película, también las que no tienen reparto (`[]`): `obra_id` y `reparto` ordenado por `orden` (D-45).",
+      "consultas": [
+        "CG-21.cypher"
+      ],
+      "previa": "`semilla/grafo-01-consultas.txt`."
+    },
+    {
+      "id": "CG-22",
+      "grupo": "grafo",
+      "titulo": "Obras con sus conteos",
+      "rf": "RNF-03, D-24",
+      "actor": "Sistema",
+      "bases": "Neo4j.",
+      "proposito": "Listar las obras con cuántas relaciones tienen, para reportar las que no llegan al mínimo de D-24 y detectar un segundo libro de origen.",
+      "entrada": "Ninguna (por lotes).",
+      "salida": "Por obra: `tipo`, `obra_id`, `n1`, `n2`, `n3`. Libro: autores, adaptaciones, 0. Película: libros de origen, directores, reparto.",
+      "consultas": [
+        "CG-22.cypher"
+      ],
+      "previa": "`grafo/03-consultas.txt`: Q-00.20 a Q-00.22. `grafo/02-cardinalidad.txt`: K-07."
+    },
+    {
+      "id": "CG-23",
+      "grupo": "grafo",
+      "titulo": "Usuarios con sus relaciones",
+      "rf": "RNF-03",
+      "actor": "Sistema",
+      "bases": "Neo4j. Se compara con PostgreSQL (O20).",
+      "proposito": "Listar los usuarios con sus `sigue` y `leyó` para detectar huérfanos.",
+      "entrada": "Ninguna (por lotes).",
+      "salida": "Una fila por usuario: `usuario_id`, `sigue` (ids) y `leyo` (ids de obra), ordenados. Un `leyó` hacia una película (D-16 lo prohíbe) aparece para que la comparación lo señale.",
+      "consultas": [
+        "CG-23.cypher"
+      ],
+      "previa": "`semilla/grafo-01-consultas.txt`."
+    },
+    {
+      "id": "CG-24",
+      "grupo": "grafo",
+      "titulo": "Asignar, cambiar o quitar la foto de una persona",
+      "rf": "RF-10, D-25",
+      "actor": "Administrador",
+      "bases": "Neo4j (fuente). Después la API regenera el reparto de sus películas (CG-25, CG-20 y AP-17).",
+      "proposito": "Mantener la `foto_url` de una persona.",
+      "entrada": "`$persona_id` y `$foto_url` (o nulo para quitarla). El grafo acepta cualquier texto: la API valida el https (D-22).",
+      "salida": "El `persona_id`; con `null`, la propiedad deja de existir. Una persona inexistente no devuelve nada.",
+      "consultas": [
+        "CG-24.cypher"
+      ],
+      "previa": "`grafo/01-restricciones.txt`: R-20. `grafo/03-consultas.txt`: Q-00.24 y Q-00.25."
+    },
+    {
+      "id": "CG-25",
+      "grupo": "grafo",
+      "titulo": "Películas en las que actuó una persona",
+      "rf": "RF-10, D-27",
+      "actor": "Sistema",
+      "bases": "Neo4j.",
+      "proposito": "Saber qué reparto hay que regenerar cuando cambia la foto de una persona.",
+      "entrada": "`$persona_id`.",
+      "salida": "`obra_id` de cada película donde actuó (solo `actuó_en`). Vacío si no actuó, no existe o el id no es de una persona.",
+      "consultas": [
+        "CG-25.cypher"
+      ],
+      "previa": "`grafo/03-consultas.txt`: Q-00.23 y Q-00.24."
+    },
+    {
+      "id": "INT-01",
+      "grupo": "integrada",
+      "titulo": "Alta de una película adaptada, de borrador a publicada",
+      "rf": "RF-08, RF-10, RF-11, D-24",
+      "actor": "Administrador",
+      "bases": "MongoDB (AP-05, AP-07, AP-08, AP-09, AP-17), PostgreSQL (O5) y Neo4j (CG-11, CG-13, CG-14, CG-15, CG-03, CG-04, CG-05, CG-20).",
+      "proposito": "Dar de alta un libro y su película con autor, director y reparto, copiar el reparto a la ficha y publicar ambas solo cuando se cumple el mínimo de D-24.",
+      "entrada": "Libro (título, autor), película (título, libro de origen, director, reparto con personaje y orden). El script hace de API: comprueba el libro de origen (AP-05), crea las fichas en borrador, registra la obra, crea nodos y relaciones (con el bloqueo de D-23), lee el reparto, lo copia y publica.",
+      "salida": "Libro y película `publicada` con el reparto copiado (con la foto de cada actor que la tenga), un libro de origen por película y la coherencia entre bases intacta. Si no se cumple el mínimo, la ficha queda en `borrador` y CG-22 la señala. Si el libro no existe, no se escribe nada.",
+      "orden": "5",
+      "previa": ""
+    },
+    {
+      "id": "INT-02",
+      "grupo": "integrada",
+      "titulo": "Publicar una reseña y ver la ficha con su promedio",
+      "rf": "RF-13, RF-06",
+      "actor": "Lector",
+      "bases": "PostgreSQL (O7, O17), MongoDB (AP-01, AP-02) y Neo4j (solo para comprobar que `leyó` todavía no existe: el worker no corre).",
+      "proposito": "Mostrar que la reseña y el promedio son definitivos al responder, que la ficha de MongoDB no cambia (el promedio se une al mostrarla) y que lo único eventual es la lectura en el grafo.",
+      "entrada": "`usuario_id`, `obra_id` y calificación de 1 a 5.",
+      "salida": "Promedio y total nuevos en PostgreSQL; ficha de MongoDB idéntica; un evento `obra_leida` pendiente; ninguna relación `leyó` aún. Con calificación 6 o una segunda reseña, el rechazo no cambia nada.",
+      "orden": "1",
+      "previa": ""
+    },
+    {
+      "id": "INT-04",
+      "grupo": "integrada",
+      "titulo": "Recomendar libros por adaptaciones del mismo director",
+      "rf": "RF-26",
+      "actor": "Lector",
+      "bases": "PostgreSQL (O18), Neo4j (CG-08) y MongoDB (AP-04).",
+      "proposito": "Recomendar libros: PostgreSQL entrega los libros que le gustaron, el grafo los conecta por director y MongoDB entrega las fichas.",
+      "entrada": "`usuario_id` y `:limite`.",
+      "salida": "Los libros recomendados con su ficha (título). Si O18 devuelve vacío no se llama al grafo; si el grafo no devuelve nada, no se consultan fichas.",
+      "orden": "3",
+      "previa": ""
+    },
+    {
+      "id": "INT-06",
+      "grupo": "integrada",
+      "titulo": "Reseña comparativa con validación de la adaptación",
+      "rf": "RF-16, RN-05, RN-06",
+      "actor": "Lector",
+      "bases": "PostgreSQL (el usuario existe), MongoDB (AP-05 y AP-18) y Neo4j (CG-10).",
+      "proposito": "Crear una comparativa solo si el usuario existe, las dos fichas existen y están publicadas y el grafo confirma la adaptación.",
+      "entrada": "`usuario_id`, `libro_id`, `pelicula_id` y veredicto.",
+      "salida": "`creada` o un rechazo con el motivo y sin escribir nada (usuario o ficha inexistentes, ficha en borrador, sin adaptación, pareja repetida o grafo que no responde).",
+      "orden": "4",
+      "previa": ""
+    },
+    {
+      "id": "INT-07",
+      "grupo": "integrada",
+      "titulo": "Eliminar una cuenta y limpiar las copias",
+      "rf": "RF-04",
+      "actor": "Lector",
+      "bases": "PostgreSQL (O4), MongoDB (AP-28) y Neo4j (CG-17).",
+      "proposito": "Eliminar la cuenta en PostgreSQL con su cascada y dejar el evento; después limpiar las comparativas y el nodo. **SIMULADO:** como no hay worker, el script aplica el evento a mano.",
+      "entrada": "`usuario_id`.",
+      "salida": "PostgreSQL sin filas del usuario y con los promedios corregidos; mientras no se aplica el evento quedan restos que la coherencia detecta; al aplicarlo, las tres bases cuadran. Repetirlo es idempotente.",
+      "orden": "2",
+      "previa": ""
+    }
+  ],
+  "textos": {
+    "titulo": "Entregable 5. Catálogo de operaciones y consultas",
+    "subtitulo": "Del Libro a la Pantalla · Proyecto integrador de bases de datos",
+    "generado": "Este archivo **se genera** con `db/scripts/generar-catalogo.ps1` a partir de `docs/entregables/catalogo-operaciones.json` (propósito, bases, parámetros y resultado esperado de cada operación) y de la salida real guardada en `db/evidencias/catalogo/` (casos y resultados obtenidos). No se edita a mano: si cambia una operación o se vuelve a ejecutar la evidencia, se regenera.",
+    "como_leer": [
+      "Cada operación es una **ficha** con los seis puntos que pide la guía del curso (sección 7.5): identificador y propósito; bases que intervienen; parámetros de entrada y validaciones; resultado esperado y formato de salida; casos normales, límite y de error; y evidencia de ejecución con el resultado obtenido.",
+      "**Identificadores.** `O` = relacional (`docs/modelado/relacional/04-operaciones.md`), `AP` = documental (`docs/modelado/documental/01-patrones-de-acceso.md`), `CG` = grafo (`docs/modelado/grafo/01-consultas-y-entidades.md`) e `INT` = integrada (varias bases). Los números retirados (O6, AP-06, AP-22, AP-31 y CG-12) no se reutilizan ni aparecen.",
+      "**Casos.** Cada caso se llama `<operación>-<tipo><número>`: `n` normal, `l` límite y `e` error. Por ejemplo `O7-e2` es el segundo caso de error de O7. Así se pueden citar.",
+      "**Resultado obtenido.** Es el texto que imprimió el motor al ejecutar el caso, copiado tal cual del archivo de evidencia. El **esperado** está escrito en el script de cada base y el resultado `PASA` significa que ambos coinciden. Las consultas no se copian aquí: cada ficha enlaza el documento de diseño y el archivo que la contiene.",
+      "**Real y simulado.** Todavía no existen la API ni el worker de sincronización (Entregables 6 y 7). Las operaciones integradas se ejecutan con un script que hace de API; lo que dependería del worker se marca **SIMULADO** (ver la sección 6)."
+    ],
+    "seccion_resumen": "1. Resumen de cobertura",
+    "seccion_relacional": "2. Operaciones de la base relacional (PostgreSQL)",
+    "seccion_documental": "3. Operaciones de la base documental (MongoDB)",
+    "seccion_grafo": "4. Operaciones de la base de grafos (Neo4j)",
+    "seccion_integradas": "5. Operaciones integradas (varias bases)",
+    "seccion_simulado": "6. Qué es real y qué es simulado",
+    "simulado": [
+      "- **Real:** las 76 operaciones de las tres bases y las 5 integradas, ejecutadas contra PostgreSQL 18.7, MongoDB 9.0.4 y Neo4j 5.26.34 Community, sobre la semilla del Entregable 4, sin alterarla (D-50).",
+      "- **Simulado:** el worker (O19). INT-07 aplica a mano `AP-28` y `CG-17` y marca el evento `procesado`; INT-01-l3 repite los pasos de un alta interrumpida (lo que hará la reconciliación); INT-06-e5 provoca un «grafo caído» apuntando a un puerto cerrado (Neo4j no se detuvo); O19 ejecuta solo la parte de PostgreSQL.",
+      "- **Sin ejercitar:** el aviso en memoria, el sondeo de 30 s, los reintentos con espera creciente y el paso a `fallido` en un ciclo real del worker; la reconciliación que **corrige** copias (solo existe la que las detecta, `coherencia.ps1`).",
+      "- **Criterios del script a confirmar en el Entregable 6:** `INT-06-l1` rechaza comparar fichas en borrador (los documentos no lo dicen); AP-30 usa umbrales de prueba (el umbral real no está definido).",
+      "- **Hallazgos que el motor mostró:** CG-06 con origen igual a destino falla (D-49); CG-01 y CG-02 fallan con texto mal formado o vacío; MongoDB permite publicar una película con el reparto vacío (el mínimo de D-24 lo impone la API); Neo4j Community acepta seguimientos a sí mismo y fotos con `http://` (D-22)."
+    ],
+    "seccion_reproducir": "7. Cómo reproducir la evidencia",
+    "reproducir": [
+      "Con las tres bases levantadas y la semilla cargada (`db/README.md`):",
+      "```powershell\n.\\db\\scripts\\catalogo.ps1\n```",
+      "Ejecuta, uno a la vez, los scripts de cada base y las integradas (unos 3 minutos), guarda la salida en `db/evidencias/catalogo/` y termina con `coherencia.ps1` para comprobar que la semilla quedó intacta. Después se regenera este archivo:",
+      "```powershell\n.\\db\\scripts\\generar-catalogo.ps1\n```",
+      "`generar-catalogo.ps1` falla si una operación no tiene casos normal, límite y de error, si algún caso no pasó o si hay casos en la evidencia que no pertenecen a ninguna operación."
+    ],
+    "puntos": {
+      "p1": "1. Identificador y propósito",
+      "p2": "2. Bases que intervienen",
+      "p3": "3. Parámetros de entrada y validaciones",
+      "p4": "4. Resultado esperado y formato de salida",
+      "p5": "5. Casos normales, límite y de error",
+      "p6": "6. Evidencia de ejecución y resultado obtenido"
+    },
+    "tipos": {
+      "n": "normal",
+      "l": "límite",
+      "e": "error"
+    }
+  }
+}

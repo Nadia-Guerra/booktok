@@ -2,6 +2,7 @@
 // Recorre las relaciones SIN dirección, solo por escribió, adaptado_a, dirigida_por y actuó_en.
 // Tope de profundidad 6, provisional (D-17): Cypher no admite un parámetro en el rango, así que va fijo aquí.
 // $origen_id y $destino_id son un persona_id o un obra_id; cada rama del UNION usa el índice de su etiqueta.
+// Con $origen_id = $destino_id allShortestPaths falla en el motor (Neo.DatabaseError.Statement.ExecutionFailed): la API lo rechaza antes (D-49).
 CALL {
   MATCH (n:Persona {persona_id: $origen_id}) RETURN n
   UNION

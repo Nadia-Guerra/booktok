@@ -1,0 +1,579 @@
+Colecciones creadas en la base 'dlbp_pruebas': libros, peliculas, resenas_comparativas
+Índices creados en la base 'dlbp_pruebas'.
+
+Catalogo documental  (MongoDB 9.0.4)
+
+PASA  DOC-00    Preparacion: dlbp_pruebas queda con una copia de la semilla (11 libros, 12 peliculas, 5 comparativas), con validador e indices reales
+            esperado: 11, 12, 5
+            obtenido: 11, 12, 5
+PASA  AP-01-n1  AP-01: ficha completa de un libro en una sola lectura (Dune)
+            esperado: Dune | 1965 | 2 ediciones
+            obtenido: Dune | 1965 | 2 ediciones
+PASA  AP-01-l1  AP-01: un libro sin portada no trae el campo portada_url (Historia de tu vida)
+            esperado: sin portada_url
+            obtenido: sin portada_url
+PASA  AP-01-l2  AP-01: una ficha en borrador y sin ediciones tambien se lee (Neuromante)
+            esperado: borrador | 0 ediciones
+            obtenido: borrador | 0 ediciones
+PASA  AP-01-e1  AP-01: un id que no existe no devuelve ficha
+            esperado: (no existe)
+            obtenido: (no existe)
+PASA  AP-01-e2  AP-01: el id va en minusculas (D-11): el mismo id en mayusculas no encuentra nada
+            esperado: (no existe)
+            obtenido: (no existe)
+PASA  AP-02-n1  AP-02: ficha completa de una pelicula con reparto, datos tecnicos y clasificacion (Dune 2021)
+            esperado: 2021 | 155 min | 2 actores | PG-13
+            obtenido: 2021 | 155 min | 2 actores | PG-13
+PASA  AP-02-l1  AP-02: una ficha en borrador tiene el reparto vacio (Neuromante)
+            esperado: borrador | 0 actores
+            obtenido: borrador | 0 actores
+PASA  AP-02-l2  AP-02: un actor sin foto no lleva foto_url en el reparto (Macfadyen)
+            esperado: Matthew Macfadyen | sin foto_url
+            obtenido: Matthew Macfadyen | sin foto_url
+PASA  AP-02-e1  AP-02: un id que no existe no devuelve ficha
+            esperado: (no existe)
+            obtenido: (no existe)
+PASA  AP-02-e2  AP-02: el id de un libro buscado en peliculas no devuelve nada
+            esperado: (no existe)
+            obtenido: (no existe)
+PASA  AP-03-n1  AP-03: 'dune' (visitante) encuentra el libro y las dos peliculas publicadas
+            esperado: libros: Dune ; películas: Dune | Dune: Parte dos
+            obtenido: libros: Dune ; películas: Dune | Dune: Parte dos
+PASA  AP-03-n2  AP-03: 'MARCIANO' en mayusculas encuentra el libro y la pelicula
+            esperado: 1 libros, 1 películas
+            obtenido: 1 libros, 1 películas
+PASA  AP-03-l1  AP-03: varias palabras: 'orgullo prejuicio' encuentra libro y pelicula
+            esperado: Orgullo y prejuicio | Orgullo y prejuicio
+            obtenido: Orgullo y prejuicio | Orgullo y prejuicio
+PASA  AP-03-l2  AP-03: sin tilde ('expiacion') encuentra 'Expiación'
+            esperado: libros: Expiación ; películas: Expiación
+            obtenido: libros: Expiación ; películas: Expiación
+PASA  AP-03-l3  AP-03: el administrador (sin filtro de publicacion) si ve los borradores
+            esperado: 1 libros, 1 películas
+            obtenido: 1 libros, 1 películas
+PASA  AP-03-e1  AP-03: un visitante no ve los borradores
+            esperado: 0 libros, 0 películas
+            obtenido: 0 libros, 0 películas
+PASA  AP-03-e2  AP-03: un fragmento de palabra ('dun') no encuentra nada: limitacion conocida del indice de texto
+            esperado: 0 libros, 0 películas
+            obtenido: 0 libros, 0 películas
+PASA  AP-03-e3  AP-03: un texto vacio no encuentra nada y no falla
+            esperado: 0 libros, 0 películas
+            obtenido: 0 libros, 0 películas
+PASA  AP-04-n1  AP-04: datos de presentacion de 4 obras (2 libros y 2 peliculas) a partir de sus ids
+            esperado: Dune | Dune | Historia de tu vida | La llegada
+            obtenido: Dune | Dune | Historia de tu vida | La llegada
+PASA  AP-04-l1  AP-04: una lista vacia de ids no devuelve nada
+            esperado: 0 obras
+            obtenido: 0 obras
+PASA  AP-04-l2  AP-04: una sola obra
+            esperado: Historia de tu vida
+            obtenido: Historia de tu vida
+PASA  AP-04-e1  AP-04: un id que no existe se omite sin fallar
+            esperado: Dune
+            obtenido: Dune
+PASA  AP-04-e2  AP-04: un visitante no recibe las fichas en borrador
+            esperado: 0 obras
+            obtenido: 0 obras
+PASA  AP-04-e3  AP-04: el administrador si las recibe
+            esperado: Neuromante | Neuromante
+            obtenido: Neuromante | Neuromante
+PASA  AP-05-n1  AP-05: un libro publicado existe
+            esperado: existe, publicada
+            obtenido: existe, publicada
+PASA  AP-05-l1  AP-05: un libro en borrador existe y lo dice (Neuromante)
+            esperado: existe, borrador
+            obtenido: existe, borrador
+PASA  AP-05-l2  AP-05: una pelicula en borrador existe y lo dice (Neuromante)
+            esperado: existe, borrador
+            obtenido: existe, borrador
+PASA  AP-05-e1  AP-05: el id de un libro buscado en la coleccion de peliculas no existe
+            esperado: no existe
+            obtenido: no existe
+PASA  AP-05-e2  AP-05: un id desconocido no existe
+            esperado: no existe
+            obtenido: no existe
+PASA  AP-07-n1  AP-07: crear la ficha de un libro como borrador
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-07-n2  AP-07: la ficha queda en borrador: 0 visibles para el visitante, 1 para el administrador
+            esperado: 0 visibles; 1 para el admin
+            obtenido: 0 visibles; 1 para el admin
+PASA  AP-07-l1  AP-07: crear el libro con su primera edicion
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-07-l2  AP-07: anio de publicacion en el limite superior (2100)
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-07-l3  AP-07: con portada_url valida (opcional)
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-07-e1  AP-07: sin titulo se rechaza
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-07-e2  AP-07: estado_publicacion fuera de la lista
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-07-e3  AP-07: _id en mayusculas
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-07-e4  AP-07: anio de publicacion 2101 (fuera de rango)
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-07-e5  AP-07: un campo no definido en el validador
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-07-e6  AP-07: el mismo _id dos veces
+            esperado: rechazado 11000
+            obtenido: rechazado 11000
+PASA  AP-08-n1  AP-08: crear la ficha de una pelicula como borrador con el reparto vacio
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-08-l1  AP-08: duracion minima (1) y anio minimo (1888)
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-08-l2  AP-08: duracion maxima (1000)
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-08-l3  AP-08: datos_tecnicos solo con lo obligatorio (sin productoras ni clasificacion)
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-08-e1  AP-08: duracion 0
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-08-e2  AP-08: anio de estreno 1887 (antes del cine)
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-08-e3  AP-08: datos_tecnicos sin paises
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-08-e4  AP-08: un actor con orden 0
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-08-e5  AP-08: una plataforma con un campo url (D-26 la elimino)
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-09-n1  AP-09: publicar una ficha en borrador (Neuromante, libro)
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-09-n2  AP-09: repetirla no tiene efecto ni falla (el filtro exige borrador)
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-09-n3  AP-09: la ficha queda publicada
+            esperado: publicada
+            obtenido: publicada
+PASA  AP-09-l1  AP-09: el validador NO impide publicar una pelicula con el reparto vacio: el minimo de D-24 lo exige la API antes de llamar a AP-09
+            esperado: coincidencias=1 modificados=1; reparto=0
+            obtenido: coincidencias=1 modificados=1; reparto=0
+PASA  AP-09-e1  AP-09: publicar un id que no existe no hace nada
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-09-e2  AP-09: un estado fuera de la lista se rechaza
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-10-n1  AP-10: corregir titulo y sinopsis
+            esperado: coincidencias=1 modificados=1; Dune (edicion corregida)
+            obtenido: coincidencias=1 modificados=1; Dune (edicion corregida)
+PASA  AP-10-n2  AP-10: agregar una portada a una ficha que no la tenia (Historia de tu vida)
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-10-l1  AP-10: quitar la portada con $unset (el campo deja de existir)
+            esperado: coincidencias=1 modificados=1; sin portada_url
+            obtenido: coincidencias=1 modificados=1; sin portada_url
+PASA  AP-10-l2  AP-10: corregir con el mismo valor no modifica nada
+            esperado: coincidencias=1 modificados=0
+            obtenido: coincidencias=1 modificados=0
+PASA  AP-10-e1  AP-10: dejar el titulo vacio
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-10-e2  AP-10: portada_url con http://
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-10-e3  AP-10: un id que no existe
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-10-e4  AP-10: un campo no definido en el validador
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-11-n1  AP-11: agregar una edicion con ISBN nuevo, sin cambiar el esquema
+            esperado: coincidencias=1 modificados=1; 3 ediciones
+            obtenido: coincidencias=1 modificados=1; 3 ediciones
+PASA  AP-11-n2  AP-11: agregar una edicion sin ISBN (es opcional)
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-11-l1  AP-11: la primera edicion de un libro que no tenia ninguna (Neuromante)
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-11-l2  AP-11: la edicion numero 51 (el maximo es 50)
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-11-e1  AP-11: un ISBN que el mismo libro ya tiene (filtro condicional de la API)
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-11-e2  AP-11: un ISBN que ya tiene OTRO libro (lo rechaza el indice unico sparse)
+            esperado: rechazado 11000
+            obtenido: rechazado 11000
+PASA  AP-11-e3  AP-11: una edicion sin paginas
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-11-e4  AP-11: un ISBN con guiones
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-12-n1  AP-12: corregir las paginas de una edicion
+            esperado: coincidencias=1 modificados=1; 600
+            obtenido: coincidencias=1 modificados=1; 600
+PASA  AP-12-n2  AP-12: ponerle un ISBN libre a la edicion que no lo tenia
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-12-l1  AP-12: quitarle el ISBN a una edicion ($unset): el ISBN es opcional
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-12-l2  AP-12: una edicion que no existe no coincide con nada
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-12-e1  AP-12: ISBN que ya tiene otra edicion del mismo libro (filtro condicional)
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-12-e2  AP-12: ISBN que ya tiene OTRO libro
+            esperado: rechazado 11000
+            obtenido: rechazado 11000
+PASA  AP-12-e3  AP-12: paginas 0
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-13-n1  AP-13: quitar una edicion de un libro con dos
+            esperado: coincidencias=1 modificados=1; 1 ediciones
+            obtenido: coincidencias=1 modificados=1; 1 ediciones
+PASA  AP-13-l1  AP-13: quitar la ultima edicion deja el arreglo vacio y la ficha sigue siendo valida
+            esperado: coincidencias=1 modificados=1; 0 ediciones
+            obtenido: coincidencias=1 modificados=1; 0 ediciones
+PASA  AP-13-e1  AP-13: quitar una edicion que no existe: coincide el libro pero no cambia nada
+            esperado: coincidencias=1 modificados=0
+            obtenido: coincidencias=1 modificados=0
+PASA  AP-13-e2  AP-13: un libro que no existe
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-14-n1  AP-14: agregar una plataforma sin cambiar el esquema
+            esperado: coincidencias=1 modificados=1; A,B,C
+            obtenido: coincidencias=1 modificados=1; A,B,C
+PASA  AP-14-l1  AP-14: un nombre con tilde y espacios
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-14-l2  AP-14: la plataforma numero 31 (el maximo es 30)
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-14-e1  AP-14: un nombre que la pelicula ya tiene (filtro condicional)
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-14-e2  AP-14: una plataforma sin nombre
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-14-e3  AP-14: una plataforma con un campo url (D-26)
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-15-n1  AP-15: renombrar una plataforma a un nombre libre
+            esperado: coincidencias=1 modificados=1; Plataforma A,Plataforma Z
+            obtenido: coincidencias=1 modificados=1; Plataforma A,Plataforma Z
+PASA  AP-15-l1  AP-15: renombrar una plataforma que no existe
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-15-l2  AP-15: renombrar a su mismo nombre no coincide (el filtro exige un nombre distinto)
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-15-e1  AP-15: renombrar a un nombre que la pelicula ya tiene
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-15-e2  AP-15: renombrar a un nombre vacio
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-16-n1  AP-16: quitar una plataforma
+            esperado: coincidencias=1 modificados=1; Plataforma A
+            obtenido: coincidencias=1 modificados=1; Plataforma A
+PASA  AP-16-l1  AP-16: quitar la ultima plataforma deja el arreglo vacio y la ficha sigue siendo valida
+            esperado: coincidencias=1 modificados=1; 0 plataformas
+            obtenido: coincidencias=1 modificados=1; 0 plataformas
+PASA  AP-16-e1  AP-16: quitar una plataforma que no existe
+            esperado: coincidencias=1 modificados=0
+            obtenido: coincidencias=1 modificados=0
+PASA  AP-16-e2  AP-16: una pelicula que no existe
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-17-n1  AP-17: reemplazar el reparto completo (2 actores, uno con foto y otro sin ella)
+            esperado: coincidencias=1 modificados=1; 2 actores
+            obtenido: coincidencias=1 modificados=1; 2 actores
+PASA  AP-17-l1  AP-17: un reparto de un solo actor
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-17-l2  AP-17: un reparto de exactamente 300 actores (el maximo)
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-17-l3  AP-17: un reparto vacio (una ficha en borrador que aun no lo tiene)
+            esperado: coincidencias=1 modificados=1; 0 actores
+            obtenido: coincidencias=1 modificados=1; 0 actores
+PASA  AP-17-e1  AP-17: un reparto de 301 actores
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-17-e2  AP-17: un actor con orden 0
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-17-e3  AP-17: foto_url con http://
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-17-e4  AP-17: persona_id que no es un UUID
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-17-e5  AP-17: una pelicula que no existe
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-18-n1  AP-18: publicar una comparativa
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-18-n2  AP-18: aspectos de nombre libre, con y sin puntuacion (RF-16)
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-18-l1  AP-18: exactamente 10 aspectos (el maximo)
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-18-l2  AP-18: veredicto 'empate' con comentario
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-18-e1  AP-18: la misma pareja del mismo usuario otra vez (RN-05)
+            esperado: rechazado 11000
+            obtenido: rechazado 11000
+PASA  AP-18-e2  AP-18: 11 aspectos
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-18-e3  AP-18: preferencia fuera de la lista
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-18-e4  AP-18: puntuacion 6
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-18-e5  AP-18: sin aspectos
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-18-e6  AP-18: oculta como texto
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-19-n1  AP-19: la comparativa de Ana sobre Dune y Dune (2021)
+            esperado: existe: 01
+            obtenido: existe: 01
+PASA  AP-19-l1  AP-19: su autora ve su propia comparativa oculta (Elena)
+            esperado: existe: 05 (oculta)
+            obtenido: existe: 05 (oculta)
+PASA  AP-19-e1  AP-19: Pedro no tiene comparativa sobre esa pareja (RN-05 permite crearla)
+            esperado: no existe
+            obtenido: no existe
+PASA  AP-19-e2  AP-19: un usuario que no existe
+            esperado: no existe
+            obtenido: no existe
+PASA  AP-20-n1  AP-20: una comparativa por id
+            esperado: preferencia=libro oculta=false
+            obtenido: preferencia=libro oculta=false
+PASA  AP-20-l1  AP-20: la comparativa oculta NO la ve otro lector (filtro oculta=false)
+            esperado: (no visible)
+            obtenido: (no visible)
+PASA  AP-20-l2  AP-20: su autora (Elena) si la ve
+            esperado: visible
+            obtenido: visible
+PASA  AP-20-l3  AP-20: el administrador (sin filtro) la ve
+            esperado: visible
+            obtenido: visible
+PASA  AP-20-e1  AP-20: un id que no existe
+            esperado: no existe
+            obtenido: no existe
+PASA  AP-21-n1  AP-21: comparativas de una adaptacion, la mas reciente primero (Dune y Dune 2021: Marta, luego Ana)
+            esperado: 02, 01
+            obtenido: 02, 01
+PASA  AP-21-l1  AP-21: la comparativa oculta no se lista a un lector
+            esperado: 0
+            obtenido: 0
+PASA  AP-21-l2  AP-21: el administrador si la ve
+            esperado: 05
+            obtenido: 05
+PASA  AP-21-l3  AP-21: paginado (saltar 1, tomar 1)
+            esperado: 01
+            obtenido: 01
+PASA  AP-21-e1  AP-21: una pareja sin comparativas (Dune y El marciano no son adaptacion una de la otra)
+            esperado: 0
+            obtenido: 0
+PASA  AP-23-n1  AP-23: comparativas de un usuario, la mas reciente primero (Ana)
+            esperado: 01
+            obtenido: 01
+PASA  AP-23-l1  AP-23: otro lector no ve la comparativa oculta de Elena
+            esperado: 0
+            obtenido: 0
+PASA  AP-23-l2  AP-23: su autora o el administrador si
+            esperado: 05
+            obtenido: 05
+PASA  AP-23-l3  AP-23: paginado, primera pagina de 1 (Marta)
+            esperado: 02
+            obtenido: 02
+PASA  AP-23-e1  AP-23: un usuario sin comparativas (Sofia)
+            esperado: 0
+            obtenido: 0
+PASA  AP-23-e2  AP-23: un usuario que no existe
+            esperado: 0
+            obtenido: 0
+PASA  AP-24-n1  AP-24: editar veredicto y aspectos de una comparativa propia
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-24-n2  AP-24: no cambian usuario, libro ni pelicula y actualizado_en avanza
+            esperado: mismo usuario, libro y pelicula; actualizado_en avanzo
+            obtenido: mismo usuario, libro y pelicula; actualizado_en avanzo
+PASA  AP-24-l1  AP-24: editar con 10 aspectos (el maximo)
+            esperado: coincidencias=1 modificados=1
+            obtenido: coincidencias=1 modificados=1
+PASA  AP-24-l2  AP-24: guardar los mismos valores no modifica nada (sin tocar actualizado_en)
+            esperado: coincidencias=1 modificados=0
+            obtenido: coincidencias=1 modificados=0
+PASA  AP-24-e1  AP-24: puntuacion 7
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-24-e2  AP-24: editar la comparativa de OTRO usuario no cambia nada (RN-10)
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-24-e3  AP-24: preferencia fuera de la lista
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-25-n1  AP-25: eliminar una comparativa propia
+            esperado: borrados=1
+            obtenido: borrados=1
+PASA  AP-25-l1  AP-25: tras eliminarla, el mismo usuario puede volver a comparar esa pareja
+            esperado: aceptado
+            obtenido: aceptado
+PASA  AP-25-e1  AP-25: eliminar la comparativa de OTRO usuario no borra nada (RN-10)
+            esperado: borrados=0; sigue existiendo
+            obtenido: borrados=0; sigue existiendo
+PASA  AP-25-e2  AP-25: un id que no existe
+            esperado: borrados=0
+            obtenido: borrados=0
+PASA  AP-26-n1  AP-26: ocultar una comparativa
+            esperado: coincidencias=1 modificados=1; oculta=true
+            obtenido: coincidencias=1 modificados=1; oculta=true
+PASA  AP-26-n2  AP-26: volver a mostrarla
+            esperado: coincidencias=1 modificados=1; oculta=false
+            obtenido: coincidencias=1 modificados=1; oculta=false
+PASA  AP-26-l1  AP-26: ocultar una que ya esta oculta no cambia nada
+            esperado: coincidencias=1 modificados=0
+            obtenido: coincidencias=1 modificados=0
+PASA  AP-26-l2  AP-26: ocultar o mostrar no modifica actualizado_en (supuesto 5)
+            esperado: actualizado_en igual
+            obtenido: actualizado_en igual
+PASA  AP-26-e1  AP-26: oculta como texto
+            esperado: rechazado 121
+            obtenido: rechazado 121
+PASA  AP-26-e2  AP-26: un id que no existe
+            esperado: coincidencias=0 modificados=0
+            obtenido: coincidencias=0 modificados=0
+PASA  AP-27-n1  AP-27: eliminar una comparativa por moderacion
+            esperado: borrados=1; quedan 4
+            obtenido: borrados=1; quedan 4
+PASA  AP-27-l1  AP-27: eliminar una comparativa que estaba oculta
+            esperado: borrados=1; quedan 3
+            obtenido: borrados=1; quedan 3
+PASA  AP-27-e1  AP-27: un id que no existe
+            esperado: borrados=0
+            obtenido: borrados=0
+PASA  AP-28-n1  AP-28: borrar todas las comparativas de un usuario (3)
+            esperado: borrados=3; quedan 5 de los demas
+            obtenido: borrados=3; quedan 5 de los demas
+PASA  AP-28-l1  AP-28: repetirlo no falla y no borra nada
+            esperado: borrados=0
+            obtenido: borrados=0
+PASA  AP-28-l2  AP-28: un usuario con una sola comparativa (Ana)
+            esperado: borrados=1
+            obtenido: borrados=1
+PASA  AP-28-e1  AP-28: un usuario sin comparativas (Sofia)
+            esperado: borrados=0
+            obtenido: borrados=0
+PASA  AP-28-e2  AP-28: las comparativas de los demas no se tocan
+            esperado: 4
+            obtenido: 4
+PASA  AP-29-n1  AP-29: fichas publicadas de libros y de peliculas (10 y 11 de las 23 fichas)
+            esperado: libros=10 peliculas=11
+            obtenido: libros=10 peliculas=11
+PASA  AP-29-n2  AP-29: recorrido por lotes de 5 en peliculas
+            esperado: 5, 5, 1
+            obtenido: 5, 5, 1
+PASA  AP-29-l1  AP-29: un lote mas alla del final esta vacio
+            esperado: 0
+            obtenido: 0
+PASA  AP-29-l2  AP-29: los borradores no entran
+            esperado: libros 10 de 11; peliculas 11 de 12
+            obtenido: libros 10 de 11; peliculas 11 de 12
+PASA  AP-29-e1  AP-29: una coleccion vacia (en dlbp_pruebas) no devuelve nada y no falla
+            esperado: 0
+            obtenido: 0
+PASA  AP-30-n1  AP-30: borradores creados antes del umbral (umbral de prueba 2026-11-06; el umbral real no esta definido, supuesto 7)
+            esperado: libro 11, pelicula 12
+            obtenido: libro 11, pelicula 12
+PASA  AP-30-l1  AP-30: un umbral igual a la fecha exacta de creacion no incluye esa ficha (la comparacion es estricta)
+            esperado: (ninguno)
+            obtenido: (ninguno)
+PASA  AP-30-l2  AP-30: un umbral entre las dos fechas solo incluye la mas antigua
+            esperado: libro 11
+            obtenido: libro 11
+PASA  AP-30-e1  AP-30: un umbral anterior a todas las fichas no devuelve nada
+            esperado: (ninguno)
+            obtenido: (ninguno)
+PASA  AP-32-n1  AP-32: el reparto de todas las peliculas publicadas, para compararlo con actuo_en
+            esperado: 11 peliculas, 18 personas
+            obtenido: 11 peliculas, 18 personas
+PASA  AP-32-l1  AP-32: un lote de 5
+            esperado: 5 peliculas
+            obtenido: 5 peliculas
+PASA  AP-32-l2  AP-32: la ficha en borrador (sin reparto) no entra
+            esperado: 11 de 12 peliculas
+            obtenido: 11 de 12 peliculas
+PASA  AP-32-e1  AP-32: una coleccion vacia (en dlbp_pruebas) no devuelve nada y no falla
+            esperado: 0
+            obtenido: 0
+PASA  AP-33-n1  AP-33: los usuarios distintos que tienen comparativas
+            esperado: 02, 04, 05, 07, 08
+            obtenido: 02, 04, 05, 07, 08
+PASA  AP-33-l1  AP-33: recorre solo el indice IX-04, sin leer documentos
+            esperado: ix_comp_unica, 0 documentos leidos
+            obtenido: ix_comp_unica, 0 documentos leidos
+PASA  AP-33-l2  AP-33: tras borrar las comparativas de un usuario (en dlbp_pruebas) ya no aparece
+            esperado: 04, 05, 07, 08
+            obtenido: 04, 05, 07, 08
+PASA  AP-33-e1  AP-33: sin comparativas no hay usuarios y no falla
+            esperado: 0 usuarios
+            obtenido: 0 usuarios
+PASA  DOC-99    La base de la aplicacion (dlbp) no cambio: mismos 11 libros, 12 peliculas y 5 comparativas, y sin ids de prueba
+            esperado: 11, 12, 5; 0 ids de prueba
+            obtenido: 11, 12, 5; 0 ids de prueba
+
+Pasan 180 de 180, fallan 0.
+
+Casos por patron (normales / limite / error):
+  AP-01  1 / 2 / 2
+  AP-02  1 / 2 / 2
+  AP-03  2 / 3 / 3
+  AP-04  1 / 2 / 3
+  AP-05  1 / 2 / 2
+  AP-07  2 / 3 / 6
+  AP-08  1 / 3 / 5
+  AP-09  3 / 1 / 2
+  AP-10  2 / 2 / 4
+  AP-11  2 / 2 / 4
+  AP-12  2 / 2 / 3
+  AP-13  1 / 1 / 2
+  AP-14  1 / 2 / 3
+  AP-15  1 / 2 / 2
+  AP-16  1 / 1 / 2
+  AP-17  1 / 3 / 5
+  AP-18  2 / 2 / 6
+  AP-19  1 / 1 / 2
+  AP-20  1 / 3 / 1
+  AP-21  1 / 3 / 1
+  AP-23  1 / 3 / 2
+  AP-24  2 / 2 / 3
+  AP-25  1 / 1 / 2
+  AP-26  2 / 2 / 2
+  AP-27  1 / 1 / 1
+  AP-28  1 / 2 / 2
+  AP-29  2 / 2 / 1
+  AP-30  1 / 2 / 1
+  AP-32  1 / 2 / 1
+  AP-33  1 / 2 / 1

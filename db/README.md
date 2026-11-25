@@ -86,6 +86,7 @@ db/
   grafo/                    01-restricciones.cypher, 02-semilla.cypher (generado), consultas/CG-*.cypher, construir.sh, cypher.sh, pruebas/
   semilla/                  semilla.json (la única fuente), generar.ps1 y su README
   scripts/                  los .ps1 de abajo
+  tmp/                      temporales de catalogo-integradas.ps1 (ignorado por git)
   evidencias/               la salida guardada de cada prueba
 ```
 
@@ -101,7 +102,11 @@ db/
 | `probar-grafo-concurrencia.ps1` | Prueba de D-23: dos sesiones intentan dar dos libros de origen a una película | Sí, el grafo |
 | `probar-grafo.ps1 -Semilla` | Las consultas CG sobre la semilla | No |
 | `probar-semilla.ps1` | O17, O18, O20 y O22; AP-01 a AP-05, AP-21 y AP-23; CG-01 a CG-10 y CG-21 a CG-23; y la coherencia | No (solo lee) |
-| `coherencia.ps1` | 13 comprobaciones entre las tres bases; **falla si algo no cuadra** | No (solo lee) |
+| `coherencia.ps1` | 13 comprobaciones entre las tres bases; **falla si algo no cuadra** | No (solo lee). Reescribe `evidencias/semilla/coherencia.txt` (hora y tiempos) en cada ejecución |
+| `catalogo.ps1` | **Entregable 5**: toda la evidencia del catálogo (los 4 scripts de abajo y `coherencia.ps1`) en unos 3 minutos; `-SinIntegradas` omite el último | No: transacciones que se revierten, base aparte y datos de prueba que se borran (D-50) |
+| `catalogo-grafo.ps1` | Las 24 consultas de grafo (`grafo/pruebas/catalogo/`), cada caso en una transacción que se revierte | No |
+| `catalogo-integradas.ps1` | Las 5 operaciones integradas; `-Solo INT-02` ejecuta solo una. Hace de API y marca `[REAL]` y `[SIMULADO]` | Crea y borra ids `99000000-…` en las tres bases |
+| `generar-catalogo.ps1` | Genera `docs/entregables/entregable-5-catalogo.md` desde `catalogo-operaciones.json` y la evidencia de `evidencias/catalogo/`; falla si una operación no tiene casos normal, límite y error o algún caso no pasó. `-Verificar` solo comprueba | Escribe el catálogo |
 | `..\semilla\generar.ps1` | Valida `semilla.json` y regenera los tres cargadores | Escribe los 3 archivos generados |
 
 Los `.ps1` están escritos **sin tildes** a propósito: Windows PowerShell 5.1 lee mal el UTF-8 sin BOM. Los archivos que generan o las pruebas que leen, que sí las llevan, se leen y se escriben explícitamente en UTF-8 sin BOM.
@@ -114,6 +119,7 @@ El Entregable 5 pide evidencia de ejecución; cada script guarda la suya aquí.
 |---|---|
 | `relacional/`, `documental/`, `grafo/` | Salida de cada prueba de cada base y un `resumen.txt` |
 | `semilla/` | Carga de la semilla, consultas sobre ella (`consultas-*.txt`, `grafo-01-consultas.txt`), `coherencia.txt` y la **prueba negativa** de la coherencia (12 corrupciones deliberadas, todas detectadas) |
+| `catalogo/` | **Entregable 5**: `relacional.txt`, `documental.txt`, `grafo.txt` e `integradas.txt` con un identificador por caso (`O5-n1`, `AP-18-e1`, `CG-14-l3`, `INT-07-n2`; n normal, l límite, e error), `coherencia-final.txt` y `resumen.txt` |
 | `reconstruccion/` | La salida de cada paso de `reconstruir.ps1` y su `resumen.txt` con versiones, tiempos y memoria |
 
 ## Problemas conocidos y cómo se resuelven
@@ -130,4 +136,4 @@ El Entregable 5 pide evidencia de ejecución; cada script guarda la suya aquí.
 
 ## Decisiones que conviene leer
 
-D-36 (memoria y perfiles), D-38 (bloqueo del trigger del promedio), D-39 (versiones, puerto y salud), D-40 (tipos de PostgreSQL), D-41 (índice de texto de personas), D-42 (bloqueo de D-23), D-43 a D-46 (la semilla y su coherencia) y D-47 (memoria de Neo4j). Los documentos de diseño de cada base están en `docs/modelado/relacional/`, `documental/` y `grafo/`.
+D-36 (memoria y perfiles), D-38 (bloqueo del trigger del promedio), D-39 (versiones, puerto y salud), D-40 (tipos de PostgreSQL), D-41 (índice de texto de personas), D-42 (bloqueo de D-23), D-43 a D-46 (la semilla y su coherencia) D-47 (memoria de Neo4j), D-49 (CG-06 con origen igual a destino) y D-50 (cómo se obtiene la evidencia del catálogo sin tocar la semilla) y D-51 (cómo se genera el catálogo). Los documentos de diseño de cada base están en `docs/modelado/relacional/`, `documental/` y `grafo/`.

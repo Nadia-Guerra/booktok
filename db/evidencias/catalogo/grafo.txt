@@ -1,0 +1,733 @@
+Catalogo del grafo sobre la semilla  (2026-11-24 17:12:41)
+Cada caso corre en una transaccion de Neo4j que se REVIERTE al terminar: la semilla no cambia.
+
+PASA   CG-01-n1.1     CG-01: buscar por el nombre de una persona devuelve sus obras con el vinculo (Villeneuve dirigio 3 peliculas)
+               esperado: valor 3|3|dirigida_por
+               obtenido: valor 3|3|dirigida_por
+PASA   CG-01-n2.1     CG-01: un autor devuelve el libro que escribio (Herbert)
+               esperado: valor libro|escribió
+               obtenido: valor libro|escribió
+PASA   CG-01-l1.1     CG-01: una persona con dos roles en la misma pelicula da 1 obra y 2 vinculos (Branagh)
+               esperado: valor 2|1|2
+               obtenido: valor 2|1|2
+PASA   CG-01-l2.1     CG-01: en mayusculas y sin tilde ('TIMOTHEE') encuentra a Chalamet con sus 2 peliculas
+               esperado: filas 2
+               obtenido: filas 2
+PASA   CG-01-e1.1     CG-01: un nombre que no existe no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-01-e2.1     CG-01: un texto con sintaxis Lucene mal formada FALLA en Neo4j: por eso la API debe sanearlo (D-41)
+               esperado: error Neo.ClientError.Procedure.ProcedureCallFailed
+               obtenido: error Neo.ClientError.Procedure.ProcedureCallFailed
+PASA   CG-02-n1.1     CG-02: buscar una persona por nombre antes de registrar otra (Tolkien)
+               esperado: valor J. R. R. Tolkien
+               obtenido: valor J. R. R. Tolkien
+PASA   CG-02-n2.1     CG-02: varias palabras encuentran a varias personas ('ferguson villeneuve')
+               esperado: filas 2
+               obtenido: filas 2
+PASA   CG-02-l1.1     CG-02: una persona sin foto devuelve foto_url nulo (Macfadyen)
+               esperado: valor (nulo)
+               obtenido: valor (nulo)
+PASA   CG-02-l2.1     CG-02: sin tilde ('timothee') encuentra a Timothée Chalamet
+               esperado: valor 1|Timothée Chalamet
+               obtenido: valor 1|Timothée Chalamet
+PASA   CG-02-e1.1     CG-02: un fragmento de palabra ('chala') no encuentra nada: limitacion conocida del indice de texto (D-41)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-02-e2.1     CG-02: un texto vacio FALLA en Neo4j (la API no debe llamarla sin texto)
+               esperado: error Neo.ClientError.Procedure.ProcedureCallFailed
+               obtenido: error Neo.ClientError.Procedure.ProcedureCallFailed
+PASA   CG-03-n1.1     CG-03: adaptaciones de un libro con dos peliculas (Dune: f01 y f02)
+               esperado: valor 01,02,
+               obtenido: valor 01,02,
+PASA   CG-03-l1.1     CG-03: un libro con una sola adaptacion (Historia de tu vida: f05)
+               esperado: valor 05,
+               obtenido: valor 05,
+PASA   CG-03-l2.1     CG-03: un libro en borrador ya tiene su pelicula en borrador (Neuromante: f12)
+               esperado: valor 12,
+               obtenido: valor 12,
+PASA   CG-03-e1.1     CG-03: un libro nuevo sin adaptaciones no devuelve nada (la API no lo publica, D-24)
+               esperado: ok
+               obtenido: ok
+PASA   CG-03-e1.2     CG-03: un libro nuevo sin adaptaciones no devuelve nada (la API no lo publica, D-24)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-03-e2.1     CG-03: el id de una pelicula usado como libro no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-03-e3.1     CG-03: un id que no existe no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-04-n1.1     CG-04: libro de origen de una pelicula (Dune 2021: Dune)
+               esperado: valor b01
+               obtenido: valor b01
+PASA   CG-04-n2.1     CG-04: dos peliculas del mismo libro devuelven el mismo libro (Dune parte dos)
+               esperado: valor b01
+               obtenido: valor b01
+PASA   CG-04-l1.1     CG-04: la pelicula en borrador ya tiene su libro (Neuromante)
+               esperado: valor b11
+               obtenido: valor b11
+PASA   CG-04-e1.1     CG-04: una pelicula nueva sin libro de origen no devuelve nada (la API no la publica, D-24)
+               esperado: ok
+               obtenido: ok
+PASA   CG-04-e1.2     CG-04: una pelicula nueva sin libro de origen no devuelve nada (la API no la publica, D-24)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-04-e2.1     CG-04: el id de un libro usado como pelicula no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-04-e3.1     CG-04: un id que no existe no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-05-n1.1     CG-05: autor de un libro (Dune)
+               esperado: valor Frank Herbert
+               obtenido: valor Frank Herbert
+PASA   CG-05-n2.1     CG-05: director de una pelicula (Dune 2021)
+               esperado: valor Denis Villeneuve
+               obtenido: valor Denis Villeneuve
+PASA   CG-05-l1.1     CG-05: un libro con dos autores devuelve dos personas
+               esperado: ok
+               obtenido: ok
+PASA   CG-05-l1.2     CG-05: un libro con dos autores devuelve dos personas
+               esperado: filas 2
+               obtenido: filas 2
+PASA   CG-05-l2.1     CG-05: en una pelicula solo cuenta quien la dirigio, no quien actua (Orient Express: Branagh dirige y actua, sale una vez)
+               esperado: valor 1|Kenneth Branagh
+               obtenido: valor 1|Kenneth Branagh
+PASA   CG-05-e1.1     CG-05: un libro nuevo sin autor no devuelve nada (la API no lo publica, D-24)
+               esperado: ok
+               obtenido: ok
+PASA   CG-05-e1.2     CG-05: un libro nuevo sin autor no devuelve nada (la API no lo publica, D-24)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-05-e2.1     CG-05: una pelicula nueva sin director no devuelve nada
+               esperado: ok
+               obtenido: ok
+PASA   CG-05-e2.2     CG-05: una pelicula nueva sin director no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-05-e3.1     CG-05: un id que no existe no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-06-n1.1     CG-06: de un autor a un actor hay 3 saltos y DOS caminos mas cortos (Herbert a Chalamet, por las dos peliculas de Dune)
+               esperado: valor 2|3
+               obtenido: valor 2|3
+PASA   CG-06-n2.1     CG-06: el camino lleva los tipos de relacion en orden
+               esperado: valor escribió,adaptado_a,actuó_en
+               obtenido: valor escribió,adaptado_a,actuó_en
+PASA   CG-06-l1.1     CG-06: entre dos obras, por el director comun (Dune a Historia de tu vida): 4 saltos y 2 caminos
+               esperado: valor 2|4
+               obtenido: valor 2|4
+PASA   CG-06-l2.1     CG-06: un camino largo, de 5 saltos y 2 rutas (Jane Austen a James McAvoy)
+               esperado: valor 2|5
+               obtenido: valor 2|5
+PASA   CG-06-l3.1     CG-06: con origen = destino (Herbert a Herbert) allShortestPaths FALLA en el motor (HALLAZGO, D-49): la API debe rechazarlo antes
+               esperado: error Neo.DatabaseError.Statement.ExecutionFailed
+               obtenido: error Neo.DatabaseError.Statement.ExecutionFailed
+PASA   CG-06-e1.1     CG-06: dos nodos sin conexion no devuelven ningun camino (Gibson solo esta unido a la ficha en borrador)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-06-e2.1     CG-06: un origen que no existe no devuelve nada ni falla
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-07-n1.1     CG-07: autores cuyos libros adapto un director (Villeneuve: Herbert y Chiang, 3 filas)
+               esperado: valor 3|2
+               obtenido: valor 3|2
+PASA   CG-07-n2.1     CG-07: otro director con dos autores (Scott: Dick y Weir)
+               esperado: valor 2|2
+               obtenido: valor 2|2
+PASA   CG-07-l1.1     CG-07: un director con dos libros del MISMO autor da 2 filas y 1 autor (Jackson: Tolkien)
+               esperado: valor 2|1
+               obtenido: valor 2|1
+PASA   CG-07-l2.1     CG-07: un director con un solo libro adaptado (Spielberg)
+               esperado: valor 1|1
+               obtenido: valor 1|1
+PASA   CG-07-e1.1     CG-07: una persona que no dirigio nada no devuelve autores (Herbert)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-07-e2.1     CG-07: un id que no existe no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-08-n1.1     CG-08: RF-26, Ana (partida: Dune y El marciano) recibe 2 libros por el mismo director
+               esperado: valor 2|2
+               obtenido: valor 2|2
+PASA   CG-08-n2.1     CG-08: los libros recomendados son Historia de tu vida (por Villeneuve) y Androides (por Scott)
+               esperado: valor 02 por Ridley Scott;04 por Denis Villeneuve;
+               obtenido: valor 02 por Ridley Scott;04 por Denis Villeneuve;
+PASA   CG-08-l1.1     CG-08: Pedro ya leyo el otro libro del director: no hay nada que recomendar
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-08-l2.1     CG-08: un libro de partida con dos adaptaciones del mismo director no se recomienda a si mismo (Dune)
+               esperado: valor 1|0
+               obtenido: valor 1|0
+PASA   CG-08-l3.1     CG-08: Marta (partida: Orgullo y prejuicio y Dune) recibe Expiacion y Historia de tu vida
+               esperado: valor 2|2
+               obtenido: valor 2|2
+PASA   CG-08-e1.1     CG-08: una lista de partida vacia no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-08-e2.1     CG-08: ids de peliculas en la lista de partida no devuelven nada (la partida son libros)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-08-e3.1     CG-08: los libros que el usuario ya leyo no se recomiendan (Ana leyo Dune: se excluye aunque otro libro la lleve a el)
+               esperado: valor 0
+               obtenido: valor 0
+PASA   CG-09-n1.1     CG-09: RF-27, Sofia sigue a 3 lectores y recibe 7 peliculas; las mas alcanzadas, por 2 seguidos
+               esperado: valor 7|2
+               obtenido: valor 7|2
+PASA   CG-09-n2.1     CG-09: cada pelicula trae su libro de origen: las 7 peliculas de Sofia vienen de 6 libros (Dune tiene dos adaptaciones)
+               esperado: valor 7|6
+               obtenido: valor 7|6
+PASA   CG-09-l1.1     CG-09: quien sigue a un solo lector cuenta 1 en cada pelicula (Luis)
+               esperado: valor 1
+               obtenido: valor 1
+PASA   CG-09-l2.1     CG-09: NO excluye las peliculas que el usuario ya vio (D-20): Sofia vio Dune 2021 y sigue saliendo
+               esperado: valor 1
+               obtenido: valor 1
+PASA   CG-09-e1.1     CG-09: quien no sigue a nadie no recibe nada (Pedro)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-09-e2.1     CG-09: un usuario que no existe no recibe nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-10-n1.1     CG-10: un libro y su pelicula estan unidos por una adaptacion (Dune y Dune 2021)
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-10-n2.1     CG-10: un libro con varias adaptaciones esta unido a cada una (Dune y Dune parte dos)
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-10-l1.1     CG-10: un libro y una pelicula de otra adaptacion no estan unidos (Dune y El marciano: la API rechaza la comparativa, RN-06)
+               esperado: valor false
+               obtenido: valor false
+PASA   CG-10-e1.1     CG-10: con los ids invertidos (pelicula como libro) no hay adaptacion
+               esperado: valor false
+               obtenido: valor false
+PASA   CG-10-e2.1     CG-10: ids que no existen no estan unidos
+               esperado: valor false
+               obtenido: valor false
+PASA   CG-11-n1.1     CG-11: crear el nodo de un libro
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-11-n1.2     CG-11: crear el nodo de un libro
+               esperado: valor 1
+               obtenido: valor 1
+PASA   CG-11-n2.1     CG-11: crear el nodo de una pelicula
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-11-n2.2     CG-11: crear el nodo de una pelicula
+               esperado: valor 1
+               obtenido: valor 1
+PASA   CG-11-l1.1     CG-11: repetir el alta no duplica el nodo (idempotente)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-11-l1.2     CG-11: repetir el alta no duplica el nodo (idempotente)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-11-l1.3     CG-11: repetir el alta no duplica el nodo (idempotente)
+               esperado: valor 1
+               obtenido: valor 1
+PASA   CG-11-l2.1     CG-11: sobre una obra de la semilla no cambia nada (Dune sigue siendo un solo nodo)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-11-l2.2     CG-11: sobre una obra de la semilla no cambia nada (Dune sigue siendo un solo nodo)
+               esperado: valor 11
+               obtenido: valor 11
+PASA   CG-11-l3.1     CG-11: un libro y una pelicula pueden compartir obra_id: la unicidad es por etiqueta (D-21)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-11-l3.2     CG-11: un libro y una pelicula pueden compartir obra_id: la unicidad es por etiqueta (D-21)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-11-l3.3     CG-11: un libro y una pelicula pueden compartir obra_id: la unicidad es por etiqueta (D-21)
+               esperado: valor 2
+               obtenido: valor 2
+PASA   CG-11-e1.1     CG-11: un obra_id nulo se rechaza (no se puede crear un nodo con clave nula)
+               esperado: error Neo.ClientError.Statement.SemanticError
+               obtenido: error Neo.ClientError.Statement.SemanticError
+PASA   CG-13-n1.1     CG-13: registrar una persona con foto
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-13-n1.2     CG-13: registrar una persona con foto
+               esperado: valor Persona de prueba|https://almacenamiento.ejemplo.com/personas/t01.jpg
+               obtenido: valor Persona de prueba|https://almacenamiento.ejemplo.com/personas/t01.jpg
+PASA   CG-13-l1.1     CG-13: sin foto (null) la propiedad foto_url no existe
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-13-l1.2     CG-13: sin foto (null) la propiedad foto_url no existe
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-13-l2.1     CG-13: registrar de nuevo el mismo persona_id no cambia el nombre (ON CREATE)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-13-l2.2     CG-13: registrar de nuevo el mismo persona_id no cambia el nombre (ON CREATE)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-13-l2.3     CG-13: registrar de nuevo el mismo persona_id no cambia el nombre (ON CREATE)
+               esperado: valor 1|Nombre original
+               obtenido: valor 1|Nombre original
+PASA   CG-13-e1.1     CG-13: un persona_id que ya existe con CREATE choca con la restriccion de unicidad (la API usa MERGE)
+               esperado: error Neo.ClientError.Schema.ConstraintValidationFailed
+               obtenido: error Neo.ClientError.Schema.ConstraintValidationFailed
+PASA   CG-13-e2.1     CG-13: un persona_id nulo se rechaza
+               esperado: error Neo.ClientError.Statement.SemanticError
+               obtenido: error Neo.ClientError.Statement.SemanticError
+PASA   CG-14-n1.1     CG-14 (escribió): registrar que una persona escribio un libro
+               esperado: ok
+               obtenido: ok
+PASA   CG-14-n1.2     CG-14 (escribió): registrar que una persona escribio un libro
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-14-n2.1     CG-14 (dirigida_por): registrar que una persona dirigio una pelicula
+               esperado: ok
+               obtenido: ok
+PASA   CG-14-n2.2     CG-14 (dirigida_por): registrar que una persona dirigio una pelicula
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-14-n3.1     CG-14 (actuó_en): registrar un actor con su personaje y su orden
+               esperado: ok
+               obtenido: ok
+PASA   CG-14-n3.2     CG-14 (actuó_en): registrar un actor con su personaje y su orden
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-14-n3.3     CG-14 (actuó_en): registrar un actor con su personaje y su orden
+               esperado: valor Personaje de prueba|1
+               obtenido: valor Personaje de prueba|1
+PASA   CG-14-l1.1     CG-14: repetir la misma relacion no la duplica (devuelve 0 filas la segunda vez)
+               esperado: ok
+               obtenido: ok
+PASA   CG-14-l1.2     CG-14: repetir la misma relacion no la duplica (devuelve 0 filas la segunda vez)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-14-l1.3     CG-14: repetir la misma relacion no la duplica (devuelve 0 filas la segunda vez)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-14-l2.1     CG-14 (actuó_en): una segunda relacion del mismo par no sobrescribe el personaje (D-19)
+               esperado: ok
+               obtenido: ok
+PASA   CG-14-l2.2     CG-14 (actuó_en): una segunda relacion del mismo par no sobrescribe el personaje (D-19)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-14-l2.3     CG-14 (actuó_en): una segunda relacion del mismo par no sobrescribe el personaje (D-19)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-14-l2.4     CG-14 (actuó_en): una segunda relacion del mismo par no sobrescribe el personaje (D-19)
+               esperado: valor 1|Gandalf
+               obtenido: valor 1|Gandalf
+PASA   CG-14-l3.1     CG-14 (actuó_en): el reparto admite exactamente 300 personas y la 301 se rechaza
+               esperado: ok
+               obtenido: ok
+PASA   CG-14-l3.2     CG-14 (actuó_en): el reparto admite exactamente 300 personas y la 301 se rechaza
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-14-l3.3     CG-14 (actuó_en): el reparto admite exactamente 300 personas y la 301 se rechaza
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-14-l3.4     CG-14 (actuó_en): el reparto admite exactamente 300 personas y la 301 se rechaza
+               esperado: valor 300
+               obtenido: valor 300
+PASA   CG-14-e1.1     CG-14: el id de una pelicula usado como libro no crea la relacion
+               esperado: ok
+               obtenido: ok
+PASA   CG-14-e1.2     CG-14: el id de una pelicula usado como libro no crea la relacion
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-14-e2.1     CG-14: una persona que no existe no crea la relacion
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-14-e3.1     CG-14: una obra que no existe no crea la relacion
+               esperado: ok
+               obtenido: ok
+PASA   CG-14-e3.2     CG-14: una obra que no existe no crea la relacion
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-14-e4.1     CG-14 (dirigida_por): repetir la direccion de una persona sobre una pelicula no la duplica (Villeneuve y Dune 2021)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-15-n1.1     CG-15: registrar una adaptacion con el protocolo de D-23 (bloqueo, CG-04 sin libro, CG-15)
+               esperado: ok
+               obtenido: ok
+PASA   CG-15-n1.2     CG-15: registrar una adaptacion con el protocolo de D-23 (bloqueo, CG-04 sin libro, CG-15)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-n1.3     CG-15: registrar una adaptacion con el protocolo de D-23 (bloqueo, CG-04 sin libro, CG-15)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-15-n1.4     CG-15: registrar una adaptacion con el protocolo de D-23 (bloqueo, CG-04 sin libro, CG-15)
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-15-n1.5     CG-15: registrar una adaptacion con el protocolo de D-23 (bloqueo, CG-04 sin libro, CG-15)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-n2.1     CG-15: un libro con varias adaptaciones (dos peliculas del mismo libro)
+               esperado: ok
+               obtenido: ok
+PASA   CG-15-n2.2     CG-15: un libro con varias adaptaciones (dos peliculas del mismo libro)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-n2.3     CG-15: un libro con varias adaptaciones (dos peliculas del mismo libro)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-n2.4     CG-15: un libro con varias adaptaciones (dos peliculas del mismo libro)
+               esperado: filas 2
+               obtenido: filas 2
+PASA   CG-15-l1.1     CG-15: repetir la misma adaptacion no la duplica (idempotente por par)
+               esperado: ok
+               obtenido: ok
+PASA   CG-15-l1.2     CG-15: repetir la misma adaptacion no la duplica (idempotente por par)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-l1.3     CG-15: repetir la misma adaptacion no la duplica (idempotente por par)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-l1.4     CG-15: repetir la misma adaptacion no la duplica (idempotente por par)
+               esperado: valor 1
+               obtenido: valor 1
+PASA   CG-15-l2.1     CG-15: por si sola NO impide un segundo libro de origen (RN-07 la impone la API con D-23): la pelicula queda con 2
+               esperado: ok
+               obtenido: ok
+PASA   CG-15-l2.2     CG-15: por si sola NO impide un segundo libro de origen (RN-07 la impone la API con D-23): la pelicula queda con 2
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-l2.3     CG-15: por si sola NO impide un segundo libro de origen (RN-07 la impone la API con D-23): la pelicula queda con 2
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-l2.4     CG-15: por si sola NO impide un segundo libro de origen (RN-07 la impone la API con D-23): la pelicula queda con 2
+               esperado: filas 2
+               obtenido: filas 2
+PASA   CG-15-e1.1     CG-15: con el protocolo, si CG-04 ya devuelve un libro la API rechaza y no llama a CG-15 (una pelicula de la semilla)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-e1.2     CG-15: con el protocolo, si CG-04 ya devuelve un libro la API rechaza y no llama a CG-15 (una pelicula de la semilla)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-15-e2.1     CG-15: un libro que no existe no crea la adaptacion
+               esperado: ok
+               obtenido: ok
+PASA   CG-15-e2.2     CG-15: un libro que no existe no crea la adaptacion
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-15-e3.1     CG-15: una pelicula que no existe no crea la adaptacion
+               esperado: ok
+               obtenido: ok
+PASA   CG-15-e3.2     CG-15: una pelicula que no existe no crea la adaptacion
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-15-e4.1     CG-15: el bloqueo sobre una pelicula que no existe no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-16-n1.1     CG-16: crear el nodo de un usuario
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-16-n1.2     CG-16: crear el nodo de un usuario
+               esperado: valor 9
+               obtenido: valor 9
+PASA   CG-16-l1.1     CG-16: repetirlo no duplica el nodo (idempotente)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-16-l1.2     CG-16: repetirlo no duplica el nodo (idempotente)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-16-l1.3     CG-16: repetirlo no duplica el nodo (idempotente)
+               esperado: valor 1
+               obtenido: valor 1
+PASA   CG-16-l2.1     CG-16: sobre un usuario de la semilla no cambia nada (Ana)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-16-l2.2     CG-16: sobre un usuario de la semilla no cambia nada (Ana)
+               esperado: valor 8
+               obtenido: valor 8
+PASA   CG-16-e1.1     CG-16: un usuario_id que ya existe con CREATE choca con la restriccion de unicidad
+               esperado: error Neo.ClientError.Schema.ConstraintValidationFailed
+               obtenido: error Neo.ClientError.Schema.ConstraintValidationFailed
+PASA   CG-16-e2.1     CG-16: un usuario_id nulo se rechaza
+               esperado: error Neo.ClientError.Statement.SemanticError
+               obtenido: error Neo.ClientError.Statement.SemanticError
+PASA   CG-17-n1.1     CG-17: eliminar a Ana borra su nodo y sus sigue y leyó en ambos sentidos (quedan 6 sigue y 8 leyó de 10 y 12)
+               esperado: ok
+               obtenido: ok
+PASA   CG-17-n1.2     CG-17: eliminar a Ana borra su nodo y sus sigue y leyó en ambos sentidos (quedan 6 sigue y 8 leyó de 10 y 12)
+               esperado: valor 6|8
+               obtenido: valor 6|8
+PASA   CG-17-n2.1     CG-17: no toca los nodos de los demas usuarios ni los de obra
+               esperado: ok
+               obtenido: ok
+PASA   CG-17-n2.2     CG-17: no toca los nodos de los demas usuarios ni los de obra
+               esperado: valor 7|11|12
+               obtenido: valor 7|11|12
+PASA   CG-17-l1.1     CG-17: repetirlo no falla (idempotente): la segunda vez no encuentra nada
+               esperado: ok
+               obtenido: ok
+PASA   CG-17-l1.2     CG-17: repetirlo no falla (idempotente): la segunda vez no encuentra nada
+               esperado: ok
+               obtenido: ok
+PASA   CG-17-l2.1     CG-17: un usuario sin relaciones se elimina igual
+               esperado: ok
+               obtenido: ok
+PASA   CG-17-l2.2     CG-17: un usuario sin relaciones se elimina igual
+               esperado: ok
+               obtenido: ok
+PASA   CG-17-l2.3     CG-17: un usuario sin relaciones se elimina igual
+               esperado: valor 0
+               obtenido: valor 0
+PASA   CG-17-e1.1     CG-17: un usuario que no existe no falla ni borra nada
+               esperado: ok
+               obtenido: ok
+PASA   CG-17-e1.2     CG-17: un usuario que no existe no falla ni borra nada
+               esperado: valor 8
+               obtenido: valor 8
+PASA   CG-18-n1.1     CG-18 (crear): crear un seguimiento
+               esperado: ok
+               obtenido: ok
+PASA   CG-18-n1.2     CG-18 (crear): crear un seguimiento
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-18-n2.1     CG-18 (eliminar): eliminar el seguimiento
+               esperado: ok
+               obtenido: ok
+PASA   CG-18-n2.2     CG-18 (eliminar): eliminar el seguimiento
+               esperado: ok
+               obtenido: ok
+PASA   CG-18-n2.3     CG-18 (eliminar): eliminar el seguimiento
+               esperado: valor 0
+               obtenido: valor 0
+PASA   CG-18-l1.1     CG-18 (crear): repetirlo no duplica la relacion (idempotente por par)
+               esperado: ok
+               obtenido: ok
+PASA   CG-18-l1.2     CG-18 (crear): repetirlo no duplica la relacion (idempotente por par)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-18-l1.3     CG-18 (crear): repetirlo no duplica la relacion (idempotente por par)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-18-l1.4     CG-18 (crear): repetirlo no duplica la relacion (idempotente por par)
+               esperado: valor 1
+               obtenido: valor 1
+PASA   CG-18-l2.1     CG-18 (eliminar): eliminar un seguimiento que no existe no falla
+               esperado: ok
+               obtenido: ok
+PASA   CG-18-l2.2     CG-18 (eliminar): eliminar un seguimiento que no existe no falla
+               esperado: ok
+               obtenido: ok
+PASA   CG-18-l3.1     CG-18 (crear): dos usuarios pueden seguirse mutuamente (2 relaciones, una por sentido)
+               esperado: ok
+               obtenido: ok
+PASA   CG-18-l3.2     CG-18 (crear): dos usuarios pueden seguirse mutuamente (2 relaciones, una por sentido)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-18-l3.3     CG-18 (crear): dos usuarios pueden seguirse mutuamente (2 relaciones, una por sentido)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-18-l3.4     CG-18 (crear): dos usuarios pueden seguirse mutuamente (2 relaciones, una por sentido)
+               esperado: valor 2
+               obtenido: valor 2
+PASA   CG-18-e1.1     CG-18 (crear): el grafo ACEPTA un seguimiento a si mismo; RN-03 lo impide el CHECK del relacional
+               esperado: ok
+               obtenido: ok
+PASA   CG-18-e1.2     CG-18 (crear): el grafo ACEPTA un seguimiento a si mismo; RN-03 lo impide el CHECK del relacional
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-18-e2.1     CG-18 (crear): un usuario que no existe no crea la relacion
+               esperado: ok
+               obtenido: ok
+PASA   CG-18-e2.2     CG-18 (crear): un usuario que no existe no crea la relacion
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-19-n1.1     CG-19 (crear): crear la lectura de un libro
+               esperado: ok
+               obtenido: ok
+PASA   CG-19-n1.2     CG-19 (crear): crear la lectura de un libro
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-19-n2.1     CG-19 (eliminar): eliminar la lectura (Ana deja de haber leido Dune)
+               esperado: ok
+               obtenido: ok
+PASA   CG-19-n2.2     CG-19 (eliminar): eliminar la lectura (Ana deja de haber leido Dune)
+               esperado: valor 0
+               obtenido: valor 0
+PASA   CG-19-l1.1     CG-19 (crear): repetirla no duplica la relacion (Ana ya habia leido Dune)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-19-l1.2     CG-19 (crear): repetirla no duplica la relacion (Ana ya habia leido Dune)
+               esperado: valor 1
+               obtenido: valor 1
+PASA   CG-19-l2.1     CG-19 (crear): con el id de una PELICULA no crea nada (D-16: leyó solo apunta a libros)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-19-l3.1     CG-19 (eliminar): eliminar una lectura que no existe no falla
+               esperado: ok
+               obtenido: ok
+PASA   CG-19-e1.1     CG-19 (crear): un usuario que no existe no crea la lectura
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-19-e2.1     CG-19 (crear): un libro que no existe no crea la lectura
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-20-n1.1     CG-20: el reparto de una pelicula sale ordenado por orden, con personaje (Dune 2021)
+               esperado: valor 1:Paul Atreides,2:Lady Jessica,
+               obtenido: valor 1:Paul Atreides,2:Lady Jessica,
+PASA   CG-20-l1.1     CG-20: una pelicula en borrador sin reparto no devuelve nada (la API no la publica, D-24)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-20-l2.1     CG-20: el orden manda sobre el nombre (El Hobbit: Bilbo 1, Gandalf 2)
+               esperado: valor 1:Bilbo Bolsón,2:Gandalf,
+               obtenido: valor 1:Bilbo Bolsón,2:Gandalf,
+PASA   CG-20-l3.1     CG-20: un actor sin foto devuelve foto_url nulo (Macfadyen en Orgullo y prejuicio)
+               esperado: valor 2|true
+               obtenido: valor 2|true
+PASA   CG-20-e1.1     CG-20: el id de un libro usado como pelicula no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-20-e2.1     CG-20: un id que no existe no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-21-n1.1     CG-21: una fila por pelicula (12), tambien las que no tienen reparto
+               esperado: filas 12
+               obtenido: filas 12
+PASA   CG-21-n2.1     CG-21: el total de personas en los repartos es 18
+               esperado: valor 18
+               obtenido: valor 18
+PASA   CG-21-l1.1     CG-21: la pelicula sin reparto devuelve una lista vacia (Neuromante)
+               esperado: valor 0
+               obtenido: valor 0
+PASA   CG-21-l2.1     CG-21: el reparto va ordenado por orden (El Hobbit: primero Bilbo)
+               esperado: valor Bilbo Bolsón
+               obtenido: valor Bilbo Bolsón
+PASA   CG-21-l3.1     CG-21: un actor sin foto lleva foto_url nulo (Macfadyen)
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-21-e1.1     CG-21: un grafo sin peliculas no devuelve nada y no falla
+               esperado: ok
+               obtenido: ok
+PASA   CG-21-e1.2     CG-21: un grafo sin peliculas no devuelve nada y no falla
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-22-n1.1     CG-22: cuenta autores y adaptaciones de un libro (Dune: 1 autor, 2 adaptaciones)
+               esperado: valor 1|2
+               obtenido: valor 1|2
+PASA   CG-22-n2.1     CG-22: cuenta libro de origen, directores y reparto de una pelicula (Dune 2021: 1, 1 y 2)
+               esperado: valor 1|1|2
+               obtenido: valor 1|1|2
+PASA   CG-22-n3.1     CG-22: una fila por obra del grafo (11 libros y 12 peliculas)
+               esperado: filas 23
+               obtenido: filas 23
+PASA   CG-22-l1.1     CG-22: el libro en borrador ya cumple su minimo (Neuromante: 1 autor, 1 adaptacion)
+               esperado: valor 1|1
+               obtenido: valor 1|1
+PASA   CG-22-l2.1     CG-22: la pelicula en borrador no llega al minimo (Neuromante: 1 libro, 0 directores, 0 reparto)
+               esperado: valor 1|0|0
+               obtenido: valor 1|0|0
+PASA   CG-22-e1.1     CG-22: la reconciliacion senala exactamente las obras bajo el minimo de D-24 (solo la pelicula en borrador)
+               esperado: valor 1|f1000000-0000-4000-8000-000000000012
+               obtenido: valor 1|f1000000-0000-4000-8000-000000000012
+PASA   CG-22-e2.1     CG-22: detecta una pelicula con DOS libros de origen (RN-07 que Neo4j no impide)
+               esperado: ok
+               obtenido: ok
+PASA   CG-22-e2.2     CG-22: detecta una pelicula con DOS libros de origen (RN-07 que Neo4j no impide)
+               esperado: valor 2
+               obtenido: valor 2
+PASA   CG-23-n1.1     CG-23: una fila por usuario (8)
+               esperado: filas 8
+               obtenido: filas 8
+PASA   CG-23-n2.1     CG-23: Sofia sigue a 3 y no leyo libros
+               esperado: valor 3|0
+               obtenido: valor 3|0
+PASA   CG-23-l1.1     CG-23: un usuario sin relaciones devuelve listas vacias (el administrador sigue a nadie y no leyo nada)
+               esperado: valor 0|0
+               obtenido: valor 0|0
+PASA   CG-23-l2.1     CG-23: Ana sigue a 1 y leyo 4 libros
+               esperado: valor 1|4
+               obtenido: valor 1|4
+PASA   CG-23-e1.1     CG-23: un leyó hacia una PELICULA (que D-16 prohibe) aparece en la lista, para que la comparacion con el relacional lo senale
+               esperado: ok
+               obtenido: ok
+PASA   CG-23-e1.2     CG-23: un leyó hacia una PELICULA (que D-16 prohibe) aparece en la lista, para que la comparacion con el relacional lo senale
+               esperado: valor 1|true
+               obtenido: valor 1|true
+PASA   CG-23-e2.1     CG-23: sin usuarios no devuelve nada y no falla
+               esperado: ok
+               obtenido: ok
+PASA   CG-23-e2.2     CG-23: sin usuarios no devuelve nada y no falla
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-24-n1.1     CG-24: asignar una foto a una persona que no la tenia (Macfadyen)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-24-n1.2     CG-24: asignar una foto a una persona que no la tenia (Macfadyen)
+               esperado: valor https://almacenamiento.ejemplo.com/personas/macfadyen.jpg
+               obtenido: valor https://almacenamiento.ejemplo.com/personas/macfadyen.jpg
+PASA   CG-24-n2.1     CG-24: cambiar la foto de una persona que ya la tenia (Chalamet)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-24-n2.2     CG-24: cambiar la foto de una persona que ya la tenia (Chalamet)
+               esperado: valor https://almacenamiento.ejemplo.com/personas/chalamet-nueva.jpg
+               obtenido: valor https://almacenamiento.ejemplo.com/personas/chalamet-nueva.jpg
+PASA   CG-24-l1.1     CG-24: quitar la foto con null elimina la propiedad (nunca queda un valor vacio)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-24-l1.2     CG-24: quitar la foto con null elimina la propiedad (nunca queda un valor vacio)
+               esperado: valor true
+               obtenido: valor true
+PASA   CG-24-l2.1     CG-24: asignar dos veces la misma foto deja un solo valor (idempotente)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-24-l2.2     CG-24: asignar dos veces la misma foto deja un solo valor (idempotente)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-24-l2.3     CG-24: asignar dos veces la misma foto deja un solo valor (idempotente)
+               esperado: valor 1|https://almacenamiento.ejemplo.com/personas/chalamet-x.jpg
+               obtenido: valor 1|https://almacenamiento.ejemplo.com/personas/chalamet-x.jpg
+PASA   CG-24-e1.1     CG-24: una persona que no existe no cambia nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-24-e2.1     CG-24: una foto con http:// SE ACEPTA en el grafo (Community no valida valores, D-22): la valida la API
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-24-e2.2     CG-24: una foto con http:// SE ACEPTA en el grafo (Community no valida valores, D-22): la valida la API
+               esperado: valor http://inseguro.ejemplo.com/f.jpg
+               obtenido: valor http://inseguro.ejemplo.com/f.jpg
+PASA   CG-25-n1.1     CG-25: peliculas en las que actuo una persona (Chalamet: 2)
+               esperado: filas 2
+               obtenido: filas 2
+PASA   CG-25-l1.1     CG-25: una persona con una sola pelicula (Amy Adams)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-25-l2.1     CG-25: solo cuenta actuó_en, no dirigida_por (Branagh dirigio y actuo en la misma pelicula: sale una vez)
+               esperado: filas 1
+               obtenido: filas 1
+PASA   CG-25-e1.1     CG-25: un director que no actuo no devuelve nada (Villeneuve)
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-25-e2.1     CG-25: una persona que no existe no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+PASA   CG-25-e3.1     CG-25: el id de una pelicula usado como persona no devuelve nada
+               esperado: filas 0
+               obtenido: filas 0
+
+Pasan 234 de 234 pasos; 153 de 153 casos pasan; fallan 0 pasos.  (15.1 s)
+
+Casos por consulta (normales / limite / error):
+  CG-01  2 / 2 / 2
+  CG-02  2 / 2 / 2
+  CG-03  1 / 2 / 3
+  CG-04  2 / 1 / 3
+  CG-05  2 / 2 / 3
+  CG-06  2 / 3 / 2
+  CG-07  2 / 2 / 2
+  CG-08  2 / 3 / 3
+  CG-09  2 / 2 / 2
+  CG-10  2 / 1 / 2
+  CG-11  2 / 3 / 1
+  CG-13  1 / 2 / 2
+  CG-14  3 / 3 / 4
+  CG-15  2 / 2 / 4
+  CG-16  1 / 2 / 2
+  CG-17  2 / 2 / 1
+  CG-18  2 / 3 / 2
+  CG-19  2 / 3 / 2
+  CG-20  1 / 3 / 2
+  CG-21  2 / 3 / 1
+  CG-22  3 / 2 / 2
+  CG-23  2 / 2 / 2
+  CG-24  2 / 2 / 2
+  CG-25  1 / 2 / 3

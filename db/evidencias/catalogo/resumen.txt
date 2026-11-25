@@ -1,0 +1,14 @@
+Evidencia del catalogo (Entregable 5) - 2026-11-24 17:12:31
+
+PASA   relacional   PostgreSQL: 22 operaciones (O1 a O5, O7 a O23)  [148 | 0 | 148 (pasan | fallan | total)]  (1.1 s, codigo 0)
+PASA   documental   MongoDB: 30 patrones de acceso  [Pasan 180 de 180, fallan 0.]  (7.9 s, codigo 0)
+PASA   grafo        Neo4j: 24 consultas  [Pasan 234 de 234 pasos; 153 de 153 casos pasan; fallan 0 pasos.]  (17.1 s, codigo 0)
+PASA   integradas   INT-01, INT-02, INT-04, INT-06, INT-07  [Casos integrados: 35 de 35 pasan.]  (152.5 s, codigo 0)
+PASA   coherencia   La semilla quedo intacta (13 comprobaciones entre las tres bases)  [Todo cuadra: 13 de 13 comprobaciones pasan.  (2.8 s)]  (3.6 s, codigo 0)
+
+Total: 182.5 s
+
+Memoria de los contenedores (docker stats):
+dlbp-neo4j  1.011GiB / 1.25GiB  (80.84%)  CPU 1.50%
+dlbp-mongo  273.4MiB / 512MiB  (53.40%)  CPU 5.10%
+dlbp-postgres  55.45MiB / 384MiB  (14.44%)  CPU 8.38%

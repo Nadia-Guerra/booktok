@@ -833,3 +833,56 @@ Termina con código 1 si falló algún paso. `-SinPruebas` omite el paso 4.
 **Por qué.** Se ejecutó una vez desde cero con `-Forzar` y pasaron los 13 pasos en **202 s (3,4 min)**: 6 s en borrar, 12 s en levantar PostgreSQL, 7 s MongoDB, 42 s Neo4j, 20 s en construir los esquemas, 70 s en las pruebas, 22 s en cargar la semilla y 22 s en consultar y comprobar la coherencia. Al terminar: 8 usuarios, 23 obras, 18 reseñas, 11 libros, 12 películas y 5 comparativas; los tres contenedores sanos y Neo4j sin reinicios. Se comprobó además que responder `NO` a la confirmación cancela con código 1 sin tocar los contenedores.
 **Costo que se acepta.** **No se ejercitaron** la ruta sin `-Forzar` hasta el final (solo la cancelación), `-SinPruebas`, la falta de `.env` ni Docker apagado. Un fallo a medias deja las bases a medio construir: se arregla ejecutando de nuevo el script. Cada paso se ejecuta con `chcp 65001` para que los registros de los scripts hijos queden en UTF-8; se comprobó en el de `probar-grafo.ps1`, que es el que lleva acentos.
 **Dónde.** `db/scripts/reconstruir.ps1`, `db/relacional/construir.sh`, `db/documental/construir.sh`, `db/grafo/construir.sh` y `db/README.md`.
+
+---
+
+## D-49. CG-06 con origen igual a destino falla en el motor: la API lo rechaza antes de llamarla
+
+**Contexto.** Al ejecutar el catálogo de operaciones (Entregable 5, caso `CG-06-l3`) se probó CG-06 con el mismo id como origen y destino. Los documentos (`01-consultas-y-entidades.md`, D-17) no preveían el caso. Neo4j 5.26.34 responde con un **error de base de datos, no de cliente**: `Neo.DatabaseError.Statement.ExecutionFailed: The shortest path algorithm does not work when the start and end nodes are the same`. La consulta que se había escrito para ese caso esperaba "0 filas"; el motor dijo otra cosa.
+**Decisión.** La API compara `origen_id` y `destino_id` **antes** de llamar a CG-06 y responde un error de validación (400) si son iguales. Si el producto prefiere devolver "un camino de longitud 0" en lugar de rechazarlo, lo resuelve también la API, sin llamar al grafo. `db/grafo/consultas/CG-06.cypher` **no cambia**.
+
+| Alternativa | Por qué no |
+|---|---|
+| Añadir `WHERE a <> b` dentro de CG-06 | Cambia una consulta ya probada con las pruebas del grafo (`probar-grafo.ps1` vacía el grafo entero y habría que recargar la semilla) y esconde una entrada que ya es un error de uso |
+| Dejar que el error llegue al usuario | Es un `DatabaseError`: la API lo trataría como fallo interno (500) |
+
+**Por qué.** Se comprobó con el motor sobre la semilla: `db/evidencias/catalogo/grafo.txt`, caso `CG-06-l3`.
+**Costo que se acepta.** Un cliente que llame a CG-06 sin esa validación verá un error interno. Es la misma clase de regla que D-41 (sanear el texto de CG-01 y CG-02) y D-22 (la API valida lo que Community no puede).
+**Dónde.** `db/evidencias/catalogo/grafo.txt` (CG-06-l3), `db/grafo/pruebas/catalogo/01-catalogo.cypher`. La API (Entregable 6) debe implementarlo.
+
+---
+
+## D-50. La evidencia del catálogo no toca la semilla: transacciones revertidas, base aparte y datos de prueba que se borran; las operaciones integradas hacen de API y marcan lo simulado
+
+**Contexto.** El Entregable 5 pide casos normales, límite y de error de **todas** las operaciones, escrituras incluidas, con evidencia guardada. Las pruebas de `db/*/pruebas/` (salvo las de la semilla) crean y **borran** sus datos y `probar-grafo.ps1` vacía el grafo entero (D-46, D-48), así que no sirven para repetir las operaciones sobre la semilla. Tampoco existen todavía la API ni el worker.
+**Decisión.**
+- **PostgreSQL** (`07-catalogo.sql`): una sola transacción que termina en `ROLLBACK`. Cada operación O1 a O23 es una función temporal (`pg_temp`) que ejecuta los pasos de `04-operaciones.md` en su orden. Las escrituras usan usuarios y obras de prueba creados dentro de la transacción; la única que borra datos de la semilla (O4 sobre Ana) va al final.
+- **MongoDB** (`05-catalogo.js`): las lecturas de la semilla van a la base `dlbp`, que no se escribe; las escrituras van a `dlbp_pruebas`, construida con los mismos `01-colecciones.js` y `02-indices.js` (validador e índices reales) y a la que se **copia** la semilla. Se borra al terminar.
+- **Neo4j** (`catalogo-grafo.ps1`): cada caso abre una transacción por la API HTTP, ejecuta sus pasos dentro de ella y la **revierte**. Consecuencia: un paso con error cierra la transacción, así que el error va en el último paso del caso.
+- **Operaciones integradas** (`catalogo-integradas.ps1`): el script hace de API y llama a las tres bases en el orden de `04-fuente-de-verdad-y-sincronizacion.md`. Usan ids `99000000-...`, los crean y los borran en un bloque `finally`, y terminan con `coherencia.ps1`. Cada paso del registro lleva `[REAL]` (lo ejecutó una base) o `[SIMULADO]` (lo haría el worker o la reconciliación, que no existen).
+- Los casos se identifican como `O5-n1`, `AP-18-e1`, `CG-14-l3`, `INT-07-n2` (n normal, l límite, e error). El **esperado** se escribe en el script; el **obtenido** lo produce el motor; el resultado compara ambos.
+
+**Alternativas descartadas.**
+- Reconstruir las bases tras cada bloque de pruebas (4 minutos por vuelta): la semilla se perdería a mitad de camino.
+- Una base PostgreSQL aparte para las escrituras: la transacción con `ROLLBACK` ya aísla, sin construir un esquema más.
+- Escribir en `dlbp` y limpiar a mano en todos los casos de MongoDB: queda reservado a las integradas, que necesitan que la ficha viva en la base real para que la coherencia entre bases la vea.
+
+**Por qué.** Se ejecutó todo sobre la semilla: **148 casos relacionales, 178 documentales, 153 de grafo y 35 integrados pasan** y `coherencia.ps1` da 13 de 13 antes y después (`db/evidencias/catalogo/resumen.txt`).
+**Costo que se acepta.**
+- Las funciones `pg_temp` **repiten** el SQL de `04-operaciones.md`: si el documento cambia, hay que actualizarlas.
+- `sync_outbox.evento_id` **avanza** aunque se revierta (una secuencia de PostgreSQL no vuelve atrás): tras la ejecución el último id usado es 127 con la bandeja vacía.
+- Lo simulado no demuestra el worker: ni el aviso en memoria, ni los reintentos, ni el estado `fallido` por agotar intentos en un ciclo real. Solo el efecto de aplicar cada evento a mano.
+- `coherencia.ps1` reescribe `db/evidencias/semilla/coherencia.txt` en cada ejecución (la hora y los tiempos); tras correr el catálogo se restauró con `git checkout`.
+- Un fallo a medias en una integrada podría dejar datos `99000000-...`: el script empieza borrándolos (`Limpiar-Todo`) y `coherencia.ps1` los detectaría.
+**Dónde.** `db/relacional/pruebas/07-catalogo.sql`, `db/documental/pruebas/05-catalogo.js`, `db/grafo/pruebas/catalogo/01-catalogo.cypher`, `db/scripts/catalogo.ps1`, `catalogo-grafo.ps1` y `catalogo-integradas.ps1`, `db/evidencias/catalogo/`.
+
+---
+
+## D-51. El catálogo del Entregable 5 se genera desde una fuente escrita a mano y la evidencia guardada; el generador falla si algo no cuadra
+
+**Contexto.** El catálogo pide, por operación, seis puntos y que cada «resultado obtenido» cite la evidencia sin escribirse a mano. Son 81 fichas y 514 casos: copiar los resultados a mano los habría desalineado de la evidencia en la primera repetición.
+**Decisión.** `docs/entregables/entregable-5-catalogo.md` **no se edita**: lo genera `db/scripts/generar-catalogo.ps1` (Windows PowerShell 5.1, con BOM porque lleva acentos) a partir de dos fuentes. (1) `docs/entregables/catalogo-operaciones.json`, escrito a mano: propósito, bases, parámetros y validaciones, resultado esperado, enlaces y evidencia previa de cada operación, más los textos fijos. (2) `db/evidencias/catalogo/*.txt`: los casos, su descripción y el resultado obtenido, tal como los imprimieron los motores. El generador **termina con error** si una operación no tiene casos normal, límite y error, si un caso no pasó, si hay casos que no pertenecen a ninguna operación o si una operación no tiene evidencia; `-Verificar` comprueba que el archivo en disco corresponde a la fuente y a la evidencia.
+**Alternativas descartadas.** Escribir el catálogo a mano (se desalinea al repetir la evidencia); generarlo con Node o Python (mismo argumento que D-43: solo está asegurado PowerShell 5.1); poner los casos también en el JSON (serían una segunda copia del resultado).
+**Por qué.** Se generó con 81 operaciones y 514 casos; se comprobó que las cifras coinciden con los archivos de evidencia (148 relacionales, 178 documentales, 153 de grafo y 35 integrados), que los 44 enlaces y las 81 anclas existen y que las 178 citas a la evidencia del Entregable 4 apuntan a casos que están en sus archivos.
+**Costo que se acepta.** El propósito, los parámetros y el resultado esperado son texto escrito a mano en el JSON: si un documento de diseño cambia, hay que actualizarlos (el generador no lo detecta). Las citas a la evidencia previa también son texto; la revisión de este escalón las verificó una vez, pero no se repite sola. Los resultados obtenidos de varios pasos en el grafo muestran el último paso del caso.
+**Dónde.** `docs/entregables/catalogo-operaciones.json`, `docs/entregables/entregable-5-catalogo.md`, `db/scripts/generar-catalogo.ps1`.
