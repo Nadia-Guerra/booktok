@@ -43,7 +43,11 @@ No necesitan bases.
 npm test --workspace frontend
 ```
 
-Por agregar en el backend (unas 10 a 15): los esquemas de `shared/` (identificador en minúsculas, correo en minúsculas, puntuación entera de 1 a 5, URL `https://`), el cursor de paginación y el saneado de la búsqueda por persona.
+Las del backend (`backend/test/unitarias/`) cubren los esquemas de `shared/`, el cursor de paginación, la clasificación de errores y el saneado de la búsqueda por persona:
+
+```powershell
+npm run test:unitarias --workspace backend
+```
 
 ### 3.2 Por base
 
@@ -111,9 +115,11 @@ Se marcan a mano, con una captura por caso.
 .\db\scripts\coherencia.ps1
 ```
 
-La guía pide un "escenario de actualización y reconciliación". La detección existe (`coherencia.ps1` y los eventos `fallido`), y el reintento también. El **comando de reconciliación está diseñado** (arquitectura 04, sección 8) **pero no construido**.
+La guía pide un "escenario de actualización y reconciliación". Se construyó una versión reducida del comando diseñado (arquitectura 04, sección 8): compara `seguimiento` contra `sigue` y los libros terminados contra `leyó`, y corrige solo el grafo. Escenario: borrar una relación del grafo, ver que se detecta, reconciliar y comprobar que vuelve.
 
-Aprobado (2026-11-26): construir una versión reducida que compare `seguimiento` contra `sigue` y los libros terminados contra `leyó`, y corrija solo el grafo. Escenario de prueba: borrar a mano una relación, ver que se detecta, reconciliar y comprobar que vuelve.
+```powershell
+npm run reconciliar --workspace backend
+```
 
 ### 3.6 Rendimiento
 

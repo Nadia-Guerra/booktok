@@ -5,10 +5,10 @@ El plan está en [plan-de-pruebas.md](plan-de-pruebas.md). Aquí solo se anota l
 | Etapa | Qué | Estado |
 |---|---|---|
 | 1 | Pruebas que ya existían | **Hecha (2026-11-26)** |
-| 2 | Rendimiento | Pendiente |
-| 3 | Unitarias del backend | Pendiente |
-| 4 | Reconciliación reducida | Pendiente |
-| 5 | Instalación limpia y documentación | Pendiente |
+| 2 | Rendimiento | **Hecha (2026-11-26)** |
+| 3 | Unitarias del backend | **Hecha (2026-11-26)** |
+| 4 | Reconciliación reducida | **Hecha (2026-11-26)** |
+| 5 | Instalación limpia y documentación | **Hecha (2026-11-26)**, salvo crear las bases desde cero |
 | 6 | Funcionales en el teléfono | Pendiente |
 
 ## Condiciones
@@ -63,3 +63,181 @@ Se corrió en dos tandas para no agotar la memoria; `npm test` ejecuta lo mismo 
 
 - No se repitieron las pruebas de cada base. Valen las de `db/evidencias/` del 2026-11-24, anteriores a los cambios de `docker-compose.yml` del día 25. Se decide al final si repetirlas, porque la del grafo obliga a recargar la semilla.
 - Las pantallas no tienen pruebas automáticas: se cubren en la etapa 6.
+
+## Etapa 2: rendimiento (2026-11-26)
+
+### Cómo se midió
+
+El script [medir.mjs](rendimiento/medir.mjs) llama a la API por HTTP, hace 5 llamadas de calentamiento y mide 50 por flujo. Se corrió dos veces seguidas.
+
+| Condición | Valor |
+|---|---|
+| Equipo | AMD Ryzen 5 3550H (8 hilos), 5,9 GB de RAM, unos 0,5 GB libres al empezar |
+| Contenedores | API (tope 384 MB), PostgreSQL 18.7, MongoDB 9.0.4, Neo4j 5.26.34 |
+| Datos | La semilla: 8 usuarios, 23 obras, 60 nodos y 5 comparativas |
+| Carga | Una llamada a la vez, desde la misma máquina |
+
+**p95** (percentil 95): 95 de cada 100 llamadas tardan eso o menos. **Mediana:** la mitad tarda eso o menos.
+
+### Resultados
+
+Metas: p95 de 1 s para consultas y escrituras, y de 2 s para las que recorren el grafo.
+
+| Flujo | Mediana (1.ª / 2.ª) | p95 (1.ª / 2.ª) | Meta | Cumple |
+|---|---|---|---|---|
+| Salud (EP-01) | 7 / 5 ms | 13 / 7 ms | 1 s | Sí |
+| Iniciar sesión (EP-03) | 67 / 66 ms | 78 / 84 ms | 1 s | Sí |
+| Buscar por título (EP-08) | 6 / 5 ms | 11 / 10 ms | 1 s | Sí |
+| Buscar por persona (EP-08) | 27 / 18 ms | 43 / 24 ms | 2 s | Sí |
+| Ficha de libro (EP-09) | 31 / 23 ms | 49 / 37 ms | 1 s | Sí |
+| Ficha de película (EP-09) | 28 / 24 ms | 56 / 34 ms | 1 s | Sí |
+| Reseñas de una obra (EP-10) | 8 / 8 ms | 14 / 10 ms | 1 s | Sí |
+| Publicar una reseña (EP-11) | 13 / 12 ms | 18 / 18 ms | 1 s | Sí |
+| Recomendaciones de libros (EP-18) | 23 / 23 ms | 37 / 37 ms | 2 s | Sí |
+| Recomendaciones de películas (EP-18) | 17 / 14 ms | 22 / 20 ms | 2 s | Sí |
+| Caminos entre dos personas (EP-16) | 19 / 17 ms | 27 / 22 ms | 2 s | Sí |
+| Autores de un director (EP-17) | 19 / 19 ms | 33 / 35 ms | 2 s | Sí |
+
+Iniciar sesión es el más lento a propósito: comprobar la contraseña con *bcrypt* cuesta tiempo. La ficha une las tres bases y aun así queda por debajo de 60 ms.
+
+Salidas completas: [primera](evidencias/etapa2-rendimiento.txt) y [segunda](evidencias/etapa2-rendimiento-repeticion.txt).
+
+### Con Neo4j recién reiniciado
+
+Se reinició Neo4j dos veces y se midió la primera llamada.
+
+| Flujo | Primera llamada (dos reinicios) | Segunda llamada |
+|---|---|---|
+| Recomendaciones de libros | 6,0 y 6,2 s | 61 y 91 ms |
+| Caminos entre dos personas | 1,4 y 2,3 s | 27 y 103 ms |
+| Autores de un director | 0,3 y 0,8 s | 33 y 46 ms |
+| Buscar por persona | 0,7 y 1,8 s | 24 y 28 ms |
+
+**La primera consulta de recomendaciones no cumple la meta de 2 s.** Lo probable (no comprobado) es que Neo4j esté preparando la consulta y cargando datos en memoria. Para la demostración basta con abrir las recomendaciones una vez antes de presentar.
+
+La segunda de estas mediciones está guardada en [neo4j recién reiniciado](evidencias/etapa2-neo4j-recien-reiniciado.txt); la primera se vio en pantalla y no se guardó.
+
+### Después de medir
+
+La coherencia siguió en 13 de 13 ([evidencia](evidencias/etapa2-coherencia-despues.txt)). El script solo escribe con un lector de prueba, que elimina al terminar.
+
+### Cómo repetirla
+
+Con las bases y la API levantadas y la semilla cargada:
+
+```powershell
+node test/rendimiento/medir.mjs
+```
+
+Para la primera llamada, justo después de reiniciar Neo4j:
+
+```powershell
+node test/rendimiento/medir.mjs --frio
+```
+
+### Qué no se midió
+
+- El tiempo desde el teléfono a través del túnel, que depende de la red.
+- Varias personas usando la aplicación a la vez.
+- Un catálogo grande: con tan pocos datos, estos tiempos no predicen cómo respondería con miles de obras.
+
+## Etapa 3: unitarias del backend (2026-11-26)
+
+Prueban una regla a la vez, **sin bases, sin red y sin `.env`**, así que sirven recién clonado el repositorio. Están en `backend/test/unitarias/`.
+
+| Prueba | Resultado | Evidencia |
+|---|---|---|
+| Unitarias del backend | 16 de 16 | [salida](evidencias/etapa3-unitarias-backend.txt) |
+| Tipos del backend, con los archivos nuevos | Sin errores | |
+
+| Archivo | Qué comprueba |
+|---|---|
+| `esquemas.test.ts` (11) | Identificador y correo en minúsculas, contraseña mínima, calificación del 1 al 5, texto de reseña, imagen solo `https://`, búsqueda sin operadores de MongoDB, ISBN y reparto sin repetidos, límites de la comparativa |
+| `api.test.ts` (5) | Cursor de paginación (conserva microsegundos y rechaza uno alterado), diferencia entre base caída y petición errónea, saneado de la búsqueda por persona |
+
+Con las 8 de la app son **24 unitarias**. `npm test` también las incluye, así que desde ahora ejecuta 116 pruebas (las 100 de la etapa 1 y estas 16).
+
+```powershell
+npm run test:unitarias --workspace backend
+```
+
+## Etapa 4: reconciliación (2026-11-26)
+
+La guía pide que lo replicado no quede contradictorio sin detectarlo. Ya existían la detección (`coherencia.ps1`) y el reintento (`sync_outbox`). Se agregó el **comando de reconciliación** del diseño (arquitectura 04, sección 8), en versión reducida.
+
+### Qué hace
+
+| Compara | Fuente | Copia que corrige |
+|---|---|---|
+| Seguimientos | `seguimiento` (PostgreSQL) | `sigue` (Neo4j) |
+| Libros terminados | `estado_obra` (PostgreSQL) | `leyó` (Neo4j) |
+| Eventos pendientes y fallidos | `sync_outbox` | Solo los informa |
+
+Sin opciones solo informa. Con `--corregir` modifica **solo el grafo**. Si hay eventos pendientes no corrige, porque la diferencia puede ser un cambio que el *worker* todavía no copió.
+
+```powershell
+npm run reconciliar --workspace backend
+```
+
+```powershell
+npm run reconciliar --workspace backend -- --corregir
+```
+
+**No cubre** el resto del diseño: fichas contra `obra_resumen` y nodos, reparto, promedios, huérfanos, borradores antiguos ni nombres repetidos. Lee los pares completos y no por lotes, suficiente para este volumen.
+
+### Pruebas automáticas
+
+`backend/test/reconciliacion.test.ts` (3 casos), con la API detenida: detecta sin tocar nada; corrige solo el grafo y repetirlo no encuentra nada; con eventos pendientes no corrige. Se corrió junto a las de sincronización y salud: **17 de 17** ([salida](evidencias/etapa4-reconciliacion-pruebas.txt)). Con ellas, `npm test` pasa a 119 pruebas.
+
+### Escenario completo
+
+Con dos lectores de prueba: uno sigue al otro y marca un libro como terminado; después se borran esas dos relaciones **solo en Neo4j**.
+
+| Paso | Resultado | Evidencia |
+|---|---|---|
+| 1. `coherencia.ps1` | 2 de 13 fallan: C-06 (`sigue`) y C-07 (`leyó`) | [detecta](evidencias/etapa4-1-coherencia-detecta.txt) |
+| 2. Reconciliar sin corregir | Informa que faltan 1 `sigue` y 1 `leyó` | [informe](evidencias/etapa4-2-reconciliar-informe.txt) |
+| 3. Reconciliar con `--corregir` | Quedan 0 diferencias | [corrección](evidencias/etapa4-3-reconciliar-corregir.txt) |
+| 4. `coherencia.ps1` | 13 de 13 | [después](evidencias/etapa4-4-coherencia-despues.txt) |
+
+Los dos lectores se eliminaron al final y la coherencia volvió a 13 de 13 con los conteos de la semilla (8 usuarios, 10 seguimientos, 12 lecturas).
+
+El escenario se preparó con un guion temporal que no está en el repositorio; lo que se puede repetir es la prueba automática.
+
+## Etapa 5: instalación limpia y documentación (2026-11-26)
+
+### Instalación desde una copia limpia
+
+Se copiaron a una carpeta nueva solo los archivos del repositorio (404, sin `.env` ni `node_modules`) y se siguió la instalación. Resumen en [instalación limpia](evidencias/etapa5-instalacion-limpia.txt).
+
+| Paso | Resultado |
+|---|---|
+| `npm ci` | Correcto: 647 paquetes en unos 5 minutos |
+| `npm run typecheck` | Sin errores |
+| Unitarias de la app y del backend, sin `.env` | 8 de 8 y 16 de 16 |
+| `docker compose config` con `.env.example` | Válido |
+| Construcción de la imagen de la API | Correcta |
+| Empaquetado de la app para Android | Correcto, 1516 módulos |
+
+Hallazgos:
+
+- Con `npm ci --prefer-offline` la instalación **falla** si la caché local es antigua. A `package-lock.json` le faltan la dirección y la suma de comprobación de 550 de sus paquetes. Con `npm ci` normal, que es lo que dice el `README.md`, funciona. No se regeneró el archivo para no mover versiones a un día de la entrega.
+- El `README.md` no decía cómo clonar, remitía a otros documentos para crear las bases y no avisaba del permiso para ejecutar scripts. Se reescribió.
+
+**No se comprobó** crear las tres bases desde cero con la instrucción nueva (`reconstruir.ps1 -SinPruebas`), porque borra los datos actuales. La última reconstrucción completa registrada es la del 2026-11-24 (`db/evidencias/reconstruccion/`). Tampoco se probó en otra computadora.
+
+### Documentación
+
+- `README.md`: requisitos, instalación, uso diario, teléfono, pruebas y problemas frecuentes.
+- `docs/decisiones_tomadas.md`: D-64, la reconciliación reducida.
+
+### Todas las pruebas juntas
+
+| Prueba | Resultado | Evidencia |
+|---|---|---|
+| `npm test`, la suite completa de una vez | **119 de 119** en 8 min 13 s | [salida](evidencias/etapa5-npm-test-completo.txt) |
+| Coherencia al terminar | 13 de 13, con 8 usuarios | [coherencia](evidencias/etapa5-coherencia-despues.txt) |
+
+Un primer intento se cortó por el límite de 10 minutos con la máquina casi sin memoria, justo después del empaquetado de la app. No falló ninguna comprobación: `descubrimiento` aparecía en error porque se interrumpió a la mitad. La coherencia siguió en 13 de 13 y se repitió con más margen.
+
+Las pruebas tardan según la memoria libre: en las etapas anteriores, cada mitad tardó menos de 2 minutos. Conviene correrlas sin Expo ni otros programas pesados.

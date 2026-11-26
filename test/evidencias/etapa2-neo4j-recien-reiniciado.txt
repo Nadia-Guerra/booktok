@@ -1,0 +1,13 @@
+Fecha: 2026-11-26T21:57:46.463Z
+Equipo: Windows_NT 10.0.26200, AMD Ryzen 5 3550H with Radeon Vega Mobile Gfx (8 hilos)
+Memoria: 5.9 GB, libre al empezar 0.6 GB
+Node v24.14.0. Llamadas a http://127.0.0.1:3000/api/v1, una a la vez.
+
+Primera llamada al grafo y la siguiente (ejecutar justo despues de reiniciar Neo4j)
+
+| Flujo | Primera | Segunda |
+|---|---|---|
+| Recomendaciones de libros (EP-18) | 6185 ms | 91 ms |
+| Caminos entre dos personas (EP-16) | 2276 ms | 103 ms |
+| Autores de un director (EP-17) | 815 ms | 46 ms |
+| Buscar por persona (EP-08) | 1843 ms | 28 ms |

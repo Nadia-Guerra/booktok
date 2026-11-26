@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node --env-file=../.env --watch src/servidor.ts",
     "start": "node src/servidor.ts",
+    "reconciliar": "node --env-file=../.env src/reconciliar.ts",
     "test": "node --env-file=../.env --test --test-concurrency=1 \"test/**/*.test.ts\"",
+    "test:unitarias": "node --test \"test/unitarias/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

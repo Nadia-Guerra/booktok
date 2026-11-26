@@ -1,0 +1,15 @@
+Reconciliación - 2026-11-26T22:11:51.546Z - con corrección
+
+Estado encontrado
+  Eventos sin aplicar: 0 pendientes y 0 fallidos
+  sigue: 11 en PostgreSQL, faltan 1 y sobran 0 en el grafo
+    falta  8ff75024-3613-4914-b9fe-083400af48c1 -> 074f748c-73d5-4d19-8392-767090c8907e
+  leyó: 13 en PostgreSQL, faltan 1 y sobran 0 en el grafo
+    falta  8ff75024-3613-4914-b9fe-083400af48c1 -> b1000000-0000-4000-8000-000000000001
+
+Después de corregir
+  Eventos sin aplicar: 0 pendientes y 0 fallidos
+  sigue: 11 en PostgreSQL, faltan 0 y sobran 0 en el grafo
+  leyó: 13 en PostgreSQL, faltan 0 y sobran 0 en el grafo
+
+Resultado: el grafo coincide con PostgreSQL.

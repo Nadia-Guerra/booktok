@@ -1,0 +1,102 @@
+Pruebas de reconciliacion y sincronizacion - 2026-11-26 16:08 - Node v24.14.0
+POST /api/v1/auth/registro 201 472 ms
+POST /api/v1/auth/sesion 201 117 ms
+POST /api/v1/auth/registro 201 92 ms
+POST /api/v1/auth/sesion 201 80 ms
+✔ detecta lo que falta y lo que sobra en el grafo, sin tocar nada (11476.6748ms)
+✔ corrige solo el grafo, y repetirlo no encuentra nada (329.0849ms)
+✔ con eventos pendientes informa pero no corrige (187.2947ms)
+GET /api/v1/salud 200 200 ms
+✔ EP-01: responde 200 con las tres bases arriba (369.9943ms)
+GET /api/v1/no-existe 404 3 ms
+✔ una ruta que no existe da 404 con el formato de error (20.1018ms)
+GET /api/v1/prueba/fallo -> error_interno (Error )
+    at file:///D:/dev/Proyecto%20Final%20BD/backend/test/salud.test.ts:18:9
+    at Layer.handleRequest (D:\dev\Proyecto Final BD\node_modules\router\lib\layer.js:169:33)
+    at next (D:\dev\Proyecto Final BD\node_modules\router\lib\route.js:163:13)
+    at Route.dispatch (D:\dev\Proyecto Final BD\node_modules\router\lib\route.js:123:3)
+    at handle (D:\dev\Proyecto Final BD\node_modules\router\index.js:449:11)
+GET /api/v1/prueba/fallo 500 4 ms
+✔ un error inesperado da 500 sin detalles internos (13.2518ms)
+GET /api/v1/prueba/base-caida -> base_no_disponible (Error ECONNREFUSED)
+    at file:///D:/dev/Proyecto%20Final%20BD/backend/test/salud.test.ts:21:23
+    at Layer.handleRequest (D:\dev\Proyecto Final BD\node_modules\router\lib\layer.js:169:33)
+    at next (D:\dev\Proyecto Final BD\node_modules\router\lib\route.js:163:13)
+    at Route.dispatch (D:\dev\Proyecto Final BD\node_modules\router\lib\route.js:123:3)
+    at handle (D:\dev\Proyecto Final BD\node_modules\router\index.js:449:11)
+GET /api/v1/prueba/base-caida 503 3 ms
+✔ una base caída da 503 (8.8422ms)
+POST /api/v1/prueba/eco 400 238 ms
+✔ un JSON mal formado da 400 (252.9547ms)
+POST /api/v1/auth/registro 201 208 ms
+POST /api/v1/auth/sesion 201 128 ms
+POST /api/v1/auth/registro 201 81 ms
+POST /api/v1/auth/sesion 201 76 ms
+✔ los eventos llegan al grafo, repetirlos no duplica y se pueden deshacer (3182.5315ms)
+POST /api/v1/auth/registro 201 84 ms
+POST /api/v1/auth/sesion 201 73 ms
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+✔ si la base destino no responde, el evento espera sin gastar intentos (232.66ms)
+POST /api/v1/auth/registro 201 75 ms
+POST /api/v1/auth/sesion 201 73 ms
+POST /api/v1/auth/registro 201 75 ms
+POST /api/v1/auth/sesion 201 72 ms
+Sincronización: falló el evento 4372 (obra_leida, Error)
+Sincronización: falló el evento 4372 (obra_leida, Error)
+Sincronización: falló el evento 4372 (obra_leida, Error)
+Sincronización: falló el evento 4372 (obra_leida, Error)
+Sincronización: falló el evento 4372 (obra_leida, Error); queda como fallido
+✔ un evento defectuoso frena a los siguientes hasta quedar fallido al quinto intento (493.5552ms)
+POST /api/v1/auth/registro 201 74 ms
+POST /api/v1/auth/sesion 201 73 ms
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 83 ms
+Sincronización: falló el evento 4376 (seguimiento_creado, Error)
+✔ si falta un nodo: es un fallo solo mientras PostgreSQL tenga el dato (502.0707ms)
+POST /api/v1/auth/registro 201 83 ms
+POST /api/v1/auth/sesion 201 71 ms
+✔ eliminar un usuario borra su nodo y sus comparativas (1441.331ms)
+POST /api/v1/auth/registro 201 83 ms
+POST /api/v1/auth/sesion 201 80 ms
+POST /api/v1/auth/registro 201 74 ms
+POST /api/v1/auth/sesion 201 71 ms
+POST /api/v1/me/seguidos 201 18 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000001 200 119 ms
+✔ el worker vacía lo pendiente al arrancar y atiende los avisos de la API sin esperar (1104.3213ms)
+POST /api/v1/auth/registro 201 179 ms
+POST /api/v1/auth/registro 201 252 ms
+POST /api/v1/auth/registro 201 383 ms
+POST /api/v1/auth/registro 201 378 ms
+POST /api/v1/auth/sesion 201 180 ms
+POST /api/v1/auth/registro 201 466 ms
+POST /api/v1/auth/sesion 201 173 ms
+POST /api/v1/auth/sesion 201 185 ms
+POST /api/v1/auth/sesion 201 120 ms
+POST /api/v1/auth/sesion 201 414 ms
+✔ el worker nunca aplica dos eventos a la vez ni repite uno (1124.2742ms)
+POST /api/v1/auth/registro 201 83 ms
+POST /api/v1/auth/sesion 201 74 ms
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+✔ tras una caída de la base, el worker espera y sigue donde iba (470.7487ms)
+POST /api/v1/auth/registro 201 100 ms
+POST /api/v1/auth/sesion 201 80 ms
+POST /api/v1/auth/registro 201 99 ms
+POST /api/v1/auth/sesion 201 75 ms
+✔ al apagar termina el evento en curso y no toma otro (829.4345ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 90630.5292
+codigo 0

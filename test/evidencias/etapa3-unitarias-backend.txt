@@ -1,0 +1,26 @@
+Pruebas unitarias del backend - 2026-11-26 16:02 - Node v24.14.0 - sin .env ni bases
+✔ paginación: con una fila de más hay cursor, y el cursor devuelve fecha e id exactos (10.8717ms)
+✔ paginación: sin más filas no hay cursor (0.5797ms)
+✔ paginación: un cursor alterado es una entrada inválida (7.1801ms)
+✔ errores: distingue una base caída de un fallo de la propia petición (1.9329ms)
+✔ búsqueda por persona: quita la sintaxis de Lucene (D-41) (0.9368ms)
+✔ los identificadores entran en minúsculas (D-11, D-40) (4.2051ms)
+✔ el correo se limpia y pasa a minúsculas (D-03) (3.9313ms)
+✔ registro: contraseña de 8 o más, correo válido y nombre obligatorio (D-57) (3.7196ms)
+✔ la calificación es un entero del 1 al 5 (1.6656ms)
+✔ reseña: el texto vacío queda nulo y no pasa de 3000 caracteres (1.5275ms)
+✔ las reseñas se piden por obra o por usuario, no por ambos ni por ninguno (1.5661ms)
+✔ las imágenes solo se aceptan por https (D-31) (0.9221ms)
+✔ búsqueda: por título si no se dice otra cosa, y con algo que buscar (0.8866ms)
+✔ libro: no admite dos ediciones con el mismo ISBN (D-08) (7.2333ms)
+✔ película: ni persona ni orden repetidos en el reparto (D-22) (4.8283ms)
+✔ comparativa: de 1 a 10 aspectos y preferencia conocida (4.6078ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10092.5535
+codigo 0

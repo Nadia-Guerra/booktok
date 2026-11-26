@@ -1046,3 +1046,13 @@ Termina con código 1 si falló algún paso. `-SinPruebas` omite el paso 4.
 **Alternativa descartada.** NativeWind 5 (Tailwind 4): todavía es una versión candidata.
 **Costo que se acepta.** Más dependencias que mantener; `tokens.js` es JavaScript porque también lo lee la configuración de Tailwind.
 **Dónde.** `frontend/`.
+
+---
+
+## D-64. La reconciliación se construye en versión reducida
+
+**Contexto.** La arquitectura (documento 04, sección 8) diseña un comando que compara nueve cosas. El plazo no alcanza para todas y la guía del curso pide un escenario de actualización y reconciliación.
+**Decisión.** El comando (`npm run reconciliar --workspace backend`) compara `seguimiento` contra `sigue` y los libros terminados contra `leyó`, informa los eventos pendientes y fallidos y, solo con `--corregir`, modifica el grafo. Con eventos pendientes no corrige.
+**Alternativa descartada.** No construirlo y dejar solo la detección (`coherencia.ps1`).
+**Costo que se acepta.** No repara fichas, `obra_resumen`, reparto, promedios, huérfanos ni borradores antiguos.
+**Dónde.** `backend/src/reconciliar.ts` y `servicios/reconciliacion.ts`; prueba en `backend/test/reconciliacion.test.ts`.
