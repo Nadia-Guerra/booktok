@@ -31,7 +31,16 @@ function MiCuenta({ usuario }: { usuario: PerfilPropio }) {
         {usuario.rol === 'admin' ? <Chip texto="Administrador" /> : null}
         {usuario.biografia ? <Texto className="text-center">{usuario.biografia}</Texto> : null}
       </Tarjeta>
+      {usuario.rol === 'admin' ? (
+        <Boton titulo="Administración" icono="construct-outline" onPress={() => navegacion.navigate('Admin')} />
+      ) : null}
       <Boton titulo="Editar perfil" icono="create-outline" onPress={() => navegacion.navigate('EditarPerfil')} />
+      <Boton
+        titulo="Seguidos y seguidores"
+        variante="secundario"
+        icono="people-outline"
+        onPress={() => navegacion.navigate('MiRed')}
+      />
       <Boton
         titulo="Cerrar sesión"
         variante="secundario"

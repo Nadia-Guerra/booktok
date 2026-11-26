@@ -4,6 +4,10 @@ import { View } from 'react-native';
 import { Chip, Chips } from '../../componentes/Chip';
 import { Cifras } from '../../componentes/Datos';
 import { Cargando, EstadoError } from '../../componentes/Estados';
+import { Boton } from '../../componentes/Boton';
+import { nodoDeObra } from '../../componentes/nodos';
+import { useSesion } from '../../core/sesion/ContextoSesion';
+import { useNavegacion } from '../../hooks/useNavegacion';
 import { Estrellas } from '../../componentes/Estrellas';
 import { Pantalla } from '../../componentes/Pantalla';
 import { Portada } from '../../componentes/Portada';
@@ -12,8 +16,12 @@ import { NOMBRE_TIPO } from '../../componentes/TarjetaObra';
 import { Texto } from '../../componentes/Texto';
 import { useFicha } from '../../hooks/useCatalogo';
 import type { PropsDeRaiz } from '../../navegacion/tipos';
+import { Adaptaciones } from './Adaptaciones';
+import { AdminDeObra } from './AdminDeObra';
 import { DetalleLibro } from './DetalleLibro';
 import { DetallePelicula } from './DetallePelicula';
+import { MiActividad } from './MiActividad';
+import { ResenasDeObra } from './ResenasDeObra';
 
 function cifrasDe(ficha: Ficha) {
   const comunes = [
@@ -31,6 +39,8 @@ function cifrasDe(ficha: Ficha) {
 
 export function FichaVista({ route }: PropsDeRaiz<'Ficha'>) {
   const consulta = useFicha(route.params.obraId);
+  const navegacion = useNavegacion();
+  const { usuario, esAdmin } = useSesion();
 
   if (consulta.isPending || consulta.error) {
     return (
@@ -60,11 +70,36 @@ export function FichaVista({ route }: PropsDeRaiz<'Ficha'>) {
       <Cifras cifras={cifrasDe(ficha)} />
       <Chips textos={ficha.generos} />
 
+      {/* Un borrador no se reseña ni se marca (D-56). */}
+      {ficha.estado_publicacion === 'publicada' ? <MiActividad ficha={ficha} /> : null}
+      {usuario && ficha.estado_publicacion === 'publicada' ? (
+        <Boton
+          titulo="Guardar en una lista"
+          variante="secundario"
+          icono="list-outline"
+          onPress={() => navegacion.navigate('AgregarALista', { obraId: ficha.obra_id })}
+        />
+      ) : null}
+      {ficha.estado_publicacion === 'publicada' ? <Adaptaciones ficha={ficha} /> : null}
+
       <Seccion titulo="Sinopsis">
         <Texto>{ficha.sinopsis}</Texto>
       </Seccion>
 
       {ficha.tipo === 'libro' ? <DetalleLibro libro={ficha} /> : <DetallePelicula pelicula={ficha} />}
+
+      {usuario && ficha.estado_publicacion === 'publicada' ? (
+        <Boton
+          titulo="Explorar conexiones desde aquí"
+          variante="secundario"
+          icono="git-network-outline"
+          onPress={() => navegacion.push('Caminos', { origen: nodoDeObra(ficha) })}
+        />
+      ) : null}
+
+      {esAdmin ? <AdminDeObra ficha={ficha} /> : null}
+
+      <ResenasDeObra obraId={ficha.obra_id} />
     </Pantalla>
   );
 }

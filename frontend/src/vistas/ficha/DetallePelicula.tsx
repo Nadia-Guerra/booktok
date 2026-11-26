@@ -1,10 +1,11 @@
 // La parte de la ficha propia de una película: libro, dirección, reparto y datos.
 import type { FichaPelicula } from '@dlbp/shared';
 import { useNavegacion } from '../../hooks/useNavegacion';
-import { Pressable, View } from 'react-native';
 import { Chips } from '../../componentes/Chip';
 import { FilaDato } from '../../componentes/Datos';
-import { Icono } from '../../componentes/Icono';
+import { Fila } from '../../componentes/Fila';
+import { nodoDePersona } from '../../componentes/nodos';
+import { useAbrirNodo } from '../../hooks/useAbrirNodo';
 import { PersonaMini } from '../../componentes/PersonaMini';
 import { Portada } from '../../componentes/Portada';
 import { Seccion } from '../../componentes/Seccion';
@@ -13,40 +14,36 @@ import { Texto } from '../../componentes/Texto';
 
 export function DetallePelicula({ pelicula }: { pelicula: FichaPelicula }) {
   const navegacion = useNavegacion();
+  const abrir = useAbrirNodo();
   const { libro_origen: libro, datos_tecnicos: datos } = pelicula;
   return (
     <>
       {libro ? (
         <Seccion titulo="Basada en el libro">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Ver el libro ${libro.titulo}`}
+          <Fila
+            imagen={<Portada titulo={libro.titulo} url={libro.portada_url} tamano="mini" />}
+            titulo={libro.titulo}
+            detalle={String(libro.anio)}
             onPress={() => navegacion.push('Ficha', { obraId: libro.obra_id })}
-            className="active:opacity-70"
-          >
-            <Tarjeta className="flex-row items-center">
-              <Portada titulo={libro.titulo} url={libro.portada_url} tamano="mini" />
-              <View className="flex-1">
-                <Texto variante="subtitulo">{libro.titulo}</Texto>
-                <Texto variante="leyenda" tono="suave">
-                  {libro.anio}
-                </Texto>
-              </View>
-              <Icono nombre="chevron-forward" color="texto-suave" />
-            </Tarjeta>
-          </Pressable>
+          />
         </Seccion>
       ) : null}
 
       <Seccion titulo="Dirección" carrusel>
         {pelicula.directores.map((p) => (
-          <PersonaMini key={p.persona_id} nombre={p.nombre} url={p.foto_url} />
+          <PersonaMini key={p.persona_id} nombre={p.nombre} url={p.foto_url} onPress={() => abrir(nodoDePersona(p))} />
         ))}
       </Seccion>
 
       <Seccion titulo="Reparto" carrusel>
         {pelicula.reparto.map((a) => (
-          <PersonaMini key={a.persona_id} nombre={a.nombre} url={a.foto_url} detalle={a.personaje} />
+          <PersonaMini
+            key={a.persona_id}
+            nombre={a.nombre}
+            url={a.foto_url}
+            detalle={a.personaje}
+            onPress={() => abrir(nodoDePersona(a))}
+          />
         ))}
       </Seccion>
 

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --import ./test/resolver.mjs --test \"test/**/*.test.mjs\""
   },
   "dependencies": {
     "@dlbp/shared": "0.1.0",

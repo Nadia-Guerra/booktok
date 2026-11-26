@@ -1,6 +1,7 @@
 // Rutas de la app y sus parámetros.
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { Nodo } from '../componentes/nodos';
 
 export type PestanasParams = {
   Inicio: undefined;
@@ -14,6 +15,20 @@ export type RaizParams = {
   Acceso: undefined;
   EditarPerfil: undefined;
   Ficha: { obraId: string };
+  EscribirResena: { obraId: string };
+  Usuario: { usuarioId: string };
+  MiRed: undefined;
+  Persona: { persona: Nodo };
+  Caminos: { origen?: Nodo } | undefined;
+  Comparativas: { libroId: string; peliculaId: string };
+  EscribirComparativa: { libroId: string; peliculaId: string };
+  Lista: { listaId: string };
+  AgregarALista: { obraId: string };
+  Admin: undefined;
+  NuevoLibro: undefined;
+  NuevaPelicula: { libroId: string };
+  AgregarEdicion: { obraId: string };
+  AgregarPlataforma: { obraId: string };
 };
 
 export type PropsDeRaiz<R extends keyof RaizParams> = NativeStackScreenProps<RaizParams, R>;

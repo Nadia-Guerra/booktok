@@ -11,21 +11,23 @@ import { Rejilla } from '../../componentes/Rejilla';
 import { Selector } from '../../componentes/Selector';
 import { TarjetaObra } from '../../componentes/TarjetaObra';
 import { Texto } from '../../componentes/Texto';
+import { VINCULOS } from '../../componentes/vinculos';
 import { ErrorApi } from '../../core/http/errores';
+import { useSesion } from '../../core/sesion/ContextoSesion';
 import { useBusqueda } from '../../hooks/useCatalogo';
+import { Recomendaciones } from './Recomendaciones';
 
 const FILTROS = [
   { valor: 'titulo', titulo: 'Por título' },
   { valor: 'persona', titulo: 'Por persona' },
 ] as const;
 
-const VINCULOS = { 'escribió': 'Escribió', dirigida_por: 'Dirigió', 'actuó_en': 'Actuó' } as const;
-
 const motivo = ({ persona, vinculo }: ResultadoBusqueda) =>
   persona && vinculo ? `${VINCULOS[vinculo]}: ${persona.nombre}` : undefined;
 
 export function InicioVista() {
   const navegacion = useNavegacion();
+  const { usuario } = useSesion();
   const [texto, setTexto] = useState('');
   const [buscado, setBuscado] = useState('');
   const [por, setPor] = useState<BuscarPor>('titulo');
@@ -38,7 +40,11 @@ export function InicioVista() {
       <CampoTexto
         etiqueta="Buscar"
         value={texto}
-        onChangeText={setTexto}
+        onChangeText={(nuevo) => {
+          setTexto(nuevo);
+          // Al borrar el texto vuelve la portada.
+          if (!nuevo.trim()) setBuscado('');
+        }}
         onSubmitEditing={() => setBuscado(texto.trim())}
         returnKeyType="search"
         placeholder={por === 'titulo' ? 'Una palabra del título' : 'Nombre o apellido'}
@@ -47,11 +53,23 @@ export function InicioVista() {
       <Boton titulo="Buscar" icono="search" onPress={() => setBuscado(texto.trim())} deshabilitado={!texto.trim()} />
 
       {buscado === '' ? (
-        <EstadoVacio
-          icono="film-outline"
-          titulo="Encuentra un libro o su película"
-          mensaje="La búsqueda usa palabras completas."
-        />
+        usuario ? (
+          <>
+            <Boton
+              titulo="Explorar conexiones"
+              variante="secundario"
+              icono="git-network-outline"
+              onPress={() => navegacion.navigate('Caminos')}
+            />
+            <Recomendaciones />
+          </>
+        ) : (
+          <EstadoVacio
+            icono="film-outline"
+            titulo="Encuentra un libro o su película"
+            mensaje="La búsqueda usa palabras completas."
+          />
+        )
       ) : busqueda.isPending ? (
         <Cargando />
       ) : sinConfigurar ? (

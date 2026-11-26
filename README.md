@@ -70,6 +70,12 @@ npm run app
 npm run typecheck
 ```
 
+Las pruebas de la app no necesitan las bases:
+
+```powershell
+npm test --workspace frontend
+```
+
 Las pruebas de la API necesitan las tres bases levantadas y la API detenida, porque su *worker* se llevaría los eventos de las pruebas:
 
 ```powershell

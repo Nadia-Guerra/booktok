@@ -28,7 +28,6 @@ Thumbs.db
 .vscode/
 
 # Guía del curso: no es parte del código del proyecto
-# (quita esta línea si se quiere versionar)
 Guia_Proyecto_Final_Bases_Datos.pdf
 INSTRUCCIONES POSTER.pdf
 Plantilla póster.pdf

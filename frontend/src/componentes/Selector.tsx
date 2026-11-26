@@ -22,7 +22,8 @@ export function Selector<T extends string>({ opciones, valor, onCambiar }: Props
             onPress={() => onCambiar(o.valor)}
             className={clases('min-h-10 flex-1 items-center justify-center rounded-xl px-2', activa && 'bg-superficie')}
           >
-            <Texto variante="etiqueta" tono={activa ? 'normal' : 'suave'}>
+            {/* Con cuatro opciones en un teléfono angosto, el texto se encoge en vez de partirse. */}
+            <Texto variante="etiqueta" tono={activa ? 'normal' : 'suave'} numberOfLines={1} adjustsFontSizeToFit>
               {o.titulo}
             </Texto>
           </Pressable>

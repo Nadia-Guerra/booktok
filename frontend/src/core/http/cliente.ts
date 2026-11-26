@@ -4,7 +4,8 @@ import type { z } from 'zod';
 import { leerUrlApi } from '../config/urlApi';
 import { ErrorApi } from './errores';
 
-const TIEMPO_LIMITE_MS = 20_000;
+// Holgado: tras reiniciar Neo4j la primera consulta puede tardar cerca de 20 s.
+const TIEMPO_LIMITE_MS = 45_000;
 
 let token: string | null = null;
 let alExpirar: () => void = () => {};

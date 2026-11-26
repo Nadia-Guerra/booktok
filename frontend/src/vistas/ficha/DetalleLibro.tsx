@@ -2,6 +2,8 @@
 import type { FichaLibro } from '@dlbp/shared';
 import { useNavegacion } from '../../hooks/useNavegacion';
 import { FilaDato } from '../../componentes/Datos';
+import { nodoDePersona } from '../../componentes/nodos';
+import { useAbrirNodo } from '../../hooks/useAbrirNodo';
 import { PersonaMini } from '../../componentes/PersonaMini';
 import { Seccion } from '../../componentes/Seccion';
 import { Tarjeta } from '../../componentes/Tarjeta';
@@ -10,11 +12,12 @@ import { Texto } from '../../componentes/Texto';
 
 export function DetalleLibro({ libro }: { libro: FichaLibro }) {
   const navegacion = useNavegacion();
+  const abrir = useAbrirNodo();
   return (
     <>
       <Seccion titulo="Autoría" carrusel>
         {libro.autores.map((p) => (
-          <PersonaMini key={p.persona_id} nombre={p.nombre} url={p.foto_url} />
+          <PersonaMini key={p.persona_id} nombre={p.nombre} url={p.foto_url} onPress={() => abrir(nodoDePersona(p))} />
         ))}
       </Seccion>
 
