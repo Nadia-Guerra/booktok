@@ -1,0 +1,326 @@
+Pruebas de la API, tanda 1 de 2 - 2026-11-26 15:43 - Node v24.14.0
+POST /api/v1/auth/sesion 201 461 ms
+POST /api/v1/auth/sesion 201 74 ms
+GET /api/v1/obras 200 287 ms
+GET /api/v1/obras 200 7 ms
+GET /api/v1/obras 200 8 ms
+✔ EP-08: busca en libros y películas sin distinguir mayúsculas ni tildes (1050.8556ms)
+GET /api/v1/obras 200 9 ms
+GET /api/v1/obras 200 0 ms
+GET /api/v1/obras 200 6 ms
+GET /api/v1/obras 200 6 ms
+✔ EP-08: solo palabras completas; la sintaxis de búsqueda no excluye ni fuerza frases (30.2868ms)
+GET /api/v1/obras 200 5 ms
+GET /api/v1/obras 200 12 ms
+GET /api/v1/obras 200 8 ms
+✔ EP-08: los borradores solo salen para el administrador (33.0479ms)
+GET /api/v1/obras 400 2 ms
+GET /api/v1/obras 400 1 ms
+GET /api/v1/obras 400 0 ms
+GET /api/v1/obras 400 0 ms
+GET /api/v1/obras 400 1 ms
+GET /api/v1/obras 400 0 ms
+✔ EP-08: la entrada inválida da 400 (16.5983ms)
+GET /api/v1/obras/b1000000-0000-4000-8000-000000000001 200 1625 ms
+✔ EP-09: la ficha de un libro une las tres bases (1636.027ms)
+GET /api/v1/obras/F1000000-0000-4000-8000-000000000001 200 67 ms
+✔ EP-09: la ficha de una película trae reparto, directores y libro de origen (72.8113ms)
+GET /api/v1/obras/f1000000-0000-4000-8000-000000000003 200 60 ms
+✔ EP-09: una película sin portada ni plataformas se devuelve con nulos y listas vacías (63.5666ms)
+GET /api/v1/obras/b1000000-0000-4000-8000-000000000001 200 63 ms
+GET /api/v1/obras/b1000000-0000-4000-8000-000000000009 200 76 ms
+GET /api/v1/obras/b1000000-0000-4000-8000-000000000001 200 62 ms
+✔ EP-09: con sesión llegan mi estado y mi reseña, aunque esté oculta (216.9937ms)
+GET /api/v1/obras/b1000000-0000-4000-8000-000000000011 404 6 ms
+GET /api/v1/obras/b1000000-0000-4000-8000-000000000011 404 8 ms
+GET /api/v1/obras/b1000000-0000-4000-8000-000000000011 200 66 ms
+GET /api/v1/obras/f1000000-0000-4000-8000-000000000012 404 5 ms
+GET /api/v1/obras/f1000000-0000-4000-8000-000000000012 404 9 ms
+GET /api/v1/obras/f1000000-0000-4000-8000-000000000012 200 1759 ms
+✔ EP-09: un borrador da 404 salvo al administrador (1873.275ms)
+GET /api/v1/obras/99999999-9999-4999-8999-999999999999 404 5 ms
+GET /api/v1/obras/no-es-un-id 400 2 ms
+GET /api/v1/obras/b1000000-0000-4000-8000-000000000001 401 3 ms
+GET /api/v1/obras 401 3 ms
+✔ EP-09: id inexistente 404, id mal formado 400 y token que no vale 401 (18.4096ms)
+DELETE /api/v1/auth/sesion 204 14 ms
+DELETE /api/v1/auth/sesion 204 13 ms
+POST /api/v1/auth/registro 201 166 ms
+✔ EP-02: registra un lector, normaliza el correo y deja el evento usuario_creado (257.5014ms)
+POST /api/v1/auth/registro 201 83 ms
+POST /api/v1/auth/registro 409 93 ms
+✔ EP-02: un correo ya registrado da 409 y no deja usuario ni evento (194.7934ms)
+POST /api/v1/auth/registro 400 2 ms
+POST /api/v1/auth/registro 400 3 ms
+POST /api/v1/auth/registro 400 2 ms
+POST /api/v1/auth/registro 400 2 ms
+✔ EP-02: la entrada inválida da 400 y dice qué campo falla (27.0395ms)
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 77 ms
+✔ EP-03: entrega un token y en la base solo queda su SHA-256, con 30 días de vigencia (178.5328ms)
+POST /api/v1/auth/registro 201 78 ms
+POST /api/v1/auth/sesion 401 70 ms
+POST /api/v1/auth/sesion 401 69 ms
+✔ EP-03: contraseña mala y correo inexistente responden exactamente lo mismo (224.8003ms)
+POST /api/v1/auth/sesion 201 72 ms
+DELETE /api/v1/auth/sesion 204 8 ms
+✔ EP-03: un usuario de la semilla (hash $2a$) puede entrar (84.5324ms)
+POST /api/v1/auth/registro 201 80 ms
+POST /api/v1/auth/sesion 201 73 ms
+GET /api/v1/me 200 8 ms
+GET /api/v1/me 401 1 ms
+GET /api/v1/me 401 4 ms
+GET /api/v1/me 401 0 ms
+✔ EP-05: devuelve el perfil propio; sin token o con uno falso da 401 (183.1109ms)
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 72 ms
+GET /api/v1/me 200 5 ms
+GET /api/v1/me 401 3 ms
+✔ EP-05: el rol se lee en cada petición y una sesión vencida no sirve (176.1904ms)
+POST /api/v1/auth/registro 201 74 ms
+POST /api/v1/auth/sesion 201 76 ms
+PATCH /api/v1/me 200 10 ms
+PATCH /api/v1/me 200 11 ms
+PATCH /api/v1/me 200 7 ms
+PATCH /api/v1/me 400 4 ms
+PATCH /api/v1/me 400 3 ms
+PATCH /api/v1/me 400 3 ms
+PATCH /api/v1/me 400 3 ms
+PATCH /api/v1/me 401 1 ms
+✔ EP-06: cambia solo lo enviado, borra la biografía y no deja cambiar el rol (215.1002ms)
+POST /api/v1/auth/registro 201 77 ms
+POST /api/v1/auth/sesion 201 75 ms
+POST /api/v1/auth/sesion 201 73 ms
+DELETE /api/v1/auth/sesion 204 5 ms
+GET /api/v1/me 401 2 ms
+DELETE /api/v1/auth/sesion 401 3 ms
+GET /api/v1/me 200 5 ms
+✔ EP-04: cierra solo esa sesión; las demás siguen valiendo (253.3468ms)
+POST /api/v1/auth/registro 201 174 ms
+POST /api/v1/auth/sesion 201 105 ms
+POST /api/v1/auth/registro 201 99 ms
+POST /api/v1/auth/sesion 201 87 ms
+✔ seguir y dejar de seguir a la vez: los eventos quedan en el orden de los cambios (2008.3818ms)
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 84 ms
+✔ marcar y desmarcar terminada a la vez: los eventos quedan en el orden de los cambios (2906.1761ms)
+POST /api/v1/auth/sesion 201 106 ms
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 77 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 223 ms
+✔ EP-11: publicar deja reseña, estado terminada, evento y promedio recalculado (611.9651ms)
+POST /api/v1/auth/registro 201 77 ms
+POST /api/v1/auth/sesion 201 73 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 23 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 200 18 ms
+✔ EP-11: repetir edita la misma reseña, sin otro evento; sin texto lo borra (204.8279ms)
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 73 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000003 200 16 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 22 ms
+✔ EP-11: reseñar una obra ya terminada no repite el evento (197.6488ms)
+POST /api/v1/auth/registro 201 75 ms
+POST /api/v1/auth/sesion 201 72 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 400 5 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 400 4 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 400 3 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 400 4 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 400 3 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 400 3 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000011/resena 404 8 ms
+PUT /api/v1/obras/dfa9852d-8b60-4954-af05-ec70a98405ac/resena 404 8 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 401 1 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 29 ms
+✔ EP-11: entrada inválida 400, borrador o inexistente 404 y sin sesión 401, sin dejar rastro (253.8958ms)
+POST /api/v1/auth/registro 201 77 ms
+POST /api/v1/auth/sesion 201 73 ms
+✔ O7: si la transacción falla a medias no queda reseña, estado ni evento (169.962ms)
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 73 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 42 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 200 54 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 200 63 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 200 71 ms
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/registro 201 82 ms
+POST /api/v1/auth/registro 201 86 ms
+POST /api/v1/auth/registro 201 86 ms
+POST /api/v1/auth/registro 201 146 ms
+POST /api/v1/auth/sesion 201 78 ms
+POST /api/v1/auth/sesion 201 81 ms
+POST /api/v1/auth/sesion 201 77 ms
+POST /api/v1/auth/sesion 201 115 ms
+POST /api/v1/auth/sesion 201 83 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 46 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 54 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 66 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 74 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 80 ms
+✔ EP-11: peticiones simultáneas no duplican reseñas ni descuadran el promedio (565.0388ms)
+POST /api/v1/auth/registro 201 74 ms
+POST /api/v1/auth/sesion 201 72 ms
+PUT /api/v1/me/estados/f1000000-0000-4000-8000-000000000001 200 13 ms
+PUT /api/v1/me/estados/f1000000-0000-4000-8000-000000000001 200 16 ms
+PUT /api/v1/me/estados/f1000000-0000-4000-8000-000000000001 200 20 ms
+PUT /api/v1/me/estados/f1000000-0000-4000-8000-000000000001 200 19 ms
+PUT /api/v1/me/estados/f1000000-0000-4000-8000-000000000001 200 19 ms
+PUT /api/v1/me/estados/f1000000-0000-4000-8000-000000000001 200 16 ms
+PUT /api/v1/me/estados/f1000000-0000-4000-8000-000000000001 200 17 ms
+✔ EP-14: los eventos salen solo al entrar o salir de terminada (282.8035ms)
+POST /api/v1/auth/registro 201 77 ms
+POST /api/v1/auth/sesion 201 75 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 28 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 39 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 41 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 47 ms
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 73 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 29 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 37 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 43 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 49 ms
+POST /api/v1/auth/registro 201 75 ms
+POST /api/v1/auth/sesion 201 69 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 22 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 27 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 35 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 37 ms
+✔ EP-14: marcas simultáneas dejan eventos coherentes con el estado final (614.4816ms)
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 72 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000001 400 3 ms
+PUT /api/v1/me/estados/f1000000-0000-4000-8000-000000000012 404 7 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000001 401 1 ms
+✔ EP-14: estado desconocido 400 y obra en borrador 404 (165.3932ms)
+POST /api/v1/auth/registro 201 72 ms
+POST /api/v1/auth/sesion 201 74 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000001 200 14 ms
+PUT /api/v1/me/estados/f1000000-0000-4000-8000-000000000001 200 14 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000005 200 13 ms
+GET /api/v1/me/estados 200 19 ms
+GET /api/v1/me/estados 200 8 ms
+GET /api/v1/me/estados 200 8 ms
+GET /api/v1/me/estados 200 10 ms
+✔ EP-15: lista mis obras con su título, filtra por estado y pagina (249.4933ms)
+POST /api/v1/auth/registro 201 71 ms
+POST /api/v1/auth/sesion 201 70 ms
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 72 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000006/resena 201 21 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000006/resena 201 23 ms
+GET /api/v1/resenas 200 11 ms
+GET /api/v1/resenas 200 10 ms
+GET /api/v1/resenas 200 9 ms
+GET /api/v1/resenas 200 9 ms
+✔ EP-10: recientes primero, con autor y obra; el cursor no salta ni repite (397.8129ms)
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 70 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000007/resena 201 20 ms
+GET /api/v1/resenas 200 7 ms
+GET /api/v1/resenas 200 9 ms
+GET /api/v1/resenas 200 11 ms
+✔ EP-10: las ocultas solo las ve el administrador y no cuentan en el promedio (206.0542ms)
+POST /api/v1/auth/registro 201 77 ms
+POST /api/v1/auth/sesion 201 68 ms
+GET /api/v1/resenas 401 1 ms
+GET /api/v1/resenas 403 8 ms
+GET /api/v1/resenas 200 12 ms
+GET /api/v1/resenas 200 10 ms
+GET /api/v1/resenas 200 6 ms
+GET /api/v1/resenas 404 4 ms
+✔ EP-10: el historial de otra persona exige sesión y seguirla (210.1672ms)
+GET /api/v1/resenas 400 1 ms
+GET /api/v1/resenas 400 0 ms
+GET /api/v1/resenas 400 0 ms
+GET /api/v1/resenas 400 1 ms
+GET /api/v1/resenas 400 1 ms
+GET /api/v1/resenas 400 1 ms
+GET /api/v1/resenas 400 1 ms
+GET /api/v1/resenas 404 5 ms
+✔ EP-10: filtros inválidos 400 y borrador 404 (19.8149ms)
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 73 ms
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 72 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000008/resena 201 19 ms
+DELETE /api/v1/resenas/eb70853d-511c-4748-ba4a-52fe4b7cd4b0 401 1 ms
+DELETE /api/v1/resenas/eb70853d-511c-4748-ba4a-52fe4b7cd4b0 404 5 ms
+DELETE /api/v1/resenas/eb70853d-511c-4748-ba4a-52fe4b7cd4b0 204 6 ms
+DELETE /api/v1/resenas/eb70853d-511c-4748-ba4a-52fe4b7cd4b0 404 5 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000008/resena 201 19 ms
+DELETE /api/v1/resenas/6bc15f5b-c09d-470a-9f94-2d20a466a5fe 204 5 ms
+✔ EP-13: borra el autor o el administrador; el estado no cambia y el promedio sí (385.5843ms)
+DELETE /api/v1/auth/sesion 204 8 ms
+GET /api/v1/salud 200 107 ms
+✔ EP-01: responde 200 con las tres bases arriba (184.0252ms)
+GET /api/v1/no-existe 404 1 ms
+✔ una ruta que no existe da 404 con el formato de error (10.833ms)
+GET /api/v1/prueba/fallo -> error_interno (Error )
+    at file:///D:/dev/Proyecto%20Final%20BD/backend/test/salud.test.ts:18:9
+    at Layer.handleRequest (D:\dev\Proyecto Final BD\node_modules\router\lib\layer.js:169:33)
+    at next (D:\dev\Proyecto Final BD\node_modules\router\lib\route.js:163:13)
+    at Route.dispatch (D:\dev\Proyecto Final BD\node_modules\router\lib\route.js:123:3)
+    at handle (D:\dev\Proyecto Final BD\node_modules\router\index.js:449:11)
+GET /api/v1/prueba/fallo 500 2 ms
+✔ un error inesperado da 500 sin detalles internos (7.7711ms)
+GET /api/v1/prueba/base-caida -> base_no_disponible (Error ECONNREFUSED)
+    at file:///D:/dev/Proyecto%20Final%20BD/backend/test/salud.test.ts:21:23
+    at Layer.handleRequest (D:\dev\Proyecto Final BD\node_modules\router\lib\layer.js:169:33)
+    at next (D:\dev\Proyecto Final BD\node_modules\router\lib\route.js:163:13)
+    at Route.dispatch (D:\dev\Proyecto Final BD\node_modules\router\lib\route.js:123:3)
+    at handle (D:\dev\Proyecto Final BD\node_modules\router\index.js:449:11)
+GET /api/v1/prueba/base-caida 503 2 ms
+✔ una base caída da 503 (8.0888ms)
+POST /api/v1/prueba/eco 400 20 ms
+✔ un JSON mal formado da 400 (33.5141ms)
+POST /api/v1/me/seguidos 401 22 ms
+DELETE /api/v1/me/seguidos/c1000000-0000-4000-8000-000000000002 401 2 ms
+GET /api/v1/usuarios/c1000000-0000-4000-8000-000000000002 401 1 ms
+✔ las tres rutas exigen sesión (101.2998ms)
+POST /api/v1/auth/registro 201 107 ms
+POST /api/v1/auth/sesion 201 74 ms
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 73 ms
+POST /api/v1/me/seguidos 201 16 ms
+POST /api/v1/me/seguidos 409 12 ms
+✔ seguir: 201, y repetirlo da 409 sin un segundo evento (388.0599ms)
+POST /api/v1/auth/registro 201 83 ms
+POST /api/v1/auth/sesion 201 72 ms
+POST /api/v1/me/seguidos 400 3 ms
+POST /api/v1/me/seguidos 404 8 ms
+POST /api/v1/me/seguidos 400 4 ms
+POST /api/v1/me/seguidos 400 4 ms
+✔ seguir: no a uno mismo, ni a quien no existe, ni con un id mal escrito (191.9039ms)
+POST /api/v1/auth/registro 201 81 ms
+POST /api/v1/auth/sesion 201 76 ms
+POST /api/v1/auth/registro 201 77 ms
+POST /api/v1/auth/sesion 201 69 ms
+DELETE /api/v1/me/seguidos/9b9d229c-c947-4249-8bf5-2405e7acd925 204 9 ms
+POST /api/v1/me/seguidos 201 10 ms
+DELETE /api/v1/me/seguidos/9b9d229c-c947-4249-8bf5-2405e7acd925 204 10 ms
+DELETE /api/v1/me/seguidos/9b9d229c-c947-4249-8bf5-2405e7acd925 204 8 ms
+✔ dejar de seguir: 204 siempre, con evento solo si lo seguía (357.7157ms)
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 71 ms
+GET /api/v1/usuarios/c1000000-0000-4000-8000-000000000002 200 8 ms
+GET /api/v1/resenas 403 8 ms
+POST /api/v1/me/seguidos 201 11 ms
+GET /api/v1/usuarios/c1000000-0000-4000-8000-000000000002 200 11 ms
+GET /api/v1/resenas 200 71 ms
+DELETE /api/v1/me/seguidos/c1000000-0000-4000-8000-000000000002 204 11 ms
+GET /api/v1/usuarios/c1000000-0000-4000-8000-000000000002 200 7 ms
+✔ perfil de otro: lo básico para cualquiera, las listas solo al seguirlo (D-54) (295.447ms)
+POST /api/v1/auth/registro 201 81 ms
+POST /api/v1/auth/sesion 201 76 ms
+GET /api/v1/usuarios/c7c54f9b-3f2f-44a4-88a2-76b604f6fc35 200 12 ms
+GET /api/v1/usuarios/ce9409cb-4100-4052-9ee0-da0e4d5fe5c0 404 7 ms
+✔ perfil propio y perfil inexistente (190.7696ms)
+ℹ tests 48
+ℹ suites 0
+ℹ pass 48
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65425.0265
+codigo 0

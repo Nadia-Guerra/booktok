@@ -1,0 +1,22 @@
+Pruebas unitarias de la app - 2026-11-26 15:42 - Node v24.14.0
+(node:26452) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/dev/Proyecto%20Final%20BD/frontend/src/core/formularios.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\dev\Proyecto Final BD\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la dirección de la API se limpia al pegarla (1.8999ms)
+✔ números y listas escritos a mano (2.5455ms)
+✔ alta de libro: ids de autores, géneros en lista y sin portada vacía (8.0548ms)
+✔ alta de película: el reparto toma el orden en que se agregó (4.3278ms)
+✔ un formulario vacío señala cada campo que falta (1.7252ms)
+✔ edición: el ISBN vacío se omite y uno corto se rechaza (1.8701ms)
+✔ comparativa: sin estrellas no se envía puntuación (1.8376ms)
+✔ comparativa: hay que elegir cuál gustó más (0.8934ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4160.8079
+codigo 0

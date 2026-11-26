@@ -1,0 +1,4 @@
+Tipos (tsc) - 2026-11-26 15:41 - Node v24.14.0
+shared: codigo 0
+backend: codigo 0
+frontend: codigo 0

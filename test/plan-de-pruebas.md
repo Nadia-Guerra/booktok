@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-26. Rama: `testing`, creada desde `feat/frontend` (que ya contiene todo el backend).
 
-Cubre la sección 7.8 y las pruebas obligatorias de la sección 9 de la guía. **Es un plan: nada de lo marcado como pendiente se ha ejecutado.**
+Cubre la sección 7.8 y las pruebas obligatorias de la sección 9 de la guía. Es el plan: lo ya ejecutado y sus evidencias están en [resultados.md](resultados.md).
 
 ## 1. Qué es una prueba aquí
 
@@ -113,7 +113,7 @@ Se marcan a mano, con una captura por caso.
 
 La guía pide un "escenario de actualización y reconciliación". La detección existe (`coherencia.ps1` y los eventos `fallido`), y el reintento también. El **comando de reconciliación está diseñado** (arquitectura 04, sección 8) **pero no construido**.
 
-Propuesta: construir una versión reducida que compare `seguimiento` contra `sigue` y los libros terminados contra `leyó`, y corrija solo el grafo. Escenario de prueba: borrar a mano una relación, ver que se detecta, reconciliar y comprobar que vuelve.
+Aprobado (2026-11-26): construir una versión reducida que compare `seguimiento` contra `sigue` y los libros terminados contra `leyó`, y corrija solo el grafo. Escenario de prueba: borrar a mano una relación, ver que se detecta, reconciliar y comprobar que vuelve.
 
 ### 3.6 Rendimiento
 
@@ -134,22 +134,20 @@ Es el criterio de aceptación. Clonar el repositorio en una carpeta nueva y segu
 
 ## 4. Orden de trabajo
 
-| Paso | Qué | Quién | Borra datos |
+| Etapa | Qué | Quién | Borra datos |
 |---|---|---|---|
 | 1 | Unitarias, `npm test` y `coherencia.ps1`; guardar salidas | Claude | Solo sus datos de prueba |
 | 2 | Medición de rendimiento | Claude | Solo sus datos de prueba |
 | 3 | Pruebas unitarias del backend | Claude | No |
-| 4 | Reconciliación reducida y su escenario (si se aprueba) | Claude | No |
-| 5 | Casos en el teléfono | Usuario | Solo lo que cree |
-| 6 | Instalación limpia y documentación | Ambos | Según la prueba |
-| 7 | Pruebas por base (opcional) y recarga de la semilla | Claude, con permiso | **Sí** |
-| 8 | Llevar `testing` a `master` | Usuario | No |
+| 4 | Reconciliación reducida y su escenario | Claude | No |
+| 5 | Instalación limpia y documentación | Ambos | Según la prueba |
+| 6 | Casos en el teléfono | Usuario | Solo lo que cree |
 
-No conviene correr los pasos 1, 2 ni 7 justo antes de la demostración: detienen la API o cambian datos.
+Al final: decidir si se repiten las pruebas por base (**borran datos**, piden permiso) y llevar `testing` a `master`. No conviene correr las etapas 1 y 2 justo antes de la demostración: detienen la API o cambian datos.
 
 ## 5. Evidencias
 
-En `docs/pruebas/evidencias/`: una salida por tanda (unitarias, API, coherencia, rendimiento), las capturas del teléfono y un `resultados.md` con la fecha, las condiciones, qué pasó, qué falló y qué no se probó. Las de las bases siguen en `db/evidencias/`. Ninguna debe incluir contraseñas, tokens ni la dirección del túnel.
+En `test/evidencias/`: una salida por tanda (unitarias, API, coherencia, rendimiento) y las capturas del teléfono. En `test/resultados.md`: la fecha, las condiciones, qué pasó, qué falló y qué no se probó. Las de las bases siguen en `db/evidencias/`. Ninguna debe incluir contraseñas, tokens ni la dirección del túnel.
 
 ## 6. Organización del repositorio
 
@@ -160,4 +158,4 @@ La guía dice que la estructura **puede adaptarse al stack**. No se mueven carpe
 | `database/relational`, `document`, `graph` | `db/relacional`, `db/documental`, `db/grafo` |
 | `backend/controllers`, `services`, `repositories` | `backend/src/rutas`, `servicios`, `repositorios` |
 | `tests/unit`, `integration`, `e2e` | `frontend/test`, `backend/test`, casos de la sección 3.4 |
-| `docs/pruebas` | `docs/pruebas` |
+| `docs/pruebas` | `test/` (plan, resultados y evidencias) |

@@ -1,0 +1,643 @@
+Pruebas de la API, tanda 2 de 2 - 2026-11-26 15:44 - Node v24.14.0
+POST /api/v1/auth/sesion 201 182 ms
+POST /api/v1/auth/registro 201 90 ms
+POST /api/v1/auth/sesion 201 81 ms
+GET /api/v1/admin/personas 401 2 ms
+GET /api/v1/admin/personas 403 6 ms
+POST /api/v1/admin/personas 401 1 ms
+POST /api/v1/admin/personas 403 3 ms
+POST /api/v1/admin/libros 401 1 ms
+POST /api/v1/admin/libros 403 3 ms
+POST /api/v1/admin/peliculas 401 1 ms
+POST /api/v1/admin/peliculas 403 3 ms
+POST /api/v1/admin/obras/b1000000-0000-4000-8000-000000000001/publicacion 401 1 ms
+POST /api/v1/admin/obras/b1000000-0000-4000-8000-000000000001/publicacion 403 3 ms
+POST /api/v1/admin/libros/b1000000-0000-4000-8000-000000000001/ediciones 401 1 ms
+POST /api/v1/admin/libros/b1000000-0000-4000-8000-000000000001/ediciones 403 3 ms
+POST /api/v1/admin/peliculas/b1000000-0000-4000-8000-000000000001/plataformas 401 0 ms
+POST /api/v1/admin/peliculas/b1000000-0000-4000-8000-000000000001/plataformas 403 3 ms
+✔ las rutas de administración: 401 sin sesión y 403 a un lector (RN-09) (2965.1314ms)
+POST /api/v1/admin/personas 201 3382 ms
+POST /api/v1/admin/personas 201 305 ms
+GET /api/v1/admin/personas 200 70 ms
+POST /api/v1/admin/personas 400 4 ms
+POST /api/v1/admin/personas 400 3 ms
+POST /api/v1/admin/personas 400 4 ms
+GET /api/v1/admin/personas 400 3 ms
+✔ EP-37 y EP-36: registrar una persona y volver a encontrarla (3792.9986ms)
+POST /api/v1/admin/personas 201 64 ms
+POST /api/v1/admin/libros 201 1741 ms
+GET /api/v1/obras/74b7466a-cb2e-4875-bc6c-e11d51a8683e 404 21 ms
+GET /api/v1/obras/74b7466a-cb2e-4875-bc6c-e11d51a8683e 200 905 ms
+✔ EP-39: el libro queda en borrador, oculto, con sus autores y sin ediciones vacías (2753.1715ms)
+POST /api/v1/admin/personas 201 44 ms
+POST /api/v1/admin/libros 404 16 ms
+POST /api/v1/admin/libros 409 43 ms
+POST /api/v1/admin/libros 400 3 ms
+POST /api/v1/admin/libros 400 4 ms
+POST /api/v1/admin/libros 400 4 ms
+POST /api/v1/admin/libros 400 3 ms
+POST /api/v1/admin/libros 400 3 ms
+POST /api/v1/admin/libros 400 3 ms
+POST /api/v1/admin/libros 400 4 ms
+POST /api/v1/admin/libros 400 3 ms
+POST /api/v1/admin/libros 400 3 ms
+✔ EP-39: lo que no puede crearse no deja rastro (203.1532ms)
+POST /api/v1/admin/personas 201 47 ms
+POST /api/v1/admin/personas 201 45 ms
+POST /api/v1/admin/personas 201 41 ms
+POST /api/v1/admin/personas 201 45 ms
+POST /api/v1/admin/libros 201 54 ms
+POST /api/v1/admin/peliculas 201 6420 ms
+GET /api/v1/obras/a2eb10e5-68f0-4333-98a5-6453f6292b88 200 89 ms
+GET /api/v1/obras/b2b0aafa-49a7-4292-b44c-fba898016b17 200 56 ms
+GET /api/v1/obras 200 1618 ms
+POST /api/v1/auth/registro 201 128 ms
+POST /api/v1/auth/sesion 201 100 ms
+PUT /api/v1/obras/a2eb10e5-68f0-4333-98a5-6453f6292b88/resena 201 97 ms
+POST /api/v1/admin/peliculas 201 1218 ms
+GET /api/v1/obras/b2b0aafa-49a7-4292-b44c-fba898016b17 200 84 ms
+✔ EP-40: la primera película publica el libro y luego se publica, con el reparto copiado (10534.4428ms)
+POST /api/v1/admin/personas 201 145 ms
+POST /api/v1/admin/personas 201 89 ms
+POST /api/v1/admin/peliculas 404 15 ms
+POST /api/v1/admin/peliculas 404 10 ms
+POST /api/v1/admin/peliculas 404 34 ms
+POST /api/v1/admin/peliculas 400 6 ms
+POST /api/v1/admin/peliculas 400 4 ms
+POST /api/v1/admin/peliculas 400 5 ms
+POST /api/v1/admin/peliculas 400 5 ms
+POST /api/v1/admin/peliculas 400 5 ms
+POST /api/v1/admin/peliculas 400 8 ms
+POST /api/v1/admin/peliculas 400 5 ms
+✔ EP-40: sin libro, sin las personas o con el reparto mal armado no se crea nada (393.1796ms)
+POST /api/v1/admin/personas 201 76 ms
+POST /api/v1/admin/personas 201 79 ms
+Alta incompleta de f746e80e-b11f-4fe4-9e77-19cff6836697: Error 
+POST /api/v1/admin/peliculas 503 716 ms
+POST /api/v1/admin/peliculas -> base_no_disponible (Error )
+    at completandoAlta (file:///D:/dev/Proyecto%20Final%20BD/backend/src/servicios/administracion.ts:47:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///D:/dev/Proyecto%20Final%20BD/backend/src/rutas/administracion.ts:38:24
+GET /api/v1/obras/f746e80e-b11f-4fe4-9e77-19cff6836697 404 12 ms
+POST /api/v1/admin/obras/f746e80e-b11f-4fe4-9e77-19cff6836697/publicacion 409 82 ms
+✔ D-58: un alta que falla a medias responde 503 con el id y deja un borrador (EP-41 dice qué falta) (990.8545ms)
+POST /api/v1/admin/personas 201 111 ms
+POST /api/v1/admin/libros 201 87 ms
+POST /api/v1/admin/obras/2d4f87f8-3a83-4468-8357-49b235ab8dbc/publicacion 409 51 ms
+POST /api/v1/admin/obras/ad078bed-bb37-48ed-8e4a-8921d95980d8/publicacion 404 10 ms
+POST /api/v1/admin/personas 201 60 ms
+POST /api/v1/admin/personas 201 61 ms
+POST /api/v1/admin/peliculas 201 239 ms
+POST /api/v1/admin/obras/de13f70c-26be-4bf2-b555-c5b6f5f4e874/publicacion 200 135 ms
+GET /api/v1/obras/de13f70c-26be-4bf2-b555-c5b6f5f4e874 200 74 ms
+POST /api/v1/admin/obras/de13f70c-26be-4bf2-b555-c5b6f5f4e874/publicacion 200 115 ms
+✔ EP-41: completa un alta interrumpida, y dice qué falta cuando no puede (983.2936ms)
+POST /api/v1/admin/personas 201 79 ms
+POST /api/v1/admin/libros 201 73 ms
+POST /api/v1/admin/libros 201 96 ms
+POST /api/v1/admin/libros/3d96d06f-506e-4567-9129-dc6dcf911c07/ediciones 201 24 ms
+POST /api/v1/admin/libros/3d96d06f-506e-4567-9129-dc6dcf911c07/ediciones 201 56 ms
+POST /api/v1/admin/libros/3d96d06f-506e-4567-9129-dc6dcf911c07/ediciones 201 10 ms
+POST /api/v1/admin/libros/3d96d06f-506e-4567-9129-dc6dcf911c07/ediciones 409 11 ms
+POST /api/v1/admin/libros/82c0e46a-6f05-4e40-b187-fafd3934e2e0/ediciones 409 245 ms
+POST /api/v1/admin/libros/7e6fb2ce-5a67-419c-97fe-df9db295d794/ediciones 404 11 ms
+POST /api/v1/admin/libros/3d96d06f-506e-4567-9129-dc6dcf911c07/ediciones 400 4 ms
+POST /api/v1/admin/libros/3d96d06f-506e-4567-9129-dc6dcf911c07/ediciones 400 4 ms
+POST /api/v1/admin/libros/3d96d06f-506e-4567-9129-dc6dcf911c07/ediciones 400 5 ms
+GET /api/v1/obras/3d96d06f-506e-4567-9129-dc6dcf911c07 200 75 ms
+✔ EP-43: agregar ediciones, sin repetir ISBN ni dentro del libro ni entre libros (D-08) (733.5145ms)
+POST /api/v1/admin/personas 201 96 ms
+POST /api/v1/admin/personas 201 100 ms
+POST /api/v1/admin/personas 201 83 ms
+POST /api/v1/admin/libros 201 97 ms
+POST /api/v1/admin/peliculas 201 314 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 9 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 409 12 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 400 6 ms
+POST /api/v1/admin/peliculas/239d2a94-9255-4835-aec7-32396dce8a55/plataformas 404 13 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 10 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 9 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 10 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 11 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 11 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 8 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 13 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 13 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 9 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 10 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 7 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 7 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 8 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 9 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 8 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 8 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 8 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 11 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 12 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 8 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 7 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 8 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 25 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 9 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 10 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 9 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 12 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 10 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 201 9 ms
+POST /api/v1/admin/peliculas/92142b94-caa4-4492-91d0-35b930f3d9c2/plataformas 409 14 ms
+✔ EP-46: agregar plataformas, sin repetir y hasta 30 (1128.7274ms)
+DELETE /api/v1/auth/sesion 204 7 ms
+POST /api/v1/auth/sesion 201 138 ms
+POST /api/v1/auth/sesion 201 81 ms
+GET /api/v1/comparativas 200 150 ms
+GET /api/v1/comparativas 200 30 ms
+GET /api/v1/comparativas 200 67 ms
+✔ EP-23: las de una adaptación son públicas, con autor y obras, las recientes primero (656.7154ms)
+GET /api/v1/comparativas 200 9 ms
+POST /api/v1/auth/registro 201 81 ms
+POST /api/v1/auth/sesion 201 73 ms
+GET /api/v1/comparativas 200 11 ms
+GET /api/v1/comparativas 200 17 ms
+GET /api/v1/comparativas 200 20 ms
+✔ EP-23: una oculta la ven su autor y el administrador, nadie más (234.7221ms)
+POST /api/v1/auth/registro 201 96 ms
+POST /api/v1/auth/sesion 201 76 ms
+GET /api/v1/comparativas 401 2 ms
+GET /api/v1/comparativas 403 9 ms
+POST /api/v1/me/seguidos 201 17 ms
+GET /api/v1/comparativas 200 28 ms
+GET /api/v1/comparativas 200 17 ms
+GET /api/v1/comparativas 400 3 ms
+GET /api/v1/comparativas 400 1 ms
+GET /api/v1/comparativas 400 1 ms
+✔ EP-23: el historial de otra persona pide seguirla (D-54); la consulta, una forma válida (280.91ms)
+POST /api/v1/auth/registro 201 80 ms
+POST /api/v1/auth/sesion 201 76 ms
+POST /api/v1/comparativas 201 83 ms
+POST /api/v1/comparativas 409 26 ms
+GET /api/v1/comparativas 200 13 ms
+✔ EP-25: crea la comparativa sin guardar campos vacíos, y una sola por pareja (RN-05) (293.5505ms)
+POST /api/v1/auth/registro 201 74 ms
+POST /api/v1/auth/sesion 201 76 ms
+POST /api/v1/comparativas 409 25 ms
+POST /api/v1/comparativas 404 9 ms
+POST /api/v1/comparativas 404 9 ms
+POST /api/v1/comparativas 404 11 ms
+POST /api/v1/comparativas 404 6 ms
+POST /api/v1/comparativas 401 1 ms
+GET /api/v1/comparativas 200 10 ms
+✔ EP-25: solo sobre una adaptación real, con obras publicadas (RN-06, D-56) (251.3129ms)
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 71 ms
+POST /api/v1/comparativas 400 4 ms
+POST /api/v1/comparativas 400 3 ms
+POST /api/v1/comparativas 400 3 ms
+POST /api/v1/comparativas 400 4 ms
+POST /api/v1/comparativas 400 4 ms
+POST /api/v1/comparativas 400 5 ms
+POST /api/v1/comparativas 400 4 ms
+POST /api/v1/comparativas 400 4 ms
+POST /api/v1/comparativas 201 32 ms
+✔ EP-25: valida veredicto y aspectos (230.3896ms)
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 71 ms
+POST /api/v1/auth/registro 201 75 ms
+POST /api/v1/auth/sesion 201 73 ms
+POST /api/v1/comparativas 201 35 ms
+PUT /api/v1/comparativas/337c902a-5695-4690-a888-395f552018ec 404 21 ms
+PUT /api/v1/comparativas/337c902a-5695-4690-a888-395f552018ec 404 7 ms
+PUT /api/v1/comparativas/337c902a-5695-4690-a888-395f552018ec 200 11 ms
+GET /api/v1/comparativas 200 14 ms
+✔ EP-26: solo la edita su autor, ni siquiera el administrador (RN-10) (403.2437ms)
+POST /api/v1/auth/registro 201 80 ms
+POST /api/v1/auth/sesion 201 75 ms
+POST /api/v1/comparativas 201 49 ms
+GET /api/v1/comparativas 200 16 ms
+PATCH /api/v1/comparativas/b90159d3-cf0a-43ed-8fa1-0ff4c3263991 403 2 ms
+PATCH /api/v1/comparativas/b90159d3-cf0a-43ed-8fa1-0ff4c3263991 400 4 ms
+PATCH /api/v1/comparativas/3f7e5675-83b7-44dc-9240-2094dfff82ee 404 7 ms
+PATCH /api/v1/comparativas/b90159d3-cf0a-43ed-8fa1-0ff4c3263991 200 7 ms
+GET /api/v1/comparativas 200 8 ms
+GET /api/v1/comparativas 200 12 ms
+PATCH /api/v1/comparativas/b90159d3-cf0a-43ed-8fa1-0ff4c3263991 200 6 ms
+GET /api/v1/comparativas 200 10 ms
+✔ EP-27: el administrador la oculta y la vuelve a mostrar sin cambiar su fecha (301.4282ms)
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 71 ms
+POST /api/v1/auth/registro 201 72 ms
+POST /api/v1/auth/sesion 201 76 ms
+POST /api/v1/comparativas 201 37 ms
+DELETE /api/v1/comparativas/1dd0a472-ee99-465b-9895-696c5a14627a 404 12 ms
+DELETE /api/v1/comparativas/1dd0a472-ee99-465b-9895-696c5a14627a 204 8 ms
+DELETE /api/v1/comparativas/1dd0a472-ee99-465b-9895-696c5a14627a 404 7 ms
+POST /api/v1/comparativas 201 77 ms
+DELETE /api/v1/comparativas/6f32f539-8097-4771-9ecf-7ae9993182d9 204 8 ms
+GET /api/v1/comparativas 200 11 ms
+✔ EP-28: la borra su autor o el administrador (472.4944ms)
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 72 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 31 ms
+PATCH /api/v1/resenas/6d7ebc8f-3180-4c4b-9a94-9a7e76a9a8f7 403 2 ms
+PATCH /api/v1/resenas/6d7ebc8f-3180-4c4b-9a94-9a7e76a9a8f7 200 12 ms
+PATCH /api/v1/resenas/6d7ebc8f-3180-4c4b-9a94-9a7e76a9a8f7 200 12 ms
+PATCH /api/v1/resenas/e8c8e861-af94-4dcc-a1da-3ebf8422a86f 404 8 ms
+✔ EP-12: ocultar una reseña la saca del promedio y mostrarla la devuelve (223.6228ms)
+DELETE /api/v1/auth/sesion 204 6 ms
+DELETE /api/v1/auth/sesion 204 5 ms
+POST /api/v1/auth/sesion 201 135 ms
+POST /api/v1/auth/sesion 201 78 ms
+POST /api/v1/auth/sesion 201 77 ms
+POST /api/v1/auth/sesion 201 83 ms
+POST /api/v1/auth/sesion 201 71 ms
+POST /api/v1/auth/sesion 201 74 ms
+GET /api/v1/obras 200 124 ms
+GET /api/v1/obras 200 35 ms
+GET /api/v1/obras 200 29 ms
+✔ EP-08 por persona: sin tildes ni mayúsculas, con quién es y qué hizo (810.6441ms)
+GET /api/v1/obras 200 1 ms
+GET /api/v1/obras 200 1 ms
+GET /api/v1/obras 200 2 ms
+GET /api/v1/obras 200 1 ms
+GET /api/v1/obras 200 33 ms
+GET /api/v1/obras 200 27 ms
+GET /api/v1/obras 200 1002 ms
+GET /api/v1/obras 200 118 ms
+GET /api/v1/obras 200 1 ms
+GET /api/v1/obras 200 30 ms
+✔ EP-08 por persona: la sintaxis de Lucene no llega a Neo4j (D-41) (1239.3285ms)
+GET /api/v1/obras 200 29 ms
+GET /api/v1/obras 200 40 ms
+✔ EP-08 por persona: los borradores solo los ve el administrador (75.1788ms)
+GET /api/v1/exploracion/caminos 200 53 ms
+GET /api/v1/exploracion/caminos 200 28 ms
+✔ EP-16: todos los caminos más cortos, con títulos (87.4359ms)
+GET /api/v1/exploracion/caminos 200 24 ms
+GET /api/v1/exploracion/caminos 200 21 ms
+GET /api/v1/exploracion/caminos 200 29 ms
+GET /api/v1/exploracion/caminos 200 25 ms
+✔ EP-16: sin conexión es una lista vacía; un camino por un borrador no se muestra (D-56) (108.5789ms)
+GET /api/v1/exploracion/caminos 401 2 ms
+GET /api/v1/exploracion/caminos 400 3 ms
+GET /api/v1/exploracion/caminos 400 4 ms
+GET /api/v1/exploracion/caminos 400 3 ms
+GET /api/v1/exploracion/caminos 400 3 ms
+✔ EP-16: exige sesión, dos ids distintos y bien escritos (D-49) (25.2166ms)
+GET /api/v1/personas/a1000000-0000-4000-8000-000000000011/autores-relacionados 200 23 ms
+GET /api/v1/personas/a1000000-0000-4000-8000-000000000014/autores-relacionados 200 25 ms
+GET /api/v1/personas/a1000000-0000-4000-8000-000000000017/autores-relacionados 200 19 ms
+GET /api/v1/personas/a1000000-0000-4000-8000-000000000011/autores-relacionados 401 1 ms
+✔ EP-17: los autores que adaptó un director, con el libro y la película (76.715ms)
+GET /api/v1/me/recomendaciones 200 1260 ms
+GET /api/v1/me/recomendaciones 200 44 ms
+✔ EP-18: Ana y Marta reciben libros por el director de los que les gustaron (RF-26) (1312.7309ms)
+GET /api/v1/me/recomendaciones 200 55 ms
+✔ EP-18: Sofía recibe películas por lo que leyeron quienes sigue (RF-27) (58.5109ms)
+GET /api/v1/me/recomendaciones 200 33 ms
+GET /api/v1/me/recomendaciones 200 1212 ms
+GET /api/v1/me/recomendaciones 401 1 ms
+✔ EP-18: sin nada que recomendar, las listas van vacías (1254.9551ms)
+POST /api/v1/auth/registro 201 110 ms
+POST /api/v1/auth/sesion 201 101 ms
+GET /api/v1/me/recomendaciones 200 330 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 35 ms
+POST /api/v1/me/seguidos 201 13 ms
+GET /api/v1/me/recomendaciones 200 45 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000004 200 28 ms
+DELETE /api/v1/me/seguidos/c1000000-0000-4000-8000-000000000005 204 19 ms
+GET /api/v1/me/recomendaciones 200 50 ms
+✔ caso integrado: reseñar y seguir cambia las recomendaciones cuando el worker sincroniza (1155.591ms)
+DELETE /api/v1/auth/sesion 204 6 ms
+DELETE /api/v1/auth/sesion 204 8 ms
+DELETE /api/v1/auth/sesion 204 6 ms
+DELETE /api/v1/auth/sesion 204 7 ms
+DELETE /api/v1/auth/sesion 204 7 ms
+DELETE /api/v1/auth/sesion 204 6 ms
+POST /api/v1/auth/registro 201 108 ms
+POST /api/v1/auth/sesion 201 83 ms
+POST /api/v1/auth/registro 201 83 ms
+POST /api/v1/auth/sesion 201 77 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 85 ms
+POST /api/v1/me/seguidos 201 13 ms
+POST /api/v1/me/seguidos 201 12 ms
+POST /api/v1/comparativas 201 104 ms
+DELETE /api/v1/me 204 13 ms
+GET /api/v1/me 401 3 ms
+GET /api/v1/comparativas 200 14 ms
+✔ eliminar la cuenta la borra en las tres bases y recalcula los promedios (1068.0582ms)
+POST /api/v1/auth/sesion 201 72 ms
+DELETE /api/v1/me 403 4 ms
+GET /api/v1/me 200 6 ms
+DELETE /api/v1/auth/sesion 204 6 ms
+DELETE /api/v1/me 401 1 ms
+✔ la cuenta de administrador no se elimina, y sin sesión tampoco nada (103.6368ms)
+POST /api/v1/auth/registro 201 74 ms
+POST /api/v1/auth/sesion 201 77 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 22 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 22 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 22 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 21 ms
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 89 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 392 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 42 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 40 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 46 ms
+POST /api/v1/auth/registro 201 103 ms
+POST /api/v1/auth/sesion 201 84 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 36 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 46 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 44 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 34 ms
+POST /api/v1/auth/registro 201 146 ms
+POST /api/v1/auth/sesion 201 85 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 29 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 28 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 23 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 24 ms
+POST /api/v1/auth/registro 201 78 ms
+POST /api/v1/auth/sesion 201 74 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 26 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 22 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 26 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 25 ms
+POST /api/v1/auth/registro 201 77 ms
+POST /api/v1/auth/sesion 201 70 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 21 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 20 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 23 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 22 ms
+DELETE /api/v1/me 204 30 ms
+DELETE /api/v1/me 204 74 ms
+DELETE /api/v1/me 204 84 ms
+DELETE /api/v1/me 204 97 ms
+DELETE /api/v1/me 204 101 ms
+DELETE /api/v1/me 204 111 ms
+POST /api/v1/auth/registro 201 87 ms
+POST /api/v1/auth/sesion 201 77 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 22 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 20 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 20 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 19 ms
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 75 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 21 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 20 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 22 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 20 ms
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 72 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 20 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 20 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 22 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 21 ms
+POST /api/v1/auth/registro 201 75 ms
+POST /api/v1/auth/sesion 201 74 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 23 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 19 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 21 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 20 ms
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 72 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 21 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 21 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 19 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 22 ms
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 74 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 20 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 21 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 21 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 26 ms
+DELETE /api/v1/me 204 13 ms
+DELETE /api/v1/me 204 21 ms
+DELETE /api/v1/me 204 30 ms
+DELETE /api/v1/me 204 39 ms
+DELETE /api/v1/me 204 47 ms
+DELETE /api/v1/me 204 54 ms
+POST /api/v1/auth/registro 201 74 ms
+POST /api/v1/auth/sesion 201 72 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 20 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 19 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 20 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 18 ms
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 80 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 25 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 23 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 28 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 18 ms
+POST /api/v1/auth/registro 201 89 ms
+POST /api/v1/auth/sesion 201 81 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 39 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 26 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 24 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 21 ms
+POST /api/v1/auth/registro 201 85 ms
+POST /api/v1/auth/sesion 201 77 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 25 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 26 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 28 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 25 ms
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 77 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 29 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 31 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 97 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 40 ms
+POST /api/v1/auth/registro 201 100 ms
+POST /api/v1/auth/sesion 201 97 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000004/resena 201 23 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000003/resena 201 23 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000002/resena 201 28 ms
+PUT /api/v1/obras/b1000000-0000-4000-8000-000000000001/resena 201 19 ms
+DELETE /api/v1/me 204 13 ms
+DELETE /api/v1/me 204 21 ms
+DELETE /api/v1/me 204 29 ms
+DELETE /api/v1/me 204 36 ms
+DELETE /api/v1/me 204 42 ms
+DELETE /api/v1/me 204 49 ms
+✔ varias cuentas con reseñas de las mismas obras se eliminan a la vez sin fallar (8308.4073ms)
+GET /api/v1/me/listas 401 15 ms
+POST /api/v1/me/listas 401 2 ms
+GET /api/v1/listas/11000000-0000-4000-8000-000000000001 401 1 ms
+PATCH /api/v1/listas/11000000-0000-4000-8000-000000000001 401 1 ms
+DELETE /api/v1/listas/11000000-0000-4000-8000-000000000001 401 2 ms
+POST /api/v1/listas/11000000-0000-4000-8000-000000000001/obras 401 2 ms
+DELETE /api/v1/listas/11000000-0000-4000-8000-000000000001/obras/b1000000-0000-4000-8000-000000000001 401 2 ms
+GET /api/v1/me/seguimientos 401 2 ms
+✔ todas las rutas de listas exigen sesión (129.9332ms)
+POST /api/v1/auth/registro 201 172 ms
+POST /api/v1/auth/sesion 201 76 ms
+POST /api/v1/me/listas 201 10 ms
+POST /api/v1/me/listas 201 7 ms
+GET /api/v1/me/listas 200 7 ms
+POST /api/v1/me/listas 400 4 ms
+POST /api/v1/me/listas 400 3 ms
+POST /api/v1/me/listas 400 3 ms
+POST /api/v1/me/listas 400 3 ms
+✔ EP-30 y EP-29: crear listas, con nombres repetidos y validados (319.2415ms)
+POST /api/v1/auth/registro 201 75 ms
+POST /api/v1/auth/sesion 201 70 ms
+POST /api/v1/me/listas 201 7 ms
+POST /api/v1/listas/98e1604a-2597-48ee-aca9-a7a237258a25/obras 201 65 ms
+POST /api/v1/listas/98e1604a-2597-48ee-aca9-a7a237258a25/obras 201 17 ms
+POST /api/v1/listas/98e1604a-2597-48ee-aca9-a7a237258a25/obras 201 15 ms
+POST /api/v1/listas/98e1604a-2597-48ee-aca9-a7a237258a25/obras 409 18 ms
+POST /api/v1/listas/98e1604a-2597-48ee-aca9-a7a237258a25/obras 404 7 ms
+POST /api/v1/listas/98e1604a-2597-48ee-aca9-a7a237258a25/obras 404 6 ms
+POST /api/v1/listas/31546b5a-d5c6-453c-8c49-1a03ae6115e8/obras 404 13 ms
+GET /api/v1/listas/98e1604a-2597-48ee-aca9-a7a237258a25 200 12 ms
+GET /api/v1/me/listas 200 5 ms
+✔ EP-34 y EP-31: las obras quedan en orden, sin repetirse (RN-04) y sin borradores (D-56) (334.2997ms)
+POST /api/v1/auth/registro 201 78 ms
+POST /api/v1/auth/sesion 201 78 ms
+POST /api/v1/me/listas 201 8 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 82 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 154 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 158 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 155 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 168 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 178 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 189 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 180 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 212 ms
+POST /api/v1/listas/9670bd8d-01de-4bd6-819a-7f386c3a96fa/obras 201 205 ms
+✔ EP-34: agregar muchas obras a la vez no repite posiciones (406.3317ms)
+POST /api/v1/auth/registro 201 77 ms
+POST /api/v1/auth/sesion 201 74 ms
+POST /api/v1/me/listas 201 6 ms
+POST /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049/obras 201 15 ms
+POST /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049/obras 201 15 ms
+POST /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049/obras 201 17 ms
+PATCH /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 400 12 ms
+PATCH /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 400 11 ms
+PATCH /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 400 12 ms
+PATCH /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 400 10 ms
+PATCH /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 400 11 ms
+GET /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 200 10 ms
+GET /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 200 10 ms
+PATCH /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 200 35 ms
+PATCH /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 200 18 ms
+GET /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 200 11 ms
+PATCH /api/v1/listas/b314971d-62b3-4c00-9f3c-3cbf619b7049 400 3 ms
+✔ EP-32: renombrar y reordenar; si el orden no cuadra, no cambia nada (377.0839ms)
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 70 ms
+POST /api/v1/me/listas 201 7 ms
+POST /api/v1/listas/dc506b16-bd82-4f05-9772-69219d36d47f/obras 201 16 ms
+POST /api/v1/listas/dc506b16-bd82-4f05-9772-69219d36d47f/obras 201 15 ms
+POST /api/v1/listas/dc506b16-bd82-4f05-9772-69219d36d47f/obras 201 13 ms
+DELETE /api/v1/listas/dc506b16-bd82-4f05-9772-69219d36d47f/obras/b1000000-0000-4000-8000-000000000002 204 12 ms
+DELETE /api/v1/listas/dc506b16-bd82-4f05-9772-69219d36d47f/obras/b1000000-0000-4000-8000-000000000002 204 11 ms
+POST /api/v1/listas/dc506b16-bd82-4f05-9772-69219d36d47f/obras 201 14 ms
+GET /api/v1/listas/dc506b16-bd82-4f05-9772-69219d36d47f 200 17 ms
+✔ EP-35: quitar no desordena las demás, y repetirlo no falla (265.4821ms)
+POST /api/v1/auth/registro 201 78 ms
+POST /api/v1/auth/sesion 201 73 ms
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 71 ms
+POST /api/v1/me/listas 201 8 ms
+POST /api/v1/listas/0e75f94d-96bb-4d5b-8c0b-104bf2ced16a/obras 201 17 ms
+GET /api/v1/listas/0e75f94d-96bb-4d5b-8c0b-104bf2ced16a 403 8 ms
+POST /api/v1/me/seguidos 201 11 ms
+GET /api/v1/listas/0e75f94d-96bb-4d5b-8c0b-104bf2ced16a 200 12 ms
+PATCH /api/v1/listas/0e75f94d-96bb-4d5b-8c0b-104bf2ced16a 404 7 ms
+POST /api/v1/listas/0e75f94d-96bb-4d5b-8c0b-104bf2ced16a/obras 404 10 ms
+DELETE /api/v1/listas/0e75f94d-96bb-4d5b-8c0b-104bf2ced16a/obras/b1000000-0000-4000-8000-000000000001 404 7 ms
+DELETE /api/v1/listas/0e75f94d-96bb-4d5b-8c0b-104bf2ced16a 404 4 ms
+GET /api/v1/listas/0e75f94d-96bb-4d5b-8c0b-104bf2ced16a 200 14 ms
+POST /api/v1/me/seguidos 201 22 ms
+GET /api/v1/listas/11000000-0000-4000-8000-000000000001 200 17 ms
+✔ listas ajenas: se ven al seguir a su dueño y nadie más las cambia (D-54, RN-10) (463.9943ms)
+POST /api/v1/auth/registro 201 80 ms
+POST /api/v1/auth/sesion 201 70 ms
+POST /api/v1/me/listas 201 6 ms
+POST /api/v1/listas/17c08301-30b1-4a98-b062-e1d660c946cf/obras 201 14 ms
+DELETE /api/v1/listas/17c08301-30b1-4a98-b062-e1d660c946cf 204 7 ms
+DELETE /api/v1/listas/17c08301-30b1-4a98-b062-e1d660c946cf 404 4 ms
+GET /api/v1/listas/17c08301-30b1-4a98-b062-e1d660c946cf 404 4 ms
+✔ EP-33: al eliminar la lista se van sus elementos (203.8214ms)
+POST /api/v1/auth/registro 201 75 ms
+POST /api/v1/auth/sesion 201 71 ms
+POST /api/v1/auth/registro 201 83 ms
+POST /api/v1/auth/sesion 201 76 ms
+POST /api/v1/me/seguidos 201 10 ms
+GET /api/v1/me/seguimientos 200 6 ms
+GET /api/v1/me/seguimientos 200 5 ms
+POST /api/v1/auth/sesion 201 73 ms
+GET /api/v1/me/seguimientos 200 7 ms
+DELETE /api/v1/auth/sesion 204 5 ms
+✔ EP-21: a quién sigo y quién me sigue (430.0356ms)
+POST /api/v1/auth/registro 201 104 ms
+POST /api/v1/auth/sesion 201 76 ms
+POST /api/v1/auth/registro 201 79 ms
+POST /api/v1/auth/sesion 201 74 ms
+✔ los eventos llegan al grafo, repetirlos no duplica y se pueden deshacer (1778.3273ms)
+POST /api/v1/auth/registro 201 82 ms
+POST /api/v1/auth/sesion 201 88 ms
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+✔ si la base destino no responde, el evento espera sin gastar intentos (271.6172ms)
+POST /api/v1/auth/registro 201 90 ms
+POST /api/v1/auth/sesion 201 73 ms
+POST /api/v1/auth/registro 201 73 ms
+POST /api/v1/auth/sesion 201 74 ms
+Sincronización: falló el evento 4331 (obra_leida, Error)
+Sincronización: falló el evento 4331 (obra_leida, Error)
+Sincronización: falló el evento 4331 (obra_leida, Error)
+Sincronización: falló el evento 4331 (obra_leida, Error)
+Sincronización: falló el evento 4331 (obra_leida, Error); queda como fallido
+✔ un evento defectuoso frena a los siguientes hasta quedar fallido al quinto intento (479.7024ms)
+POST /api/v1/auth/registro 201 80 ms
+POST /api/v1/auth/sesion 201 74 ms
+POST /api/v1/auth/registro 201 75 ms
+POST /api/v1/auth/sesion 201 74 ms
+Sincronización: falló el evento 4335 (seguimiento_creado, Error)
+✔ si falta un nodo: es un fallo solo mientras PostgreSQL tenga el dato (410.2823ms)
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 71 ms
+✔ eliminar un usuario borra su nodo y sus comparativas (280.4429ms)
+POST /api/v1/auth/registro 201 77 ms
+POST /api/v1/auth/sesion 201 76 ms
+POST /api/v1/auth/registro 201 74 ms
+POST /api/v1/auth/sesion 201 73 ms
+POST /api/v1/me/seguidos 201 16 ms
+PUT /api/v1/me/estados/b1000000-0000-4000-8000-000000000001 200 27 ms
+✔ el worker vacía lo pendiente al arrancar y atiende los avisos de la API sin esperar (753.495ms)
+POST /api/v1/auth/registro 201 88 ms
+POST /api/v1/auth/registro 201 107 ms
+POST /api/v1/auth/registro 201 113 ms
+POST /api/v1/auth/registro 201 115 ms
+POST /api/v1/auth/registro 201 156 ms
+POST /api/v1/auth/sesion 201 80 ms
+POST /api/v1/auth/sesion 201 83 ms
+POST /api/v1/auth/sesion 201 82 ms
+POST /api/v1/auth/sesion 201 102 ms
+POST /api/v1/auth/sesion 201 79 ms
+✔ el worker nunca aplica dos eventos a la vez ni repite uno (469.284ms)
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 71 ms
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+Sincronización: una base no responde (Error ServiceUnavailable)
+✔ tras una caída de la base, el worker espera y sigue donde iba (400.798ms)
+POST /api/v1/auth/registro 201 80 ms
+POST /api/v1/auth/sesion 201 76 ms
+POST /api/v1/auth/registro 201 76 ms
+POST /api/v1/auth/sesion 201 70 ms
+✔ al apagar termina el evento en curso y no toma otro (694.5924ms)
+ℹ tests 52
+ℹ suites 0
+ℹ pass 52
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 83168.4418
+codigo 0
