@@ -15,6 +15,8 @@ El plan está en [plan-de-pruebas.md](plan-de-pruebas.md). Aquí solo se anota l
 
 Windows 11, 6 GB de RAM (Docker ve unos 3 GB). Node 24.14.0, PostgreSQL 18.7, MongoDB 9.0.4 y Neo4j 5.26.34 Community, con la semilla cargada. Código de la rama `testing` (parte de `905bbbe`).
 
+**La semilla creció después de las etapas 1 a 5.** Sus conteos y tiempos corresponden a la anterior (11 libros, 12 películas). Lo repetido con la nueva está en [Semilla ampliada](#semilla-ampliada-2026-11-26).
+
 ## Etapa 1: pruebas que ya existían (2026-11-26)
 
 ### Resumen
@@ -255,3 +257,18 @@ Se hizo en la carpeta de trabajo, con su `.env`, y con las pruebas de cada base.
 Un primer intento se cortó por el límite de 10 minutos con la máquina casi sin memoria, justo después del empaquetado de la app. No falló ninguna comprobación: `descubrimiento` aparecía en error porque se interrumpió a la mitad. La coherencia siguió en 13 de 13 y se repitió con más margen.
 
 Las pruebas tardan según la memoria libre: en las etapas anteriores, cada mitad tardó menos de 2 minutos. Conviene correrlas sin Expo ni otros programas pesados.
+
+## Semilla ampliada (2026-11-26)
+
+La semilla pasó a 17 libros, 18 películas, 50 personas, 27 reseñas y 6 comparativas, con direcciones de imagen reales (`db/semilla/README.md`). Solo se agregaron datos, así que los escenarios de recomendaciones y caminos no cambiaron. Se actualizaron los resultados esperados que dependen de los conteos y de las fichas sin imagen.
+
+| Prueba | Resultado | Evidencia |
+|---|---|---|
+| `npm test`, la suite completa | **119 de 119** en 4 min 28 s | [salida](evidencias/semilla-nueva-npm-test.txt) |
+| Consultas representativas de las tres bases y coherencia | Todo pasa, 13 de 13 | [resumen](../db/evidencias/semilla/resumen.txt) |
+| Tipos y unitarias de la app, con el cambio de las imágenes | Sin errores, 8 de 8 | |
+| Imágenes en el navegador de la computadora | Cargan | |
+
+La app se identifica con un nombre propio al pedir las imágenes, porque Wikimedia responde 403 al que Android usa por defecto.
+
+**No se comprobó** que las imágenes se vean en el teléfono, ni se repitieron el rendimiento y la reconstrucción desde cero con la semilla nueva.

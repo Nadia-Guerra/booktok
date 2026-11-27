@@ -1,4 +1,4 @@
-Pruebas del grafo: 01-consultas  (2026-11-26 18:13:41)
+Pruebas del grafo: 01-consultas  (2026-11-26 21:02:37)
 
 PASA   S-01.1    CG-01 sobre la semilla / Villeneuve dirigió 3 películas (Dune 2021, Dune parte dos y La llegada)
              -> valor 3|3|dirigida_por
@@ -11,8 +11,8 @@ PASA   S-01.4    CG-01 sobre la semilla / Herbert escribió un libro
 PASA   S-02.1    CG-02 sobre la semilla / 'ian' encuentra a las dos personas llamadas Ian (McEwan y McKellen)
              -> filas 2
 PASA   S-02.2    CG-02 sobre la semilla / Rebecca Ferguson tiene foto
-             -> valor https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000018.jpg
-PASA   S-02.3    CG-02 sobre la semilla / Matthew Macfadyen no tiene foto: la propiedad no existe
+             -> valor https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/Rebecca_Ferguson_A_House_of_Dynamite-67_%28cropped2%29.jpg/500px-Rebecca_Ferguson_A_House_of_Dynamite-67_%28cropped2%29.jpg
+PASA   S-02.3    CG-02 sobre la semilla / Ted Levine no tiene foto: la propiedad no existe
              -> valor true
 PASA   S-03.1    CG-03 y CG-04 sobre la semilla / Dune tiene dos adaptaciones: las películas 01 y 02
              -> valor 01,02
@@ -84,25 +84,25 @@ PASA   S-09.2    CG-10 sobre la semilla / Dune y El marciano (película) no lo e
              -> valor false
 PASA   S-09.3    CG-10 sobre la semilla / Los ids al revés (película como libro y libro como película) no cuentan
              -> valor false
-PASA   S-10.1    CG-21, CG-22 y CG-23 sobre la semilla / CG-21 devuelve las 12 películas (también la del borrador)
-             -> filas 12
+PASA   S-10.1    CG-21, CG-22 y CG-23 sobre la semilla / CG-21 devuelve las 18 películas (también la del borrador)
+             -> filas 18
 PASA   S-10.2    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: la película en borrador no tiene reparto (lista vacía)
              -> valor 0
 PASA   S-10.3    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: Dune 2021 tiene 2 actores, ordenados, con la foto de Chalamet
-             -> valor 2|Timothée Chalamet|Paul Atreides|1|0017.jpg
-PASA   S-10.4    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: en Orgullo y prejuicio, Macfadyen (2.º) no tiene foto
-             -> valor Matthew Macfadyen|true
-PASA   S-10.5    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: total de personas de reparto = 18 (las relaciones actuó_en)
-             -> valor 18
+             -> valor 2|Timothée Chalamet|Paul Atreides|1|d%29.jpg
+PASA   S-10.4    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: en El silencio de los corderos, Ted Levine (3.º) no tiene foto
+             -> valor Ted Levine|true
+PASA   S-10.5    CG-21, CG-22 y CG-23 sobre la semilla / CG-21: total de personas de reparto = 28 (las relaciones actuó_en)
+             -> valor 28
 PASA   S-10.6    CG-21, CG-22 y CG-23 sobre la semilla / CG-22: la única obra que no llega al mínimo de D-24 es la película en borrador
              -> valor 1|f1000000-0000-4000-8000-000000000012
 PASA   S-10.7    CG-21, CG-22 y CG-23 sobre la semilla / CG-23 devuelve los 8 usuarios (el administrador incluido, sin relaciones)
              -> filas 8
-PASA   S-10.8    CG-21, CG-22 y CG-23 sobre la semilla / CG-23: 10 pares sigue y 12 pares leyó en total
-             -> valor 10|12
+PASA   S-10.8    CG-21, CG-22 y CG-23 sobre la semilla / CG-23: 10 pares sigue y 14 pares leyó en total
+             -> valor 10|14
 PASA   S-10.9    CG-21, CG-22 y CG-23 sobre la semilla / CG-23: Ana sigue a Pedro y leyó 4 libros (no las películas ni el que está en curso o pendiente)
              -> valor 1|4
 PASA   S-10.10   CG-21, CG-22 y CG-23 sobre la semilla / CG-23: el administrador no tiene relaciones sigue ni leyó
              -> valor 0|0
 
-Pasan 52 de 52, fallan 0.  (11.5 s)
+Pasan 52 de 52, fallan 0.  (13.2 s)
