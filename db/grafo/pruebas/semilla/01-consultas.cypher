@@ -7,9 +7,11 @@
 //   personas  a1000000-0000-4000-8000-0000000000NN  01 Herbert, 04 Chiang, 06 Tolkien, 07 Austen, 10 Gibson, 11 Villeneuve,
 //             12 Scott, 13 Spielberg, 14 Jackson, 15 Wright, 16 Branagh (dirige y actúa), 17 Chalamet, 24 McKellen, 28 McAvoy
 //   libros    b1000000-0000-4000-8000-0000000000NN  01 Dune, 02 Androides, 03 El marciano, 04 Historia de tu vida,
-//             05 Parque Jurásico, 06 El Hobbit, 07 La Comunidad, 08 Orgullo y prejuicio, 09 Expiación, 10 Orient Express, 11 Neuromante (borrador)
+//             05 Parque Jurásico, 06 El Hobbit, 07 La Comunidad, 08 Orgullo y prejuicio, 09 Expiación, 10 Orient Express, 11 Neuromante (borrador),
+//             12 El nombre de la rosa, 13 El padrino, 14 El club de la lucha, 15 Perdida, 16 El resplandor, 17 El silencio de los corderos
 //   películas f1000000-0000-4000-8000-0000000000NN  01 Dune 2021, 02 Dune parte dos, 03 Blade Runner, 04 El marciano,
-//             05 La llegada, 06 Parque Jurásico, 07 El Hobbit, 08 La Comunidad, 09 Orgullo, 10 Expiación, 11 Orient Express, 12 Neuromante (borrador)
+//             05 La llegada, 06 Parque Jurásico, 07 El Hobbit, 08 La Comunidad, 09 Orgullo, 10 Expiación, 11 Orient Express, 12 Neuromante (borrador),
+//             13 a 18 las adaptaciones de los libros 12 a 17, en el mismo orden
 //   usuarios  c1000000-0000-4000-8000-0000000000NN  01 admin, 02 Ana, 03 Luis, 04 Marta, 05 Pedro, 06 Sofía, 07 Diego, 08 Elena
 // =============================================================================
 
@@ -53,9 +55,9 @@ CALL {
 // @incluir CG-02.cypher
 }
 RETURN foto_url;
-// @espera valor https://almacenamiento.ejemplo.com/personas/a1000000-0000-4000-8000-000000000018.jpg
-// @paso Matthew Macfadyen no tiene foto: la propiedad no existe
-// @param texto = "macfadyen"
+// @espera valor https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/Rebecca_Ferguson_A_House_of_Dynamite-67_%28cropped2%29.jpg/500px-Rebecca_Ferguson_A_House_of_Dynamite-67_%28cropped2%29.jpg
+// @paso Ted Levine no tiene foto: la propiedad no existe
+// @param texto = "levine"
 CALL {
 // @incluir CG-02.cypher
 }
@@ -306,9 +308,9 @@ RETURN toString(count(*)) + '|' + toString(max(seguidos));
 
 // ---- CG-21, CG-22 y CG-23: lecturas de reconciliación ------------------------------------------
 // @prueba S-10 | CG-21, CG-22 y CG-23 sobre la semilla
-// @paso CG-21 devuelve las 12 películas (también la del borrador)
+// @paso CG-21 devuelve las 18 películas (también la del borrador)
 // @incluir CG-21.cypher
-// @espera filas 12
+// @espera filas 18
 // @paso CG-21: la película en borrador no tiene reparto (lista vacía)
 CALL {
 // @incluir CG-21.cypher
@@ -322,20 +324,20 @@ CALL {
 }
 WITH * WHERE obra_id = 'f1000000-0000-4000-8000-000000000001'
 RETURN toString(size(reparto)) + '|' + reparto[0].nombre + '|' + reparto[0].personaje + '|' + toString(reparto[0].orden) + '|' + right(reparto[0].foto_url, 8);
-// @espera valor 2|Timothée Chalamet|Paul Atreides|1|0017.jpg
-// @paso CG-21: en Orgullo y prejuicio, Macfadyen (2.º) no tiene foto
+// @espera valor 2|Timothée Chalamet|Paul Atreides|1|d%29.jpg
+// @paso CG-21: en El silencio de los corderos, Ted Levine (3.º) no tiene foto
 CALL {
 // @incluir CG-21.cypher
 }
-WITH * WHERE obra_id = 'f1000000-0000-4000-8000-000000000009'
-RETURN reparto[1].nombre + '|' + toString(reparto[1].foto_url IS NULL);
-// @espera valor Matthew Macfadyen|true
-// @paso CG-21: total de personas de reparto = 18 (las relaciones actuó_en)
+WITH * WHERE obra_id = 'f1000000-0000-4000-8000-000000000018'
+RETURN reparto[2].nombre + '|' + toString(reparto[2].foto_url IS NULL);
+// @espera valor Ted Levine|true
+// @paso CG-21: total de personas de reparto = 28 (las relaciones actuó_en)
 CALL {
 // @incluir CG-21.cypher
 }
 RETURN sum(size(reparto));
-// @espera valor 18
+// @espera valor 28
 // @paso CG-22: la única obra que no llega al mínimo de D-24 es la película en borrador
 CALL {
 // @incluir CG-22.cypher
@@ -346,12 +348,12 @@ RETURN toString(count(*)) + '|' + head(collect(obra_id));
 // @paso CG-23 devuelve los 8 usuarios (el administrador incluido, sin relaciones)
 // @incluir CG-23.cypher
 // @espera filas 8
-// @paso CG-23: 10 pares sigue y 12 pares leyó en total
+// @paso CG-23: 10 pares sigue y 14 pares leyó en total
 CALL {
 // @incluir CG-23.cypher
 }
 RETURN toString(sum(size(sigue))) + '|' + toString(sum(size(leyo)));
-// @espera valor 10|12
+// @espera valor 10|14
 // @paso CG-23: Ana sigue a Pedro y leyó 4 libros (no las películas ni el que está en curso o pendiente)
 CALL {
 // @incluir CG-23.cypher

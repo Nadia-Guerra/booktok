@@ -25,7 +25,7 @@ function usa(consulta, indice) {
 }
 
 // ---------------------------------------------------------------- la semilla está cargada
-registrar("S-00a", "Hay 11 libros, 12 películas y 5 comparativas", "11, 12, 5",
+registrar("S-00a", "Hay 17 libros, 18 películas y 6 comparativas", "17, 18, 6",
   [db.libros.countDocuments(), db.peliculas.countDocuments(), db.resenas_comparativas.countDocuments()].join(", "));
 registrar("S-00b", "Fichas en borrador: 1 libro y 1 película (Neuromante)", "1, 1",
   [db.libros.countDocuments({ estado_publicacion: "borrador" }), db.peliculas.countDocuments({ estado_publicacion: "borrador" })].join(", "));
@@ -34,8 +34,8 @@ registrar("S-00b", "Fichas en borrador: 1 libro y 1 película (Neuromante)", "1,
 const dune = db.libros.findOne({ _id: id("b1", 1) });
 registrar("S-AP01a", "AP-01: ficha completa de Dune con sus 2 ediciones (una con ISBN y una sin él)", "Dune | 2 ediciones | 1 con isbn",
   dune.titulo + " | " + dune.ediciones.length + " ediciones | " + dune.ediciones.filter(e => e.isbn !== undefined).length + " con isbn");
-registrar("S-AP01b", "AP-01: una ficha de libro sin portada no trae portada_url (Historia de tu vida)", "sin portada_url",
-  db.libros.findOne({ _id: id("b1", 4) }).portada_url === undefined ? "sin portada_url" : "con portada_url");
+registrar("S-AP01b", "AP-01: una ficha de libro sin portada no trae portada_url (Neuromante, en borrador)", "sin portada_url",
+  db.libros.findOne({ _id: id("b1", 11) }).portada_url === undefined ? "sin portada_url" : "con portada_url");
 registrar("S-AP01c", "AP-01: el campo estado_publicacion distingue la ficha en borrador (Neuromante, libro 11)", "borrador",
   db.libros.findOne({ _id: id("b1", 11) }).estado_publicacion);
 
@@ -43,9 +43,9 @@ registrar("S-AP01c", "AP-01: el campo estado_publicacion distingue la ficha en b
 const dune21 = db.peliculas.findOne({ _id: id("f1", 1) });
 registrar("S-AP02a", "AP-02: ficha de Dune (2021) con su reparto copiado, ordenado y con foto", "2 actores | Timothée Chalamet (Paul Atreides) | con foto",
   dune21.reparto.length + " actores | " + dune21.reparto[0].nombre + " (" + dune21.reparto[0].personaje + ") | " + (dune21.reparto[0].foto_url ? "con foto" : "sin foto"));
-const orgullo = db.peliculas.findOne({ _id: id("f1", 9) });
-registrar("S-AP02b", "AP-02: un actor sin foto no lleva foto_url en el reparto (Macfadyen, película 9)", "Matthew Macfadyen | sin foto_url",
-  orgullo.reparto[1].nombre + " | " + (orgullo.reparto[1].foto_url === undefined ? "sin foto_url" : "con foto_url"));
+const corderos = db.peliculas.findOne({ _id: id("f1", 18) });
+registrar("S-AP02b", "AP-02: un actor sin foto no lleva foto_url en el reparto (Ted Levine, película 18)", "Ted Levine | sin foto_url",
+  corderos.reparto[2].nombre + " | " + (corderos.reparto[2].foto_url === undefined ? "sin foto_url" : "con foto_url"));
 registrar("S-AP02c", "AP-02: datos técnicos de Dune (2021)", "inglés | Estados Unidos, Canadá | PG-13 | 155 min",
   dune21.datos_tecnicos.idioma_original + " | " + dune21.datos_tecnicos.paises.join(", ") + " | " + dune21.datos_tecnicos.clasificacion + " | " + dune21.duracion_min + " min");
 registrar("S-AP02d", "AP-02: la ficha en borrador no tiene reparto todavía (Neuromante, película 12)", "borrador | 0 actores",
@@ -111,7 +111,7 @@ registrar("S-AP23e", "AP-23: usa el índice IX-04 (ix_comp_unica) por su prefijo
   usa(db.resenas_comparativas.find({ usuario_id: id("c1", 2) }), "ix_comp_unica"));
 
 // ------------------------------------------------------------------------------- ISBN (D-08)
-registrar("S-IX03a", "ISBN: 8 libros tienen al menos una edición con ISBN", "8",
+registrar("S-IX03a", "ISBN: 14 libros tienen al menos una edición con ISBN", "14",
   db.libros.countDocuments({ "ediciones.isbn": { $exists: true } }));
 registrar("S-IX03b", "ISBN: 3 libros no tienen ninguno (2 con ediciones sin ISBN y el borrador sin ediciones): el índice sparse los admite", "3",
   db.libros.countDocuments({ "ediciones.isbn": { $exists: false } }));
