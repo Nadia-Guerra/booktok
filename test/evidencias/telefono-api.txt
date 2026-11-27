@@ -1,0 +1,17 @@
+Comprobaciones por HTTP sin sesion, despues de las pruebas en el telefono (2026-11-27 09:25)
+
+# Resenas de Dune (libro), con la de la cuenta de prueba ocultada: GET /api/v1/resenas?obra_id=...
+"calificacion":4
+"nombre":"Pedro Ibarra"
+"calificacion":4
+"nombre":"Marta Solís"
+"calificacion":5
+"nombre":"Ana Lectora"
+"promedio":4.33,"total_resenas":3
+
+# Alta hecha desde la app: GET /api/v1/obras?q=Harry&por=titulo
+"tipo":"libro","titulo":"Harry Potter y la piedra filosofal","anio":1997
+"tipo":"pelicula","titulo":"Harry Potter y la piedra filosofal","anio":2001
+
+# Eventos de sincronizacion por estado (sync_outbox)
+procesado | 16

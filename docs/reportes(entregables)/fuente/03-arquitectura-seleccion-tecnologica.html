@@ -1,0 +1,343 @@
+<!-- nombre: Arquitectura y selección tecnológica -->
+<h1>DuoBook: la arquitectura que conecta libros, películas y lectores</h1>
+
+<h2>Preámbulo</h2>
+<p><b>DuoBook</b> es una aplicación móvil para registrar, reseñar y comparar libros y sus adaptaciones al cine, y para descubrir obras por las conexiones entre autores, directores, actores y lectores. Sus datos viven en tres bases distintas, y eso plantea una pregunta práctica: ¿cómo habla una aplicación de teléfono con tres bases sin volverse un enredo?</p>
+<p>Este documento responde con la <i>arquitectura</i>, es decir, las piezas del sistema, lo que hace cada una y cómo se comunican. Presenta el diagrama general, el reparto de responsabilidades, las tecnologías elegidas y por qué se eligieron frente a otras, y la forma en que se coordinan las operaciones que tocan más de una base.</p>
+<p>Se llama <i>obra</i> a un libro o a una película. Los códigos RF y RNF identifican requerimientos funcionales y no funcionales; RN, reglas de negocio, y D, decisiones de diseño registradas en el repositorio.</p>
+
+<h2>Lo que condicionaba la arquitectura</h2>
+<p>Ninguna arquitectura se elige en el vacío. Antes de comparar tecnologías se anotaron las restricciones que cualquier propuesta debía respetar.</p>
+<table>
+<thead><tr><th>Restricción</th><th>Qué exigía</th></tr></thead>
+<tbody>
+<tr><td>Plazo de pocos días y una sola persona desarrollando</td><td>Pocos lenguajes y herramientas conocidas</td></tr>
+<tr><td>Un único cliente Android, con la administración dentro (D-28)</td><td>Un cliente móvil que se pudiera probar rápido</td></tr>
+<tr><td>Tres bases: relacional, documental y de grafo</td><td>Controladores oficiales para las tres y una sola pieza que las coordine</td></tr>
+<tr><td>Operaciones que no pueden quedar a medias (RF-13)</td><td>Transacciones y bloqueos de fila</td></tr>
+<tr><td>La edición gratuita de Neo4j no exige campos ni tipos (D-22)</td><td>Una buena librería de validación en la API</td></tr>
+<tr><td>Identificadores iguales en las tres bases (RNF-08)</td><td>Un formato único generado por la API</td></tr>
+<tr><td>Un equipo con 6 GB de memoria y Docker compartido con otros proyectos</td><td>Contenedores con límites de memoria</td></tr>
+</tbody>
+</table>
+
+<h2>La arquitectura de un vistazo</h2>
+<p>DuoBook tiene tres niveles. La <b>aplicación</b> en el teléfono muestra pantallas y envía peticiones. La <b>API</b> (el programa intermedio que recibe esas peticiones) aplica las reglas y es la única que conoce las bases. Las <b>bases de datos</b> guardan la información. Entre el teléfono y la API hay un <i>túnel</i> HTTPS, un canal cifrado que permite llegar desde el teléfono al equipo donde corre el sistema (D-30, D-62).</p>
+<figure>
+<svg viewBox="0 0 640 345" role="img" aria-label="Diagrama de arquitectura de DuoBook">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4a4038"/></marker></defs>
+<rect x="228" y="20" width="214" height="315" rx="8" fill="none" stroke="#8a8178" stroke-dasharray="6 4"/>
+<g stroke="#4a4038" stroke-width="1.3" fill="none">
+<path d="M112 165H134" marker-end="url(#a)"/>
+<path d="M206 165L250 90" marker-end="url(#a)"/>
+<path d="M335 104V137" marker-end="url(#a)"/>
+<path d="M335 184V217" marker-end="url(#a)"/>
+<path d="M420 232L498 163" marker-end="url(#a)"/>
+<path d="M420 241H498" marker-end="url(#a)"/>
+<path d="M420 250L498 312" marker-end="url(#a)"/>
+<path d="M250 170C232 200 232 280 250 303" marker-start="url(#a)" marker-end="url(#a)"/>
+<path d="M60 202V262" marker-end="url(#a)" stroke-dasharray="5 4"/>
+</g>
+<g fill="#efe4cf" stroke="#4a4038">
+<rect x="10" y="128" width="102" height="74" rx="6"/>
+<rect x="136" y="145" width="70" height="40" rx="6" fill="#fff"/>
+<rect x="250" y="58" width="170" height="46" rx="4"/>
+<rect x="250" y="138" width="170" height="46" rx="4"/>
+<rect x="250" y="218" width="170" height="46" rx="4"/>
+<rect x="250" y="285" width="170" height="38" rx="4" fill="#fff"/>
+<rect x="500" y="138" width="130" height="46" rx="14"/>
+<rect x="500" y="218" width="130" height="46" rx="14"/>
+<rect x="500" y="292" width="130" height="43" rx="14"/>
+<rect x="10" y="264" width="102" height="48" rx="6" fill="#fff" stroke-dasharray="5 4"/>
+</g>
+<g fill="#1d1a17" font-size="13" text-anchor="middle">
+<text x="335" y="42" font-weight="bold">API (un solo proceso)</text>
+<text x="61" y="160">App Android</text>
+<text x="61" y="178" font-size="11">Expo</text>
+<text x="171" y="169" font-size="12">Túnel</text>
+<text x="335" y="86">Rutas</text>
+<text x="335" y="166">Servicios</text>
+<text x="335" y="246">Repositorios</text>
+<text x="335" y="309" font-size="12">Sincronizador</text>
+<text x="565" y="166">PostgreSQL</text>
+<text x="565" y="246">MongoDB</text>
+<text x="565" y="318">Neo4j</text>
+<text x="61" y="286" font-size="11">Imágenes en</text>
+<text x="61" y="301" font-size="11">sitios externos</text>
+</g>
+<text x="150" y="125" font-size="11" fill="#4a4038">HTTPS y sesión</text>
+</svg>
+<figcaption>La aplicación nunca toca una base: todo pasa por la API.</figcaption>
+</figure>
+<table>
+<thead><tr><th style="width:30%">Camino</th><th>Qué viaja</th></tr></thead>
+<tbody>
+<tr><td>App → API</td><td>Peticiones HTTPS con el código de sesión. La dirección de la API se puede escribir en la propia app, porque la del túnel cambia en cada arranque</td></tr>
+<tr><td>App → sitios externos</td><td>Solo descarga portadas y fotos; las bases guardan la dirección, no el archivo (D-25, D-31)</td></tr>
+<tr><td>Rutas → servicios</td><td>Datos con formato ya comprobado y la identidad de quien pide</td></tr>
+<tr><td>Servicios → repositorios</td><td>Lecturas y escrituras sobre una base concreta</td></tr>
+<tr><td>Servicios ↔ sincronizador</td><td>Un aviso cuando hay un cambio por copiar, y la aplicación de ese cambio</td></tr>
+</tbody>
+</table>
+<p>Es un <i>monolito modular</i> (D-29): un solo programa, ordenado por dentro en módulos. Se descartaron los microservicios (un programa por base) y las colas externas de mensajes: para este tamaño añadirían piezas que montar y vigilar sin resolver nada nuevo.</p>
+
+<h2>Responsabilidades de cada pieza</h2>
+<p>Una regla ordena toda la API: cada petición pasa por tres capas y ninguna se salta. Las <b>rutas</b> reciben, los <b>servicios</b> deciden y los <b>repositorios</b> consultan.</p>
+
+<h3>La aplicación (frontend)</h3>
+<table>
+<thead><tr><th>Sí hace</th><th>No hace</th></tr></thead>
+<tbody>
+<tr><td>Mostrar las pantallas de lectura y de administración, según el rol</td><td>Conectarse a las bases ni llevar sus credenciales</td></tr>
+<tr><td>Guardar la sesión en el almacenamiento seguro del teléfono</td><td>Decidir permisos: ocultar un botón es comodidad; quien protege es la API (RNF-07)</td></tr>
+<tr><td>Revisar los formularios antes de enviarlos y las respuestas al recibirlas</td><td>Considerar definitiva su revisión: la API vuelve a validar todo</td></tr>
+<tr><td>Mostrar esperas y errores de red con mensajes claros</td><td>Calcular reglas de negocio, como el promedio</td></tr>
+</tbody>
+</table>
+<p>Por dentro se divide en configuración y sesión (<code>core</code>), llamadas a la API (<code>api</code>), lógica reutilizable (<code>hooks</code>), piezas visuales (<code>componentes</code>), pantallas (<code>vistas</code>) y navegación. Un único módulo habla con la API: pone la dirección y la sesión, fija un tiempo límite de 45 segundos y traduce los errores. El límite es holgado porque la primera consulta al grafo después de reiniciarlo puede tardar bastante.</p>
+
+<h3>Rutas</h3>
+<p>Son la puerta de entrada de la API, bajo el prefijo <code>/api/v1</code>. Identifican la sesión y el rol, comprueban el formato de lo que llega (tipos, rangos, largos, identificadores, direcciones <code>https://</code>) y llaman a un servicio. No tienen reglas de negocio ni consultas.</p>
+
+<h3>Servicios</h3>
+<p>Aquí viven las reglas y el orden de las operaciones. Son los únicos que combinan varias bases, y no escriben consultas.</p>
+<table>
+<thead><tr><th style="width:22%">Servicio</th><th>De qué se encarga</th><th style="width:30%">Bases</th></tr></thead>
+<tbody>
+<tr><td>Cuentas</td><td>Registro, sesión, perfil y eliminación de cuenta</td><td>Relacional</td></tr>
+<tr><td>Catálogo</td><td>Búsqueda y ficha completa de una obra</td><td>Las tres</td></tr>
+<tr><td>Reseñas y estados</td><td>Publicar, editar, eliminar y marcar lecturas</td><td>Relacional, documental</td></tr>
+<tr><td>Listas</td><td>Crear, ordenar y llenar listas</td><td>Relacional, documental</td></tr>
+<tr><td>Social</td><td>Seguir y ver lo de quienes se sigue</td><td>Relacional</td></tr>
+<tr><td>Comparativas</td><td>Crear, editar y moderar comparaciones, comprobando la adaptación</td><td>Documental, grafo, relacional</td></tr>
+<tr><td>Descubrimiento</td><td>Adaptaciones, caminos y recomendaciones</td><td>Las tres</td></tr>
+<tr><td>Administración</td><td>Alta de obras y personas, relaciones, ediciones y plataformas</td><td>Las tres</td></tr>
+<tr><td>Sincronización</td><td>Llevar a las copias los cambios pendientes</td><td>Las tres</td></tr>
+<tr><td>Reconciliación</td><td>Comparar copias contra su fuente y corregirlas</td><td>Relacional, grafo</td></tr>
+</tbody>
+</table>
+
+<h3>Repositorios</h3>
+<p>Son el único código que sabe consultar una base: hay un grupo para la relacional, otro para la documental y otro para el grafo. No contienen reglas ni se llaman entre sí. Las consultas del grafo se leen de los mismos archivos que usan las pruebas de la base, así que existe una sola copia de cada una. No se usan <i>ORM</i> ni <i>ODM</i> (capas que generan las consultas solas): se escriben a mano, siempre con parámetros, es decir, sin pegar texto del usuario dentro de la consulta.</p>
+
+<h3>Quién comprueba cada cosa</h3>
+<table>
+<thead><tr><th>Qué se comprueba</th><th style="width:24%">Dónde</th><th style="width:36%">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td>Sesión y rol</td><td>Rutas</td><td>Un lector intenta dar de alta una obra</td></tr>
+<tr><td>Formato de los datos</td><td>Rutas</td><td>Una calificación de 7</td></tr>
+<tr><td>Reglas de negocio</td><td>Servicios</td><td>Comparar un libro con una película que no es su adaptación</td></tr>
+<tr><td>Integridad y unicidad</td><td>Bases</td><td>Una segunda reseña de la misma obra</td></tr>
+<tr><td>Campos y tipos en el grafo</td><td>API</td><td>Una persona sin nombre</td></tr>
+<tr><td>Estructura de una ficha</td><td>MongoDB y API</td><td>Una ficha sin título</td></tr>
+</tbody>
+</table>
+<p>Los errores se responden de una sola forma, desde un único manejador que nunca muestra detalles internos de un motor: 400 si la entrada es inválida, 401 sin sesión, 403 sin permiso, 404 si no existe, 409 ante un conflicto o duplicado y 503 si una base no está disponible, que indica que se puede reintentar.</p>
+
+<h2>Cómo la aplicación llega a las tres bases</h2>
+<p>La forma más clara de ver la arquitectura es seguir algunas peticiones de principio a fin.</p>
+
+<h3>Abrir la ficha de una película</h3>
+<p>La ruta recibe el identificador. El servicio de Catálogo pide la ficha a MongoDB (título, sinopsis, plataformas y reparto ya copiado), el promedio a PostgreSQL y los directores y el libro de origen a Neo4j, y completa el título de ese libro con su ficha. La aplicación recibe una sola respuesta: no sabe que intervinieron tres bases.</p>
+
+<h3>Publicar una reseña</h3>
+<p>La ruta comprueba la sesión y el formato. El servicio confirma en MongoDB que la obra esté publicada y pide al repositorio relacional una única <i>transacción</i> (un grupo de cambios que se aplican todos o ninguno): guardar la reseña, actualizar el promedio, marcar la obra como terminada y anotar el evento <code>obra_leida</code>. La API responde en cuanto se confirma. Después, el sincronizador crea en el grafo la relación <code>leyó</code>, solo si la obra es un libro.</p>
+
+<h3>Recomendar libros</h3>
+<p>Es una operación que cruza dos bases en dos pasos. PostgreSQL entrega los libros que «gustaron» a la persona (terminados y calificados con 4 o más). Neo4j parte de ellos y salta a otros libros adaptados por el mismo director. MongoDB pone los títulos y las portadas.</p>
+
+<h3>Dar de alta una película</h3>
+<p>El servicio de Administración comprueba que el alta trae libro de origen, director y reparto. Luego crea la ficha como <i>borrador</i>, registra la obra en PostgreSQL, crea el nodo y sus relaciones en Neo4j, copia el reparto a la ficha, verifica el mínimo y por último la publica. Si un paso falla después de crear la ficha, la API responde con el identificador para completar la publicación sin repetir el alta (D-58).</p>
+
+<h2>Tecnologías elegidas</h2>
+<table class="junto">
+<thead><tr><th style="width:27%">Componente</th><th style="width:40%">Tecnología</th><th>Decisión</th></tr></thead>
+<tbody>
+<tr><td>App móvil</td><td>React Native 0.88 con Expo 58 y TypeScript</td><td>D-32</td></tr>
+<tr><td>Interfaz</td><td>NativeWind 4 (estilos), tipografía Poppins, React Navigation 7, TanStack Query 5 (carga y caché de datos)</td><td>D-63</td></tr>
+<tr><td>Sesión en el teléfono</td><td><code>expo-secure-store</code></td><td>D-35</td></tr>
+<tr><td>API</td><td>Node 24, TypeScript 6 y Express 5, con estilo REST</td><td>D-32, D-52, D-60</td></tr>
+<tr><td>Validación</td><td>Zod 4, con los mismos esquemas en la app y la API (carpeta <code>shared/</code>)</td><td>D-37</td></tr>
+<tr><td>Controladores</td><td><code>pg</code>, <code>mongodb</code> y <code>neo4j-driver</code></td><td>D-32</td></tr>
+<tr><td>Base relacional</td><td>PostgreSQL 18.7</td><td>D-33</td></tr>
+<tr><td>Base documental</td><td>MongoDB 9.0.4</td><td>D-09</td></tr>
+<tr><td>Base de grafo</td><td>Neo4j 5.26.34 Community</td><td>D-14, D-22</td></tr>
+<tr><td>Contraseñas</td><td>bcrypt, coste 10</td><td>D-61</td></tr>
+<tr><td>Contenedores</td><td>Docker Compose</td><td>D-30, D-36</td></tr>
+<tr><td>Túnel HTTPS</td><td>Túnel rápido de Cloudflare</td><td>D-62</td></tr>
+</tbody>
+</table>
+<p>Un <i>contenedor</i> es una caja aislada con un programa y todo lo que necesita; <i>Docker Compose</i> levanta varias con una sola orden. Una API <i>REST</i> organiza sus operaciones como direcciones web sobre las que se pide, crea, cambia o borra.</p>
+
+<h2>Comparación y justificación del stack</h2>
+<p>El <i>stack</i> es el conjunto de tecnologías de un proyecto. Las matrices siguientes comparan las alternativas que se consideraron. Las valoraciones de dificultad y riesgo son un juicio, no una medición, y dependen de lo que ya se conocía.</p>
+
+<h3>Cliente móvil y lenguaje de la API</h3>
+<table class="junto">
+<thead><tr><th>Criterio</th><th>Kotlin nativo con Ktor o Spring</th><th><b>React Native y Node (elegida)</b></th><th>Flutter y FastAPI</th></tr></thead>
+<tbody>
+<tr><td>Lenguajes</td><td>1</td><td><b>1</b></td><td>2 (Dart y Python)</td></tr>
+<tr><td>Prueba en un teléfono al desarrollar</td><td>Por cable desde Android Studio</td><td><b>Código QR, cambios al instante</b></td><td>Por cable, con recarga</td></tr>
+<tr><td>Controladores oficiales de las tres bases</td><td>Sí</td><td><b>Sí</b></td><td>Sí</td></tr>
+<tr><td>Tipos compartidos app–API</td><td>Sí</td><td><b>Sí</b></td><td>No</td></tr>
+<tr><td>Curva de aprendizaje</td><td>Alta</td><td><b>La menor: había experiencia</b></td><td>Media</td></tr>
+<tr><td>Riesgo con el plazo</td><td>Alto</td><td><b>Bajo</b></td><td>Medio</td></tr>
+</tbody>
+</table>
+<p>Pesó sobre todo la experiencia previa: con pocos días, no aprender una herramienta nueva valía más que cualquier ventaja técnica. Además, un solo lenguaje permite escribir cada esquema de datos una vez y usarlo en los dos extremos.</p>
+
+<h3>Framework de la API</h3>
+<table>
+<thead><tr><th>Criterio</th><th><b>Express (elegido)</b></th><th>Fastify</th><th>NestJS</th></tr></thead>
+<tbody>
+<tr><td>Experiencia previa</td><td><b>Sí</b></td><td>No declarada</td><td>No declarada</td></tr>
+<tr><td>Curva de aprendizaje</td><td><b>Mínima</b></td><td>Baja</td><td>Media a alta</td></tr>
+<tr><td>Estructura que impone</td><td>Ninguna</td><td>Ninguna</td><td>Módulos y controladores, con mucho código base</td></tr>
+<tr><td>Validación incluida</td><td>No: se usa Zod</td><td>Sí</td><td>Sí</td></tr>
+<tr><td>Riesgo con el plazo</td><td><b>Bajo</b></td><td>Medio</td><td>Alto</td></tr>
+</tbody>
+</table>
+<p>El precio de Express es que no impone orden ni valida por sí solo; el orden lo ponen las tres capas y la validación, Zod. Se usa la versión 5 porque entrega solo al manejador de errores los fallos de las funciones asíncronas, que en la 4 había que atrapar ruta por ruta (D-60).</p>
+
+<h3>REST frente a GraphQL</h3>
+<p>Se comparó también el estilo de la API. GraphQL permite que el cliente arme sus propias consultas, pero aquí hay un solo cliente y un conjunto de operaciones conocido; habría añadido librerías en ambos lados, riesgo de encadenar consultas a tres bases y otra forma de manejar errores. Se eligió REST, documentada con <i>OpenAPI</i>, un archivo que describe cada operación (D-52). Hoy describe 41.</p>
+
+<h3>Motores de base de datos</h3>
+<table>
+<thead><tr><th>Criterio</th><th><b>PostgreSQL (elegido)</b></th><th>MySQL o MariaDB</th></tr></thead>
+<tbody>
+<tr><td>Tipo UUID</td><td><b>Propio</b></td><td>MySQL no lo tiene; MariaDB sí en versiones recientes</td></tr>
+<tr><td>Valores cerrados</td><td><b>Tipo reutilizable</b></td><td>Por columna</td></tr>
+<tr><td>Comprobaciones y trigger con bloqueo</td><td><b>Sí</b></td><td>Sí</td></tr>
+<tr><td>Índices automáticos en llaves foráneas</td><td>No: se crean a mano</td><td>Sí</td></tr>
+<tr><td>Encaje con el diseño ya escrito</td><td><b>Directo</b></td><td>Requería adaptaciones</td></tr>
+</tbody>
+</table>
+<p><b>MongoDB</b> aporta lo que el diseño documental usa: datos anidados, validación de estructura, índices únicos y búsqueda de texto. No se compararon otros motores documentales. <b>Neo4j</b> aporta recorridos de longitud variable y búsqueda de caminos; tampoco se compararon otros, y se usa la edición Community por ser gratuita, aceptando que los campos obligatorios y los tipos los garantice la API.</p>
+<p>La pregunta más fuerte fue si hacían falta tres bases. «Todo en PostgreSQL» funcionaría en un sistema pequeño, pero buscar un camino de longitud desconocida entre autores, libros, películas y actores obligaría a imitar un grafo con tablas. «Todo en MongoDB» dejaría en manos de la aplicación el borrado en cadena sin dejar registros huérfanos.</p>
+
+<h3>Ejecución local y túnel</h3>
+<p>Las tres bases y la API corren con Docker Compose en el equipo de desarrollo, y el teléfono llega por un túnel HTTPS, que además es necesario porque Android bloquea por defecto las conexiones sin cifrar (D-30). Se descartaron una máquina virtual pública, que pedía pago o tarjeta y más configuración, y los servicios gratuitos que se duermen por inactividad: con la API dormida, el sincronizador dejaría de trabajar. Para el túnel se eligió Cloudflare sobre ngrok porque no exige crear una cuenta (D-62).</p>
+
+<h3>Memoria: un límite por contenedor</h3>
+<p>Con poca memoria y otros proyectos en el mismo equipo, cada contenedor tiene un tope y su programa se ajusta para respetarlo (D-36). Los servicios se levantan por <i>perfiles</i>, de modo que solo arranca lo que se necesita.</p>
+<table class="junto">
+<thead><tr><th>Servicio</th><th>Tope</th><th>Ajuste interno</th></tr></thead>
+<tbody>
+<tr><td>Neo4j</td><td>1280 MB</td><td>512 MB de memoria de trabajo y 128 MB de caché, reducida desde 256 tras medirla (D-47)</td></tr>
+<tr><td>MongoDB</td><td>512 MB</td><td>Caché de 0,25 GB</td></tr>
+<tr><td>PostgreSQL</td><td>384 MB</td><td>Hasta 20 conexiones; la API usa como máximo 10</td></tr>
+<tr><td>API</td><td>384 MB</td><td>256 MB para Node</td></tr>
+</tbody>
+</table>
+<p>Cada base declara una comprobación de salud para que la API pueda esperar a que estén listas. Las bases y la API solo escuchan en el propio equipo, y las contraseñas de las bases se leen de un archivo de configuración que no se guarda en el repositorio; el repositorio incluye un ejemplo sin valores reales.</p>
+
+<h3>Sesión y contraseñas</h3>
+<p>Al iniciar sesión, la API genera un <i>token</i> (un código aleatorio) y guarda en la base solo su huella; vence a los 30 días. Se descartó el <i>JWT</i>, un token firmado que no se consulta en la base: de todos modos habría que consultarla para saber si la cuenta sigue existiendo, y cerrar sesión no lo invalidaría (D-35). Las contraseñas se guardan con <i>bcrypt</i>, un método deliberadamente lento que dificulta adivinarlas. Si el correo no existe o la contraseña falla, la respuesta es la misma.</p>
+
+<h2>Fuente de verdad y sincronización</h2>
+<p>Con tres bases, cada dato necesita un dueño. La <i>fuente de verdad</i> es la base donde un dato se modifica oficialmente; las <i>copias</i> existen para no encadenar consultas y nunca se editan a mano.</p>
+<table>
+<thead><tr><th>Dato</th><th style="width:22%">Fuente de verdad</th><th style="width:32%">Copias</th></tr></thead>
+<tbody>
+<tr><td>Cuenta, sesión, reseñas, estados, listas y promedio</td><td>PostgreSQL</td><td>Nodo de usuario y <code>leyó</code></td></tr>
+<tr><td>Seguimiento</td><td>PostgreSQL</td><td><code>sigue</code></td></tr>
+<tr><td>Datos de la ficha y existencia de la obra</td><td>MongoDB</td><td>Registro de la obra y nodo</td></tr>
+<tr><td>Reseñas comparativas</td><td>MongoDB</td><td>Ninguna</td></tr>
+<tr><td>Personas, autoría, dirección, reparto y adaptación</td><td>Neo4j</td><td>Reparto en la ficha</td></tr>
+</tbody>
+</table>
+<figure>
+<svg viewBox="0 0 640 245" role="img" aria-label="Copias entre las tres bases">
+<defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4a4038"/></marker></defs>
+<g stroke="#4a4038" stroke-width="1.3" fill="none">
+<path d="M190 52H448" marker-end="url(#b)"/>
+<path d="M450 80H192" marker-end="url(#b)"/>
+<path d="M110 90L250 180" marker-end="url(#b)"/>
+<path d="M485 90L355 180" marker-end="url(#b)"/>
+<path d="M395 205L560 92" marker-end="url(#b)"/>
+</g>
+<g fill="#efe4cf" stroke="#4a4038">
+<rect x="40" y="40" width="150" height="50" rx="14"/>
+<rect x="450" y="40" width="150" height="50" rx="14"/>
+<rect x="245" y="182" width="150" height="50" rx="14"/>
+</g>
+<g fill="#1d1a17" font-size="14" text-anchor="middle">
+<text x="115" y="70">PostgreSQL</text>
+<text x="525" y="70">MongoDB</text>
+<text x="320" y="212">Neo4j</text>
+</g>
+<g fill="#4a4038" font-size="12" text-anchor="middle">
+<text x="320" y="44">al eliminar cuenta: borra comparativas</text>
+<text x="320" y="97">alta: id y tipo de obra</text>
+<text x="108" y="150">usuario, sigue, leyó</text>
+<text x="372" y="140">nodo de obra</text>
+<text x="525" y="162">reparto y fotos</text>
+</g>
+</svg>
+<figcaption>Cada flecha va de la fuente hacia la copia.</figcaption>
+</figure>
+
+<h3>La bandeja de salida</h3>
+<p>No existe una transacción que abarque tres bases. Para las copias que salen de PostgreSQL se usa una <i>bandeja de salida</i>: la misma transacción que guarda el dato anota un <i>evento</i> en la tabla <code>sync_outbox</code>. Así no puede existir el dato sin su aviso pendiente. Los eventos son <code>usuario_creado</code>, <code>usuario_eliminado</code>, <code>seguimiento_creado</code>, <code>seguimiento_eliminado</code>, <code>obra_leida</code> y <code>obra_no_leida</code>.</p>
+
+<h3>El sincronizador</h3>
+<p>Un proceso dentro de la API, el <i>sincronizador</i> o <i>worker</i>, aplica esos eventos. Su comportamiento está pensado para que un fallo no desordene ni pierda nada:</p>
+<ul>
+<li>Procesa de uno en uno, en el orden en que nacieron, en lotes de 50.</li>
+<li>Se despierta con un aviso interno justo después de confirmarse la transacción y, como respaldo, revisa cada 30 segundos. Al arrancar vacía primero lo pendiente.</li>
+<li>Cada operación es <i>idempotente</i>: repetirla no duplica nada.</li>
+<li>Si una base no responde, hace pausas cada vez más largas (2, 4, 8 segundos, hasta 30) sin contar intentos.</li>
+<li>Si el que falla es el evento, suma un intento; al quinto lo marca <code>fallido</code> y continúa con los demás. Mientras tanto no salta al siguiente, para no invertir el orden.</li>
+<li>Al apagar la API termina el evento en curso y no toma otro.</li>
+</ul>
+<p>Para enterarse de los cambios se compararon varias formas (D-34). Preguntar a la base cada 2 segundos suponía unas 43 200 consultas diarias en reposo. El aviso interno con revisión cada 30 segundos las reduce a unas 2900 y reacciona en milisegundos. Las herramientas externas de colas se descartaron por memoria y complejidad. Este diseño tiene una condición: solo puede correr <b>una copia de la API</b>, porque dos sincronizadores romperían el orden.</p>
+
+<h3>Las otras dos direcciones</h3>
+<p>El alta de una obra no usa la bandeja: es una secuencia ordenada que termina al publicar la ficha, y cada paso puede repetirse sin daño. El reparto viaja del grafo a la ficha: la API lo lee completo en Neo4j y reemplaza la lista de la película. Registrar una adaptación bloquea antes el nodo de la película, para que dos escrituras simultáneas no le den dos libros de origen (D-23).</p>
+
+<h3>Cuando algo falla a medias</h3>
+<table>
+<thead><tr><th style="width:36%">Situación</th><th>Qué ocurre</th></tr></thead>
+<tbody>
+<tr><td>Falla la transacción de una reseña</td><td>No cambia nada</td></tr>
+<tr><td>La reseña se guarda y el grafo está caído</td><td>Reseña y promedio quedan correctos; la lectura llega al grafo cuando vuelva</td></tr>
+<tr><td>Se interrumpe un alta</td><td>La obra queda en borrador y no se muestra; se puede completar</td></tr>
+<tr><td>Se elimina una cuenta y falta limpiar copias</td><td>La cuenta ya no existe; el evento se reintenta</td></tr>
+<tr><td>El grafo no responde al crear una comparativa</td><td>No se guarda y se responde un error recuperable</td></tr>
+</tbody>
+</table>
+<p>Hay una consecuencia que se aceptó desde el principio: la <i>consistencia eventual</i>. Entre que se guarda un dato y llega a su copia pasa un instante en el que, por ejemplo, una recomendación todavía no cuenta una lectura recién registrada.</p>
+
+<h3>La reconciliación</h3>
+<p>Como red de seguridad existe un comando que se lanza a mano y compara copias con su fuente. En su versión actual revisa los seguimientos y los libros leídos, informa los eventos pendientes o fallidos y, solo si se le pide, corrige el grafo (D-64). No corrige mientras haya eventos pendientes.</p>
+
+<h2>Cómo se comprobó que la arquitectura se respeta</h2>
+<p>Las reglas de capas son fáciles de escribir y fáciles de romper con prisa, así que se revisaron sobre el código: ningún archivo de rutas importa un repositorio, ningún servicio contiene consultas y ningún repositorio usa a otro. El orden de los eventos con operaciones simultáneas sobre un mismo seguimiento y un mismo estado tiene su propia prueba automática (<code>backend/test/orden-eventos.test.ts</code>), igual que la reconciliación.</p>
+
+<h2>Limitaciones</h2>
+<ul>
+<li>Solo puede ejecutarse una copia de la API, así que no escala agregando copias.</li>
+<li>Mientras la API se reinicia, la propagación se detiene; los eventos esperan en la bandeja.</li>
+<li>La ejecución depende del equipo local y de su conexión; con el túnel abierto, la API es accesible desde internet para quien conozca la dirección.</li>
+<li>La reconciliación es reducida: no repara fichas, reparto, promedios, registros huérfanos ni borradores.</li>
+<li>No se purgan los eventos ya procesados ni las sesiones vencidas, aunque el diseño lo prevé.</li>
+<li>bcrypt solo considera los primeros 72 bytes de una contraseña (D-61).</li>
+<li>Las imágenes dependen de sitios externos, que pueden cambiarlas o retirarlas.</li>
+<li>Express no impone las capas: se mantienen por disciplina.</li>
+</ul>
+
+<h2>Conclusión</h2>
+<p>La arquitectura de DuoBook se resume en una idea: la aplicación pide, la API decide y cada base guarda lo que mejor sabe guardar. Las capas evitan que las reglas se mezclen con las consultas; la fuente de verdad dice quién manda sobre cada dato, y la bandeja de salida lleva los cambios a sus copias sin perderlos. Así, una pantalla que parece sencilla puede reunir libros, películas y lectores desde tres bases distintas.</p>
+
+<h2>Archivos del repositorio en los que se basa</h2>
+<ul>
+<li>Póster del proyecto: <code>243741-NadiaGuerraCuessy-Poster.pdf</code></li>
+<li><code>docs/arquitectura/01</code> a <code>04</code></li>
+<li><code>docs/modelado/justificacion-tres-bases.md</code></li>
+<li><code>docs/decisiones_tomadas.md</code></li>
+<li><code>backend/src/</code> (capas, sesión, errores, sincronización y reconciliación) y <code>backend/Dockerfile</code></li>
+<li><code>frontend/src/</code> y <code>shared/src/</code></li>
+<li><code>package.json</code> de cada parte, <code>docker-compose.yml</code> y <code>.env.example</code> (solo nombres)</li>
+<li><code>docs/api/openapi.yaml</code></li>
+</ul>

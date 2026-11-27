@@ -1,0 +1,353 @@
+<!-- nombre: Pruebas, documentación y despliegue -->
+<h1>DuoBook: comprobar que funciona y que otra persona pueda levantarlo</h1>
+
+<h2>Preámbulo</h2>
+<p><b>DuoBook</b> es una aplicación móvil para registrar, reseñar y comparar libros y sus adaptaciones al cine, y para descubrir obras por las conexiones entre autores, directores, actores y lectores. Construirla fue la mitad del trabajo. La otra mitad es responder dos preguntas: ¿cómo se sabe que funciona? y ¿podría otra persona ponerla en marcha?</p>
+<p>Este documento cuenta qué se probó y con qué resultado, cómo se midió el rendimiento, cómo se instala y ejecuta el proyecto y qué queda pendiente. Solo se presenta como hecho lo que se ejecutó. Se llama <i>obra</i> a un libro o a una película; RF y RNF son requerimientos funcionales y no funcionales, y D, una decisión de diseño.</p>
+
+<h2>Qué significa probar aquí</h2>
+<p>Cada prueba responde tres cosas: qué se hace, qué debe pasar y qué evidencia queda. Por ejemplo, se publica una reseña de 5 estrellas; el promedio de la obra debe recalcularse y la obra quedar como terminada; y la salida de la prueba automática se guarda en un archivo.</p>
+<table>
+<thead><tr><th style="width:22%">Tipo</th><th>En palabras simples</th><th style="width:36%">Ejemplo del proyecto</th></tr></thead>
+<tbody>
+<tr><td>Unitaria</td><td>Una función sola, sin bases ni red</td><td>Un ISBN corto se rechaza</td></tr>
+<tr><td>Por base</td><td>Las reglas que impone cada motor</td><td>No hay dos reseñas de la misma persona sobre una obra</td></tr>
+<tr><td>Integración</td><td>Una operación que cruza varias bases</td><td>Seguir a un lector cambia las recomendaciones</td></tr>
+<tr><td>Funcional</td><td>Un caso de uso completo</td><td>Crear una comparativa y no poder repetirla</td></tr>
+<tr><td>Errores</td><td>Qué pasa cuando algo sale mal</td><td>Con una base caída se responde 503, no un éxito</td></tr>
+<tr><td>Consistencia</td><td>Las tres bases dicen lo mismo</td><td>13 comprobaciones entre bases</td></tr>
+<tr><td>Rendimiento</td><td>Cuánto tarda</td><td>La ficha responde en menos de 1 segundo</td></tr>
+</tbody>
+</table>
+<p>Las pruebas se organizaron en etapas y se ejecutaron el 26 de noviembre en un equipo con Windows 11, 6 GB de memoria (Docker ve unos 3 GB), Node 24.14.0, PostgreSQL 18.7, MongoDB 9.0.4 y Neo4j 5.26.34 Community. Los casos en el teléfono se recorrieron el 27 de noviembre.</p>
+<p>A mitad del trabajo se ampliaron los datos de ejemplo, la <i>semilla</i>: pasó de 11 libros y 12 películas a 17 y 18. Por eso este documento indica en cada resultado con qué datos se obtuvo.</p>
+
+<h2>Resumen de resultados</h2>
+<table>
+<thead><tr><th>Prueba</th><th style="width:26%">Resultado</th><th style="width:22%">Semilla</th></tr></thead>
+<tbody>
+<tr><td>Suite completa del servidor (<code>npm test</code>)</td><td><b>119 de 119</b></td><td>Ampliada</td></tr>
+<tr><td>Unitarias de la app y del servidor</td><td>8 de 8 y 16 de 16</td><td>Ampliada</td></tr>
+<tr><td>Revisión de tipos de las tres partes</td><td>Sin errores</td><td>Ampliada</td></tr>
+<tr><td>Consultas representativas de las tres bases</td><td>Todas correctas</td><td>Ampliada</td></tr>
+<tr><td>Coherencia entre bases</td><td>13 de 13</td><td>Ampliada</td></tr>
+<tr><td>Reconciliación con diferencia provocada</td><td>Detecta y corrige</td><td>Ampliada</td></tr>
+<tr><td>Rendimiento de 12 flujos</td><td>En meta, salvo la primera consulta tras reiniciar</td><td>Ampliada</td></tr>
+<tr><td>Pruebas de cada base y reconstrucción desde cero</td><td>Todas correctas</td><td>Anterior</td></tr>
+<tr><td>Instalación desde una copia limpia</td><td>Correcta</td><td>Anterior</td></tr>
+<tr><td>Casos funcionales en el teléfono (Expo Go)</td><td>13 casos: 7 correctos, 3 parciales y 3 sin evidencia</td><td>Ampliada</td></tr>
+<tr><td>Casos funcionales con el APK</td><td><b>Pendiente</b></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h2>Pruebas unitarias</h2>
+<p>No necesitan bases ni red, así que sirven recién descargado el proyecto. Son 24.</p>
+<table>
+<thead><tr><th style="width:34%">Archivo</th><th>Qué comprueban</th></tr></thead>
+<tbody>
+<tr><td><code>frontend/test/formularios</code> (8)</td><td>Limpieza de la dirección de la API, conversión de lo escrito en formularios, altas de libro y película, comparativas</td></tr>
+<tr><td><code>backend/test/unitarias/esquemas</code> (11)</td><td>Identificadores y correo en minúsculas, contraseña mínima, calificación 1 a 5, imágenes <code>https://</code>, búsqueda sin operadores de MongoDB, ISBN y reparto sin repetidos</td></tr>
+<tr><td><code>backend/test/unitarias/api</code> (5)</td><td>Cursor de paginación, diferencia entre base caída y petición errónea, limpieza de la búsqueda por persona</td></tr>
+</tbody>
+</table>
+
+<h2>Pruebas de cada base</h2>
+<p>Cada motor se prueba con sus propios datos, intentando romper sus reglas a propósito.</p>
+<table>
+<thead><tr><th style="width:18%">Base</th><th>Pruebas</th><th style="width:32%">Resultado</th></tr></thead>
+<tbody>
+<tr><td>PostgreSQL</td><td>Integridad, transacción, concurrencia del promedio, uso de índices y consultas</td><td>43, 5, superada, 16 y 17: todas correctas</td></tr>
+<tr><td>MongoDB</td><td>Documentos válidos e inválidos, índices y controles negativos</td><td>64, 27 y 3: todas correctas</td></tr>
+<tr><td>Neo4j</td><td>Restricciones, cardinalidad, consultas y dos escrituras simultáneas</td><td>58, 54 y 25 pasos y concurrencia: todas correctas</td></tr>
+</tbody>
+</table>
+<p>Se ejecutaron dentro de la reconstrucción completa desde cero (13 de 13 pasos en 3,9 minutos). Se hicieron con la semilla anterior; como usan datos propios, no dependen de ella, pero no se repitieron después porque borran las bases.</p>
+
+<h2>Pruebas de integración y funcionales</h2>
+<p>La suite del servidor levanta la API y las tres bases reales y la usa como lo haría la aplicación, por HTTP. Cubre los tipos de prueba que pide el curso.</p>
+<table>
+<thead><tr><th style="width:20%">Tipo</th><th style="width:34%">Archivos de <code>backend/test/</code></th><th>Qué demuestran</th></tr></thead>
+<tbody>
+<tr><td>Conectividad</td><td><code>salud</code></td><td>Responde con las tres bases; una caída da 503</td></tr>
+<tr><td>Funcional</td><td><code>cuentas</code>, <code>catalogo</code>, <code>resenas</code>, <code>social</code>, <code>listas</code>, <code>comparativas</code>, <code>descubrimiento</code>, <code>administracion</code></td><td>Los casos de uso, con permisos y validación</td></tr>
+<tr><td>Integridad</td><td><code>resenas</code>, <code>listas</code>, <code>comparativas</code></td><td>Una reseña y una comparativa por pareja; el promedio no se descuadra</td></tr>
+<tr><td>Integración</td><td><code>descubrimiento</code>, <code>eliminar-cuenta</code></td><td>Reseñar y seguir cambia las recomendaciones; eliminar una cuenta la borra en las tres</td></tr>
+</tbody>
+</table>
+<p>Las pruebas crean sus propias cuentas y las eliminan al final: la coherencia antes y después dio los mismos conteos.</p>
+
+<h2>Manejo de errores y consistencia</h2>
+<table>
+<thead><tr><th style="width:44%">Situación que se provoca</th><th>Resultado comprobado</th></tr></thead>
+<tbody>
+<tr><td>Datos inválidos, sin sesión, sin permiso, inexistente o duplicado</td><td>400, 401, 403, 404 y 409</td></tr>
+<tr><td>Una base caída</td><td>503, sin detalles internos</td></tr>
+<tr><td>Una transacción que falla a la mitad</td><td>No queda nada guardado</td></tr>
+<tr><td>El destino de un cambio no responde</td><td>El evento espera sin gastar intentos y sigue después</td></tr>
+<tr><td>Un cambio defectuoso</td><td>Frena a los siguientes hasta quedar fallido al quinto intento</td></tr>
+<tr><td>Aplicar dos veces el mismo cambio</td><td>No duplica nada</td></tr>
+<tr><td>Un alta de obra a medias</td><td>Queda en borrador y se puede completar</td></tr>
+<tr><td>Varias cuentas eliminadas a la vez con reseñas de las mismas obras</td><td>Terminan sin fallar</td></tr>
+</tbody>
+</table>
+<h3>El escenario de reconciliación</h3>
+<p>El curso pide demostrar que una copia desactualizada no pasa inadvertida. Con dos lectores de prueba, se borraron sus relaciones <b>solo en el grafo</b>.</p>
+<table class="junto">
+<thead><tr><th style="width:8%">Paso</th><th>Acción</th><th style="width:44%">Resultado</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Verificar coherencia</td><td>Fallan 2 de 13: seguimientos y libros leídos</td></tr>
+<tr><td>2</td><td>Reconciliar sin corregir</td><td>Informa que faltan 1 de cada uno</td></tr>
+<tr><td>3</td><td>Reconciliar corrigiendo</td><td>0 diferencias</td></tr>
+<tr><td>4</td><td>Verificar coherencia</td><td>13 de 13</td></tr>
+</tbody>
+</table>
+<p>La reconciliación construida es una versión reducida: compara seguimientos y libros leídos, informa los eventos pendientes o fallidos y solo modifica el grafo (D-64).</p>
+
+<h2>Pruebas funcionales en el teléfono</h2>
+<p>Los casos se recorrieron en un teléfono Android real, con la aplicación abierta en <i>Expo Go</i> (la herramienta que ejecuta la aplicación mientras se desarrolla, sin instalar un APK). La API y las tres bases corrían en el equipo y el teléfono llegaba a ellas por un túnel seguro y temporal. Se usaron la semilla ampliada, una cuenta de prueba nueva y la cuenta de administrador de ejemplo. Un caso es <i>correcto</i> si hay evidencia de todo lo que debía pasar, <i>parcial</i> si solo la hay de una parte y <i>sin evidencia</i> si no se guardó captura, así que no se da por probado.</p>
+<table>
+<thead><tr><th style="width:11%">Caso</th><th>Qué se hace y qué debe pasar</th><th style="width:33%">Resultado</th></tr></thead>
+<tbody>
+<tr><td>CF-01</td><td>Sin sesión, buscar <i>Dune</i> y abrir la ficha sin que pida entrar</td><td>Correcto</td></tr>
+<tr><td>CF-02</td><td>Crear una cuenta y entrar</td><td>Correcto</td></tr>
+<tr><td>CF-03</td><td>Entrar con contraseña equivocada: el mensaje no revela si el correo existe</td><td>Sin evidencia</td></tr>
+<tr><td>CF-04</td><td>Publicar una reseña: cambia el promedio y la obra queda terminada</td><td>Parcial: publicada y terminada; no se capturó el promedio nuevo</td></tr>
+<tr><td>CF-05</td><td>Cambiar el estado de una obra: aparece en Biblioteca</td><td>Correcto</td></tr>
+<tr><td>CF-06</td><td>Seguir a otro lector: aparecen recomendaciones de películas</td><td>Correcto</td></tr>
+<tr><td>CF-07</td><td>Explorar conexiones entre Herbert y Villeneuve</td><td>Correcto</td></tr>
+<tr><td>CF-08</td><td>Crear y editar una comparativa; no permitir una segunda de la misma pareja</td><td>Parcial: creada; no se capturó la edición ni el segundo intento</td></tr>
+<tr><td>CF-09</td><td>Crear una lista, agregar, ordenar y borrar</td><td>Parcial: creada con una obra; no se capturó ordenar ni borrar</td></tr>
+<tr><td>CF-10</td><td>Como administrador, ocultar una reseña</td><td>Correcto: oculta en la aplicación; sin sesión, comprobado por HTTP</td></tr>
+<tr><td>CF-11</td><td>Como lector, no ver opciones de administración</td><td>Correcto</td></tr>
+<tr><td>CF-12</td><td>Sin túnel: mensaje de error y opción de reintentar</td><td>Sin evidencia</td></tr>
+<tr><td>CF-13</td><td>Eliminar la cuenta de prueba y no poder volver a entrar</td><td>Sin evidencia</td></tr>
+</tbody>
+</table>
+<p>Los comportamientos de CF-03 y CF-13 sí tienen pruebas automáticas en el servidor (<code>cuentas</code> y <code>eliminar-cuenta</code>), pero eso no prueba la pantalla. Al terminar el recorrido las tres bases seguían coherentes (13 de 13) y todos los cambios pendientes de copiar se habían procesado (16 eventos, ninguno fallido).</p>
+
+<div class="junto">
+<h3>Consulta sin sesión y cuenta (CF-01, CF-02, CF-03 y CF-11)</h3>
+<div class="capturas">
+<figure><img alt="Búsqueda de Dune sin sesión" src="../capturas/cf-01-a-busqueda.jpg"><figcaption>CF-01. Buscar «Dune» sin sesión</figcaption></figure>
+<figure><img alt="Ficha de Dune sin sesión" src="../capturas/cf-01-b-ficha.jpg"><figcaption>CF-01. La ficha abre y ofrece entrar para reseñar</figcaption></figure>
+<figure><img alt="Perfil de la cuenta de prueba" src="../capturas/cf-02-perfil-lector.jpg"><figcaption>CF-02 y CF-11. Cuenta creada, sin opciones de administración</figcaption></figure>
+<figure><div class="hueco">Sin captura</div><figcaption>CF-03. Contraseña equivocada</figcaption></figure>
+</div>
+</div>
+
+<div class="junto">
+<h3>Reseñas y estados (CF-04 y CF-05)</h3>
+<div class="capturas">
+<figure><img alt="Formulario de reseña" src="../capturas/cf-04-escribir-resena.jpg"><figcaption>CF-04. Escribir la reseña</figcaption></figure>
+<figure><img alt="Biblioteca con dos obras" src="../capturas/cf-05-biblioteca.jpg"><figcaption>CF-04 y CF-05. <i>Dune</i> terminada y <i>El marciano</i> en curso</figcaption></figure>
+<figure><div class="hueco">Sin captura</div><figcaption>CF-04. Promedio después de publicar</figcaption></figure>
+</div>
+</div>
+
+<div class="junto">
+<h3>El caso integrado: seguir y recibir recomendaciones (CF-06)</h3>
+<p>Antes de seguir a nadie no hay recomendaciones. Después de seguir a otro lector aparecen las películas de los libros que leyó, y un libro relacionado por el director con la obra que se calificó alto.</p>
+<div class="capturas">
+<figure><img alt="Inicio sin recomendaciones" src="../capturas/cf-06-a-sin-recomendaciones.jpg"><figcaption>Antes: sin recomendaciones</figcaption></figure>
+<figure><img alt="Perfil de un lector seguido" src="../capturas/cf-06-b-seguir.jpg"><figcaption>Seguir a otro lector</figcaption></figure>
+<figure><img alt="Inicio con recomendaciones" src="../capturas/cf-06-c-recomendaciones.jpg"><figcaption>Después: películas y libros, con su motivo</figcaption></figure>
+</div>
+</div>
+
+<div class="junto">
+<h3>Conexiones, comparativas y listas (CF-07 a CF-09)</h3>
+<div class="capturas">
+<figure><img alt="Camino entre Frank Herbert y Denis Villeneuve" src="../capturas/cf-07-camino.jpg"><figcaption>CF-07. Camino de Herbert a Villeneuve</figcaption></figure>
+<figure><img alt="Formulario de comparativa" src="../capturas/cf-08-a-formulario.jpg"><figcaption>CF-08. Escribir la comparativa</figcaption></figure>
+<figure><img alt="Comparativa en la biblioteca" src="../capturas/cf-08-b-publicada.jpg"><figcaption>CF-08. Publicada y visible en Biblioteca</figcaption></figure>
+<figure><div class="hueco">Sin captura</div><figcaption>CF-08. Edición y segundo intento</figcaption></figure>
+<figure><img alt="Lista con una obra" src="../capturas/cf-09-lista.jpg"><figcaption>CF-09. Lista creada con una obra</figcaption></figure>
+<figure><div class="hueco">Sin captura</div><figcaption>CF-09. Ordenar y borrar</figcaption></figure>
+</div>
+</div>
+
+<div class="junto">
+<h3>Moderación, errores y baja (CF-10, CF-12 y CF-13)</h3>
+<div class="capturas">
+<figure><img alt="Reseñas con botones de moderación" src="../capturas/cf-10-a-moderar.jpg"><figcaption>CF-10. El administrador ve Ocultar y Eliminar</figcaption></figure>
+<figure><img alt="Reseña oculta por moderación" src="../capturas/cf-10-b-oculta.jpg"><figcaption>CF-10. Reseña oculta</figcaption></figure>
+<figure><div class="hueco">Sin captura</div><figcaption>CF-12. Error sin túnel y reintento</figcaption></figure>
+<figure><div class="hueco">Sin captura</div><figcaption>CF-13. Cuenta eliminada</figcaption></figure>
+</div>
+</div>
+
+<div class="junto">
+<h3>Alta de un libro y su película</h3>
+<p>Además de los casos previstos, desde el teléfono se registraron como administrador las personas, un libro y su película. Es la operación que más bases cruza. Se comprobó por HTTP que ambas obras quedaron publicadas y aparecen en la búsqueda pública.</p>
+<div class="capturas">
+<figure><img alt="Panel de administración" src="../capturas/app-09-administracion.jpg"><figcaption>Panel de administración</figcaption></figure>
+<figure><img alt="Formulario de libro nuevo" src="../capturas/app-10-nuevo-libro.jpg"><figcaption>Nuevo libro</figcaption></figure>
+<figure><img alt="Validación: falta la autoría" src="../capturas/app-11-validacion.jpg"><figcaption>Validación: pide al menos un autor</figcaption></figure>
+<figure><img alt="Autora registrada" src="../capturas/app-12-autoria.jpg"><figcaption>Autora registrada y agregada</figcaption></figure>
+<figure><img alt="Formulario de película, dirección" src="../capturas/app-13-nueva-pelicula.jpg"><figcaption>Nueva película: dirección</figcaption></figure>
+<figure><img alt="Formulario de película, reparto" src="../capturas/app-14-reparto.jpg"><figcaption>Reparto y personaje</figcaption></figure>
+</div>
+</div>
+
+<div class="junto">
+<h3>Otras pantallas</h3>
+<div class="capturas">
+<figure><img alt="Estado de la API y las tres bases" src="../capturas/app-01-conexion.jpg"><figcaption>Conexión: API y tres bases disponibles</figcaption></figure>
+<figure><img alt="Ediciones y reseñas sin sesión" src="../capturas/app-02-resenas-sin-sesion.jpg"><figcaption>Ediciones y reseñas, sin sesión</figcaption></figure>
+<figure><img alt="Comparativas sin sesión" src="../capturas/app-03-comparativas-sin-sesion.jpg"><figcaption>Comparativas, sin sesión</figcaption></figure>
+<figure><img alt="Persona y sus obras" src="../capturas/app-05-persona.jpg"><figcaption>Persona y sus obras</figcaption></figure>
+<figure><img alt="A quién sigo" src="../capturas/app-06-mi-red.jpg"><figcaption>Mi red</figcaption></figure>
+<figure><img alt="Perfil del administrador" src="../capturas/app-08-perfil-admin.jpg"><figcaption>Perfil del administrador</figcaption></figure>
+</div>
+</div>
+
+<h3>Lo que no salió como se esperaba</h3>
+<p><b>En el teléfono no cargaron los pósteres de las películas ni las fotos de las personas</b>; las portadas de los libros sí. En su lugar se ve el reemplazo previsto, con el título o las iniciales, y la aplicación sigue funcionando. Esas direcciones son de Wikimedia, que rechaza a quien no se identifica; la aplicación ya envía un nombre propio y desde el equipo la misma petición responde bien, pero en el teléfono no bastó. La causa no se ha determinado.</p>
+<p>Las pantallas todavía muestran el nombre de trabajo del proyecto, «Del Libro a la Pantalla», en lugar de DuoBook.</p>
+
+<h2>Rendimiento</h2>
+<h3>Condiciones de la medición</h3>
+<p>Un script llama a la API por HTTP, hace 5 llamadas de calentamiento y mide 50 por flujo, una a la vez y desde el mismo equipo (AMD Ryzen 5 3550H, 5,9 GB de memoria, 0,5 a 0,7 GB libres). Datos: la semilla ampliada, con 93 nodos en el grafo. Se corrió dos veces. La <i>mediana</i> es el tiempo que la mitad no supera; el <i>percentil 95</i> (p95), el que no superan 95 de cada 100. La meta fue un p95 de 1 segundo, y de 2 para los recorridos del grafo.</p>
+<table>
+<thead><tr><th>Flujo</th><th style="width:20%">Mediana (1.ª / 2.ª)</th><th style="width:20%">p95 (1.ª / 2.ª)</th><th style="width:10%">Meta</th></tr></thead>
+<tbody>
+<tr><td>Estado de la API</td><td>6 / 9 ms</td><td>10 / 21 ms</td><td>1 s</td></tr>
+<tr><td>Iniciar sesión</td><td>67 / 66 ms</td><td>117 / 124 ms</td><td>1 s</td></tr>
+<tr><td>Buscar por título</td><td>8 / 5 ms</td><td>12 / 7 ms</td><td>1 s</td></tr>
+<tr><td>Buscar por persona</td><td>19 / 16 ms</td><td>27 / 42 ms</td><td>2 s</td></tr>
+<tr><td>Ficha de libro</td><td>27 / 25 ms</td><td>38 / 53 ms</td><td>1 s</td></tr>
+<tr><td>Ficha de película</td><td>27 / 24 ms</td><td>37 / 42 ms</td><td>1 s</td></tr>
+<tr><td>Reseñas de una obra</td><td>9 / 8 ms</td><td>16 / 11 ms</td><td>1 s</td></tr>
+<tr><td>Publicar una reseña</td><td>13 / 14 ms</td><td>20 / 68 ms</td><td>1 s</td></tr>
+<tr><td>Recomendar libros</td><td>28 / 25 ms</td><td>48 / 55 ms</td><td>2 s</td></tr>
+<tr><td>Recomendar películas</td><td>18 / 16 ms</td><td>43 / 27 ms</td><td>2 s</td></tr>
+<tr><td>Caminos entre dos personas</td><td>18 / 19 ms</td><td>26 / 27 ms</td><td>2 s</td></tr>
+<tr><td>Autores de un director</td><td>16 / 15 ms</td><td>34 / 23 ms</td><td>2 s</td></tr>
+</tbody>
+</table>
+<p>Todos los flujos cumplieron su meta. Iniciar sesión es el más lento a propósito: comprobar la contraseña cuesta tiempo para dificultar adivinarla.</p>
+<h3>La primera consulta después de reiniciar</h3>
+<p>Se reinició Neo4j dos veces y se midió la primera llamada. Las recomendaciones de libros tardaron <b>11,5 y 4,2 segundos</b>, y los caminos 3,5 y 1,2; la segunda llamada bajó a milisegundos. <b>Esa primera consulta puede incumplir la meta de 2 segundos.</b> Antes de una demostración conviene abrir una vez las recomendaciones y los caminos.</p>
+<h3>Qué no dicen estas cifras</h3>
+<p>Se midieron con una sola persona usando el sistema y un catálogo pequeño: no predicen cómo respondería con muchas personas a la vez ni con miles de obras.</p>
+
+<h2>Instalación y ejecución</h2>
+<p>El código está en <code>https://github.com/Nadia-Guerra/booktok</code>. Las instrucciones completas están en el <code>README.md</code> de la raíz.</p>
+<h3>Requisitos</h3>
+<table class="junto">
+<thead><tr><th>Qué</th><th style="width:50%">Para qué</th></tr></thead>
+<tbody>
+<tr><td>Windows 10 u 11 con PowerShell 5.1</td><td>Los scripts de las bases</td></tr>
+<tr><td>Git</td><td>Descargar el proyecto</td></tr>
+<tr><td>Node 24</td><td>API, aplicación y pruebas</td></tr>
+<tr><td>Docker Desktop abierto</td><td>Las tres bases y la API</td></tr>
+<tr><td><code>cloudflared</code></td><td>Llegar a la API desde un teléfono</td></tr>
+<tr><td>Expo Go en un teléfono Android</td><td>Abrir la aplicación en desarrollo</td></tr>
+</tbody>
+</table>
+<h3>Instalar, configurar y cargar</h3>
+<pre>git clone https://github.com/Nadia-Guerra/booktok.git
+cd booktok
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+Copy-Item .env.example .env
+npm ci
+.\db\scripts\reconstruir.ps1 -SinPruebas
+docker compose --profile api up -d --wait --build
+curl.exe http://127.0.0.1:3000/api/v1/salud</pre>
+<p>La tercera línea solo hace falta si Windows bloquea los scripts. En la cuarta se crea la configuración, cuyas claves se cambian. La sexta crea las tres bases y carga los datos de ejemplo; pide confirmación porque borra lo que hubiera en las bases del proyecto. La última debe responder que las tres bases están bien.</p>
+<h3>Ejecutar cada día</h3>
+<p>Las bases se levantan de una en una y después la API, para no agotar la memoria:</p>
+<pre>docker compose --profile postgres up -d --wait
+docker compose --profile mongo up -d --wait
+docker compose --profile neo4j up -d --wait
+docker compose --profile api up -d --wait</pre>
+<p>Solo debe haber una copia de la API, porque lleva dentro el sincronizador.</p>
+<h3>Abrir la aplicación en desarrollo</h3>
+<pre>cloudflared tunnel --url http://localhost:3000
+npm run app</pre>
+<p>El primer comando crea un túnel, una dirección segura y temporal; mientras esté abierto, la API es accesible desde internet. El segundo, en otra terminal, muestra un código QR para abrir la aplicación con Expo Go. En la aplicación, en la pantalla de conexión, se pega la dirección del túnel.</p>
+<h3>Repetir las pruebas</h3>
+<pre>npm run typecheck
+npm test --workspace frontend
+npm run test:unitarias --workspace backend
+docker compose stop api
+npm test
+docker compose --profile api up -d --wait
+.\db\scripts\coherencia.ps1
+node test/rendimiento/medir.mjs</pre>
+<p>Para la suite completa se detiene la API, porque su sincronizador se llevaría los cambios que las pruebas necesitan observar.</p>
+
+<h2>Variables de entorno</h2>
+<p>La configuración se pasa en variables, fuera del código. <code>.env.example</code> trae la lista con valores de desarrollo local, sin credenciales reales; el archivo <code>.env</code> propio no se sube al repositorio.</p>
+<table>
+<thead><tr><th style="width:56%">Variables</th><th>Para qué</th></tr></thead>
+<tbody>
+<tr><td><code>API_PORT</code></td><td>Puerto de la API</td></tr>
+<tr><td><code>POSTGRES_USER</code>, <code>POSTGRES_PASSWORD</code>, <code>POSTGRES_DB</code>, <code>POSTGRES_HOST_PORT</code></td><td>PostgreSQL</td></tr>
+<tr><td><code>MONGO_USER</code>, <code>MONGO_PASSWORD</code>, <code>MONGO_DB</code>, <code>MONGO_HOST_PORT</code></td><td>MongoDB</td></tr>
+<tr><td><code>NEO4J_USER</code>, <code>NEO4J_PASSWORD</code>, <code>NEO4J_HTTP_HOST_PORT</code>, <code>NEO4J_BOLT_HOST_PORT</code></td><td>Neo4j</td></tr>
+<tr><td><code>POSTGRES_VERSION</code>, <code>MONGO_VERSION</code>, <code>NEO4J_VERSION</code></td><td>Versiones fijadas de los motores</td></tr>
+</tbody>
+</table>
+
+<h2>¿Puede levantarlo otra persona?</h2>
+<p>Para comprobarlo se copiaron a una carpeta nueva solo los archivos del repositorio, sin configuración ni dependencias, y se siguió la instalación.</p>
+<table class="junto">
+<thead><tr><th>Paso</th><th style="width:48%">Resultado</th></tr></thead>
+<tbody>
+<tr><td>Instalar dependencias</td><td>Correcto: 647 paquetes en unos 5 minutos</td></tr>
+<tr><td>Revisar tipos</td><td>Sin errores</td></tr>
+<tr><td>Unitarias sin configuración</td><td>8 de 8 y 16 de 16</td></tr>
+<tr><td>Validar la definición de contenedores</td><td>Válida</td></tr>
+<tr><td>Construir la imagen de la API</td><td>Correcto</td></tr>
+<tr><td>Empaquetar el código de la app para Android</td><td>Correcto, 1516 módulos</td></tr>
+</tbody>
+</table>
+<p>El ejercicio fue útil porque encontró fallas en la documentación: el <code>README</code> no explicaba cómo descargar el proyecto ni avisaba del permiso para ejecutar scripts, y se reescribió. También mostró que instalar con la opción <code>--prefer-offline</code> falla si la caché local es antigua; con <code>npm ci</code> normal, que es lo que indica la guía, funciona. No se probó en otra computadora.</p>
+
+<h2>Demostración funcional</h2>
+<p>La semilla se diseñó para que cada función tenga algo que mostrar. El recorrido siguiente es el guion propuesto para la demostración.</p>
+<table>
+<thead><tr><th style="width:8%">N.º</th><th>Qué hacer</th><th style="width:44%">Qué enseña</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Sin sesión, buscar «Dune» y abrir la ficha</td><td>Ficha completa desde las tres bases</td></tr>
+<tr><td>2</td><td>Ver el libro contra su película</td><td>Comparativas de forma libre</td></tr>
+<tr><td>3</td><td>Entrar, publicar una reseña y ver el promedio</td><td>Transacción relacional</td></tr>
+<tr><td>4</td><td>Con la sesión abierta, explorar de Frank Herbert a Timothée Chalamet</td><td>Camino en el grafo</td></tr>
+<tr><td>5</td><td>Seguir a un lector y actualizar recomendaciones</td><td>Sincronización y caso integrado</td></tr>
+<tr><td>6</td><td>Como administrador, ocultar una reseña</td><td>Permisos y recálculo del promedio</td></tr>
+</tbody>
+</table>
+
+<h2>Pendientes</h2>
+<p>Estos puntos <b>aún no se han realizado</b>:</p>
+<ul>
+<li><b>Compilar el APK</b>, el archivo instalable de la aplicación para Android.</li>
+<li><b>Pruebas funcionales con el APK instalado</b>, incluidos los casos que quedaron parciales o sin evidencia.</li>
+<li><b>Corregir las imágenes</b> que no cargan en el teléfono.</li>
+<li><b>Despliegue</b> y demostración con la aplicación instalada.</li>
+</ul>
+
+<h2>Limitaciones</h2>
+<ul>
+<li>Las pruebas de cada base, la reconstrucción desde cero y la instalación limpia son anteriores a la ampliación de la semilla.</li>
+<li>La instalación no se ha probado en otra computadora ni en otro sistema operativo.</li>
+<li>No hay pruebas automáticas de las pantallas.</li>
+<li>Los casos en el teléfono se hicieron con Expo Go, en un solo dispositivo, y no todos tienen evidencia completa.</li>
+<li>No se midió el rendimiento con varias personas a la vez ni con un catálogo grande.</li>
+<li>La suite completa tarda según la memoria libre y conviene ejecutarla sin otros programas pesados.</li>
+</ul>
+
+<h2>Conclusión</h2>
+<p>Lo que se probó del servidor y de las bases responde como se diseñó: 119 pruebas automáticas correctas, las tres bases coherentes y los flujos principales muy por debajo de su meta de tiempo, con una excepción conocida en la primera consulta al grafo. La instalación está documentada y se ensayó desde una copia limpia. En un teléfono real, con Expo Go, los flujos principales funcionaron, con las imágenes de películas y personas como falla conocida. Falta corregirla, llevar la aplicación al teléfono como APK, probarla ahí y desplegarla.</p>
+
+<h2>Archivos del repositorio en los que se basa</h2>
+<ul>
+<li><code>test/plan-de-pruebas.md</code>, <code>test/resultados.md</code>, <code>test/evidencias/</code> y <code>test/rendimiento/medir.mjs</code></li>
+<li><code>docs/reportes/capturas/</code> (capturas del teléfono)</li>
+<li><code>backend/test/</code> y <code>frontend/test/</code></li>
+<li><code>db/*/pruebas/</code> y <code>db/evidencias/</code></li>
+<li><code>README.md</code>, <code>db/README.md</code> y <code>.env.example</code> (solo nombres)</li>
+<li><code>db/semilla/README.md</code> (escenarios)</li>
+<li><code>docs/decisiones_tomadas.md</code></li>
+</ul>

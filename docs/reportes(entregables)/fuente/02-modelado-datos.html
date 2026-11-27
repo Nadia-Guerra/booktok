@@ -1,0 +1,636 @@
+<!-- nombre: Modelado de datos -->
+<h1>DuoBook: el modelo de datos de una red que conecta libros, películas y lectores</h1>
+
+<h2>Preámbulo</h2>
+<p><b>DuoBook</b> es una aplicación móvil para registrar, reseñar y comparar libros y sus adaptaciones al cine, y para descubrir obras por las conexiones entre autores, directores, actores y lectores. Antes de escribir una sola pantalla hubo que responder una pregunta: ¿qué información existe, cómo se relaciona y dónde se guarda?</p>
+<p>Este documento cuenta esa respuesta. Un <i>modelo de datos</i> es el plano de la información: qué cosas se guardan, qué datos tiene cada una, cómo se conectan y qué condiciones deben cumplir. Primero se presenta el modelo conceptual, común a todo el proyecto, y después su traducción a tres bases de datos: una <i>relacional</i> (tablas), una <i>documental</i> (documentos parecidos a fichas) y una de <i>grafo</i> (puntos unidos por líneas). Cada base tiene además su propia historia: por qué pasos se diseñó, qué alternativas se descartaron, qué errores aparecieron y cómo se corrigieron. Al final están el diccionario de datos y las reglas del dominio.</p>
+<p>Se llama <i>obra</i> a un libro o a una película. Los códigos como RF-12 o RN-01 identifican un requerimiento funcional (algo que la aplicación debe hacer) o una regla de negocio (una condición que siempre debe cumplirse); D-18, por ejemplo, identifica una decisión de diseño registrada en el repositorio.</p>
+
+<h2>De las necesidades a los datos</h2>
+<p>El modelado partió de 27 requerimientos funcionales, 11 reglas de negocio y 10 requerimientos no funcionales. En lugar de dibujar tres bases por separado, primero se armó una matriz que asigna cada dato y cada operación a una base. Así se evitó que las tres crecieran aisladas y terminaran contando historias distintas.</p>
+<p>Después, cada modelo se diseñó desde lo que se le iba a preguntar. En la base documental se enumeraron los <i>patrones de acceso</i> (las lecturas y escrituras que la aplicación necesita), y en el grafo, las consultas de recorrido. De ahí salió qué guardar junto, qué guardar aparte y qué conectar.</p>
+<p>El orden de trabajo fue siempre el mismo. Primero se escribieron los requerimientos; después la matriz de responsabilidades; luego un análisis de la fuente de verdad de cada dato, y por último el diseño detallado de cada base, un documento por paso. Cada vez que surgía una duda con más de una respuesta razonable, se anotó como <i>decisión</i>, con su contexto, las alternativas descartadas y el costo que se aceptaba. Las decisiones de modelado se registraron a partir del 19 de noviembre, y varias se corrigieron después, al revisar la coherencia entre documentos o al probar en los motores.</p>
+<p>Para repartir se usó una pregunta por base. La relacional responde «¿es válido y consistente este dato?»; la documental, «¿cómo se ve esta obra o esta comparación completa?», y el grafo, «¿cómo se conectan estas personas y obras?». Se evaluó también usar una sola base para todo. La opción más fuerte era hacerlo todo en la relacional, y se reconoce que para un sistema pequeño habría sido razonable; se descartó porque buscar caminos de longitud desconocida obligaría a imitar un grafo dentro de tablas.</p>
+<table class="junto">
+<thead><tr><th>Base</th><th>Motor</th><th>Responsabilidad</th><th>Qué se perdería sin ella</th></tr></thead>
+<tbody>
+<tr><td>Relacional</td><td>PostgreSQL 18.7</td><td>Usuarios, reseñas, estados, listas, seguimientos y promedios</td><td>Operaciones completas o nada, borrado en cadena y unicidad garantizada</td></tr>
+<tr><td>Documental</td><td>MongoDB 9.0.4</td><td>Fichas de libros y películas y reseñas comparativas</td><td>Leer una ficha completa de una vez y admitir campos que varían</td></tr>
+<tr><td>Grafo</td><td>Neo4j 5.26.34 Community</td><td>Personas, autoría, adaptación, dirección, reparto, caminos y recomendaciones</td><td>Recorrer conexiones de varios saltos</td></tr>
+</tbody>
+</table>
+
+<h2>Modelo conceptual del dominio</h2>
+<p>El modelo conceptual describe el mundo de DuoBook sin pensar todavía en tablas ni en bases. Tiene al <b>usuario</b>, que reseña, marca y ordena obras y sigue a otros usuarios; al <b>libro</b> y la <b>película</b>, unidos por la adaptación, que es la relación central; a la <b>persona</b>, que escribe, dirige o actúa; y a la <b>reseña comparativa</b>, que no habla de una obra sino de una pareja libro–película.</p>
+<figure>
+<svg viewBox="0 0 640 390" role="img" aria-label="Modelo conceptual del dominio">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4a4038"/></marker></defs>
+<g stroke="#4a4038" stroke-width="1.2" fill="none">
+<path d="M335 90V300" marker-end="url(#a)" stroke-width="2.4"/>
+<path d="M545 175L400 80" marker-end="url(#a)"/>
+<path d="M545 225L400 320" marker-end="url(#a)"/>
+<path d="M85 175L270 75" marker-end="url(#a)"/>
+<path d="M85 225L270 325" marker-end="url(#a)"/>
+<path d="M55 175C20 110 150 110 115 175" marker-end="url(#a)"/>
+<path d="M140 200H170" marker-end="url(#a)"/>
+<path d="M300 200H335" stroke-dasharray="5 4"/>
+</g>
+<g fill="#efe4cf" stroke="#4a4038">
+<rect x="20" y="175" width="120" height="50" rx="6"/>
+<rect x="270" y="40" width="130" height="50" rx="6"/>
+<rect x="270" y="300" width="130" height="50" rx="6"/>
+<rect x="490" y="175" width="120" height="50" rx="6"/>
+<rect x="170" y="175" width="130" height="50" rx="6" fill="#fff"/>
+</g>
+<g fill="#1d1a17" font-size="14" text-anchor="middle">
+<text x="80" y="205">Usuario</text>
+<text x="335" y="70">Libro</text>
+<text x="335" y="330">Película</text>
+<text x="550" y="205">Persona</text>
+<text x="235" y="197" font-size="12">Reseña</text>
+<text x="235" y="213" font-size="12">comparativa</text>
+</g>
+<g fill="#4a4038" font-size="12">
+<text x="345" y="190" font-weight="bold">se adapta a</text>
+<text x="345" y="208">1 libro, N películas</text>
+<text x="478" y="112">escribe (N a M)</text>
+<text x="478" y="292">dirige o actúa (N a M)</text>
+<text x="40" y="95">reseña, marca y lista</text>
+<text x="40" y="312">reseña, marca y lista</text>
+<text x="68" y="118">sigue</text>
+</g>
+</svg>
+<figcaption>Modelo conceptual. La línea gruesa, la adaptación, une los dos mundos.</figcaption>
+</figure>
+<table>
+<thead><tr><th>Concepto</th><th>Qué representa</th><th>Cómo se relaciona</th></tr></thead>
+<tbody>
+<tr><td>Usuario</td><td>Cuenta de un lector o de un administrador</td><td>Escribe reseñas y comparativas, marca estados, crea listas y sigue a otros</td></tr>
+<tr><td>Obra</td><td>Libro o película del catálogo</td><td>Recibe reseñas, estados y un promedio; puede estar en muchas listas</td></tr>
+<tr><td>Persona</td><td>Autor, director o actor; puede ser las tres cosas</td><td>Escribe libros, dirige o actúa en películas</td></tr>
+<tr><td>Adaptación</td><td>Una película nació de un libro</td><td>Toda película tiene un solo libro de origen; un libro puede tener varias</td></tr>
+<tr><td>Reseña</td><td>Calificación de 1 a 5 y texto opcional sobre una obra</td><td>Una por usuario y obra</td></tr>
+<tr><td>Estado de obra</td><td>Pendiente, en curso o terminada</td><td>Uno por usuario y obra</td></tr>
+<tr><td>Lista</td><td>Colección ordenada de obras</td><td>Pertenece a un usuario; una obra entra una sola vez</td></tr>
+<tr><td>Seguimiento</td><td>Un usuario sigue a otro</td><td>Sin seguirse a sí mismo ni repetir</td></tr>
+<tr><td>Reseña comparativa</td><td>Veredicto y aspectos sobre un libro y su película</td><td>Una por usuario y pareja unida por adaptación</td></tr>
+</tbody>
+</table>
+<h3>El catálogo tiene una condición</h3>
+<p>DuoBook no admite obras sueltas: solo libros que tienen adaptación y películas que nacieron de un libro. Por eso cada ficha tiene un estado, <i>borrador</i> o <i>publicada</i>, y solo se publica cuando cumple su mínimo (D-24): un libro necesita al menos un autor y una adaptación; una película, su libro de origen, al menos un director y al menos una persona en el reparto. Un libro recién registrado queda en borrador hasta que llega su primera película.</p>
+
+<h2>Quién manda sobre cada dato</h2>
+<p>Con tres bases, un mismo dato puede necesitarse en más de una. Para que no se contradigan, cada dato tiene una <i>fuente de verdad</i>, la base donde se modifica oficialmente, y las demás solo guardan <i>copias</i> que nadie edita a mano. Primero se escribe en la fuente y después en la copia.</p>
+<table>
+<thead><tr><th>Dato</th><th>Fuente de verdad</th><th>Copia</th><th>Para qué se copia</th></tr></thead>
+<tbody>
+<tr><td>Identidad del usuario</td><td>Relacional</td><td>Nodo Usuario (solo el id)</td><td>Anclar a quién sigue y qué leyó</td></tr>
+<tr><td>Seguimiento</td><td>Relacional</td><td>Relación <code>sigue</code></td><td>Recomendaciones por personas seguidas</td></tr>
+<tr><td>Lectura terminada de un libro</td><td>Relacional</td><td>Relación <code>leyó</code></td><td>Recomendaciones</td></tr>
+<tr><td>Existencia de la obra</td><td>Documental</td><td>Fila en <code>obra_resumen</code> y nodo de obra</td><td>Reseñar, listar y conectar</td></tr>
+<tr><td>Reparto y foto de cada actor</td><td>Grafo</td><td>Arreglo <code>reparto</code> de la ficha</td><td>Leer la ficha completa de una vez</td></tr>
+<tr><td>Promedio de calificación</td><td>Reseñas (relacional)</td><td><code>obra_resumen.promedio</code>, en la misma base</td><td>No recalcular en cada visita</td></tr>
+</tbody>
+</table>
+<p>Todo lo demás vive en un solo sitio. El título está únicamente en la ficha (D-18), el nombre y el perfil del usuario solo en la base relacional, la adaptación solo en el grafo y las reseñas comparativas solo en la base documental. Lo que une las tres es el <i>identificador</i>: cada usuario y cada obra tienen el mismo UUID (un código único de 36 caracteres que genera la API) en todas partes.</p>
+<h3>Las preguntas que hubo que resolver</h3>
+<p>Antes de modelar cada base se cruzaron los documentos y aparecieron seis huecos: cosas que todos daban por hechas y nadie había definido. Cada uno se resolvió comparando alternativas.</p>
+<table>
+<thead><tr><th style="width:30%">Pregunta sin respuesta</th><th style="width:38%">Decisión</th><th>Qué se descartó</th></tr></thead>
+<tbody>
+<tr><td>La ficha y el nodo describen la misma obra, ¿cuál manda?</td><td>La ficha documental; las otras guardan el identificador</td><td>Que mandara el grafo, o una tabla completa de obras</td></tr>
+<tr><td>Las reseñas apuntan a obras, pero la base relacional no las tenía</td><td>Tabla mínima <code>obra_resumen</code></td><td>Revisar los identificadores solo en la aplicación</td></tr>
+<tr><td>¿Cómo llega el promedio a la ficha?</td><td>La API lo adjunta al responder</td><td>Copiarlo a la ficha o calcularlo en cada visita</td></tr>
+<tr><td>¿La ficha guarda autor y director?</td><td>No; viven solo en el grafo</td><td>Copiarlos o crear una colección de personas</td></tr>
+<tr><td>¿Dónde vive la adaptación?</td><td>Solo en el grafo; la API la consulta</td><td>Un campo con el libro de origen en la ficha</td></tr>
+<tr><td>Recomendar por libros que «gustaron» sin calificaciones en el grafo</td><td>Dos pasos: la relacional elige los libros y el grafo recorre</td><td>Copiar la calificación al grafo</td></tr>
+</tbody>
+</table>
+
+<h3>Cómo viaja una copia</h3>
+<p>Entre bases distintas no existe una transacción que abarque a todas. Para las copias que salen de la base relacional, la misma operación que guarda el dato anota un <i>evento</i> en la tabla <code>sync_outbox</code>, una especie de lista de pendientes. Un proceso de la API aplica esos eventos en orden y reintenta si algo falla. Hay seis tipos de evento: <code>usuario_creado</code>, <code>usuario_eliminado</code>, <code>seguimiento_creado</code>, <code>seguimiento_eliminado</code>, <code>obra_leida</code> y <code>obra_no_leida</code>. Esto se llama <i>consistencia eventual</i>: la copia se pone al día poco después, no en el mismo instante.</p>
+<p>Un solo proceso aplica los eventos, en el orden en que nacieron, para que «seguir» y «dejar de seguir» no se inviertan (D-04). Se entera al momento por un aviso dentro de la API y, por si ese aviso se perdiera, revisa también cada 30 segundos y al arrancar (D-34). Cada aplicación es <i>idempotente</i>: repetirla no duplica nada.</p>
+<h3>Qué pasa cuando algo falla a medias</h3>
+<table>
+<thead><tr><th style="width:36%">Fallo</th><th>Qué se ve y qué se hace</th></tr></thead>
+<tbody>
+<tr><td>La transacción de una reseña falla</td><td>No cambia nada; se vuelve a intentar</td></tr>
+<tr><td>La reseña se guarda, pero no llega al grafo</td><td>Reseña y promedio correctos; el evento se reintenta y, si agota sus intentos, queda marcado como fallido</td></tr>
+<tr><td>El alta de una obra se interrumpe</td><td>La ficha queda en borrador y no se muestra. La API responde con su identificador y el administrador puede pedir que se complete la publicación, sin repetir el alta; los borradores se completan, no se borran (D-10, D-58)</td></tr>
+<tr><td>Se elimina una cuenta y falla la limpieza</td><td>La cuenta ya no existe; el evento se reintenta para limpiar las comparativas y el nodo</td></tr>
+<tr><td>El grafo no responde al crear una comparativa</td><td>No se guarda nada, porque no se puede comprobar la adaptación</td></tr>
+</tbody>
+</table>
+
+<h2>La historia de la base relacional</h2>
+<p>La historia empieza por la base relacional, la que organiza la información en tablas de filas y columnas, como hojas de cálculo con reglas estrictas. Le tocó guardar todo lo que no puede quedar a medias ni contradecirse: las cuentas, las reseñas, los estados de lectura, las listas, quién sigue a quién y el promedio de cada obra. Su diseño avanzó en cuatro pasos, cada uno con su documento en <code>docs/modelado/relacional/</code>: tablas y llaves, reglas de integridad, índices y operaciones. Después llegó al motor, donde hubo una sorpresa.</p>
+
+<h3>Relacional, paso 1: tablas y llaves</h3>
+<p>El punto de partida fue la columna «Relacional» de la matriz de responsabilidades. De cada requerimiento asignado a esta base salió una tabla. Registrarse y editar el perfil pedían <code>usuario</code>; reseñar, <code>resena</code>; marcar pendiente, en curso o terminada, <code>estado_obra</code>; crear listas y ordenarlas, <code>lista</code> y <code>elemento_lista</code>; seguir a otros, <code>seguimiento</code>.</p>
+<p>Apareció entonces un problema: las reseñas, los estados y las listas hablan de obras, pero las obras viven en la base documental. Se compararon tres salidas. Sin tabla de obras, los identificadores solo los revisaría la aplicación y podrían existir reseñas de obras inexistentes. Con una tabla completa de obras, se duplicarían fichas, ediciones y plataformas. La elegida fue la intermedia: una tabla mínima, <code>obra_resumen</code>, con el identificador, el tipo (libro o película), el promedio y el total de reseñas. Con ella, reseñas, estados y listas tienen a qué apuntar y el promedio tiene dónde vivir.</p>
+<p>Por último se agregaron dos tablas técnicas, que no representan nada del mundo de los libros pero hacen falta para que el sistema funcione. <code>sync_outbox</code> es la lista de cambios pendientes de copiar a las otras bases. <code>sesion</code> registra quién ha iniciado sesión: cada vez que alguien entra, la API genera un código aleatorio (el <i>token</i>) que la aplicación presenta en cada petición, y la base guarda solo su <i>hash</i>, una huella de la que no se puede recuperar el original (D-35). Antes se habían evaluado otras formas de manejar la sesión, como los tokens firmados o un proveedor externo; se descartaron porque no permitían cerrar sesión de verdad o sacaban la identidad fuera de la base.</p>
+<figure>
+<svg viewBox="0 0 640 300" role="img" aria-label="Tablas y llaves foráneas">
+<defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4a4038"/></marker></defs>
+<g stroke="#4a4038" stroke-width="1.2" fill="none">
+<path d="M75 56V140" marker-end="url(#b)"/>
+<path d="M135 56V140" marker-end="url(#b)"/>
+<path d="M260 78L170 146" marker-end="url(#b)"/>
+<path d="M390 78L480 146" marker-end="url(#b)"/>
+<path d="M260 158H170" marker-end="url(#b)"/>
+<path d="M390 158H480" marker-end="url(#b)"/>
+<path d="M80 244L90 176" marker-end="url(#b)"/>
+<path d="M240 244L150 176" marker-end="url(#b)"/>
+<path d="M350 262H305" marker-end="url(#b)"/>
+<path d="M440 244L520 176" marker-end="url(#b)"/>
+</g>
+<g fill="#efe4cf" stroke="#4a4038">
+<rect x="40" y="140" width="130" height="36" rx="4"/>
+<rect x="480" y="140" width="130" height="36" rx="4"/>
+<rect x="40" y="20" width="130" height="36" rx="4"/>
+<rect x="260" y="60" width="130" height="36" rx="4"/>
+<rect x="260" y="140" width="130" height="36" rx="4"/>
+<rect x="20" y="244" width="120" height="36" rx="4"/>
+<rect x="185" y="244" width="120" height="36" rx="4"/>
+<rect x="350" y="244" width="130" height="36" rx="4"/>
+<rect x="480" y="20" width="130" height="36" rx="4" fill="#fff" stroke-dasharray="5 4"/>
+</g>
+<g fill="#1d1a17" font-size="13" text-anchor="middle">
+<text x="105" y="163">usuario</text>
+<text x="545" y="163">obra_resumen</text>
+<text x="105" y="43">seguimiento</text>
+<text x="325" y="83">resena</text>
+<text x="325" y="163">estado_obra</text>
+<text x="80" y="267">sesion</text>
+<text x="245" y="267">lista</text>
+<text x="415" y="267">elemento_lista</text>
+<text x="545" y="43">sync_outbox</text>
+</g>
+</svg>
+<figcaption>Cada flecha es una llave foránea. <code>sync_outbox</code> no se relaciona con nada a propósito: es infraestructura.</figcaption>
+</figure>
+<p>La <i>clave primaria</i> (PK) es el dato que identifica cada fila, y una <i>llave foránea</i> (FK) es una columna que apunta a la fila de otra tabla y no permite apuntar a algo que no existe. La <i>cardinalidad</i> dice cuántas cosas de un lado se relacionan con cuántas del otro: 1 a N significa una con muchas, y N a M, muchas con muchas.</p>
+<table>
+<thead><tr><th>Relación</th><th>Cardinalidad</th><th>Llave foránea</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td>usuario → resena</td><td>1 a N</td><td><code>resena.usuario_id</code></td><td>Una persona usuaria escribe muchas reseñas</td></tr>
+<tr><td>usuario → estado_obra</td><td>1 a N</td><td><code>estado_obra.usuario_id</code></td><td>Marca el estado de muchas obras</td></tr>
+<tr><td>usuario → lista</td><td>1 a N</td><td><code>lista.usuario_id</code></td><td>Crea muchas listas</td></tr>
+<tr><td>usuario → sesion</td><td>1 a N</td><td><code>sesion.usuario_id</code></td><td>Puede tener sesión en varios teléfonos</td></tr>
+<tr><td>usuario ↔ usuario</td><td>N a M</td><td><code>seguimiento.seguidor_id</code> y <code>seguido_id</code></td><td>Sigue a muchos y le siguen muchos</td></tr>
+<tr><td>lista → elemento_lista</td><td>1 a N</td><td><code>elemento_lista.lista_id</code></td><td>Una lista contiene muchas obras</td></tr>
+<tr><td>obra_resumen → resena</td><td>1 a N</td><td><code>resena.obra_id</code></td><td>Una obra recibe muchas reseñas</td></tr>
+<tr><td>obra_resumen → estado_obra</td><td>1 a N</td><td><code>estado_obra.obra_id</code></td><td>Muchas personas la marcan</td></tr>
+<tr><td>obra_resumen → elemento_lista</td><td>1 a N</td><td><code>elemento_lista.obra_id</code></td><td>Aparece en muchas listas</td></tr>
+</tbody>
+</table>
+<p>En este paso también se fijaron decisiones que parecen pequeñas y no lo son. Los identificadores son UUID que genera la aplicación y no números consecutivos de la base, porque un UUID existe antes de escribir en cualquiera de las tres. El rol es una columna con dos valores posibles, lector o administrador; una tabla de roles no aportaba nada. Los valores cerrados se declararon como tipos <i>enumerados</i>, que hacen que la base rechace cualquier otro. Las tablas <code>estado_obra</code>, <code>elemento_lista</code> y <code>seguimiento</code> no tienen identificador propio: su clave son las dos columnas juntas, que por sí solas impiden repetir el par.</p>
+<p>Hubo además una duda sobre el seguimiento: seguir a alguien parece, por naturaleza, una línea entre dos puntos, algo propio del grafo. Se decidió que la fuente de verdad fuera la tabla relacional (D-01) por tres razones: seguir y ver a quienes se sigue funcionan aunque el grafo esté caído, la base impone sola que nadie se siga a sí mismo ni dos veces, y al borrar una cuenta los seguimientos desaparecen de golpe. El grafo conserva una copia para las recomendaciones.</p>
+
+<h3>Relacional, paso 2: reglas de integridad</h3>
+<p>Con las tablas definidas, tocó decidir qué reglas impondría la propia base, de modo que se cumplan aunque la aplicación tenga un error. La <i>integridad</i> es precisamente eso: que los datos no puedan quedar en un estado imposible.</p>
+<table>
+<thead><tr><th>Regla</th><th>Mecanismo en la base</th></tr></thead>
+<tbody>
+<tr><td>Un correo, una cuenta</td><td>Restricción de unicidad, con el correo guardado siempre en minúsculas y una comprobación que lo exige (D-03)</td></tr>
+<tr><td>RN-01: una reseña por usuario y obra</td><td>Unicidad sobre usuario y obra</td></tr>
+<tr><td>RN-02: calificación de 1 a 5</td><td>Comprobación de rango</td></tr>
+<tr><td>RN-03: sin seguirse a sí mismo ni dos veces</td><td>Comprobación de que seguidor y seguido son distintos, y clave primaria compuesta</td></tr>
+<tr><td>RN-04: una obra una sola vez por lista</td><td>Clave primaria compuesta</td></tr>
+<tr><td>RN-08: el promedio corresponde a las reseñas</td><td>Trigger y comprobación de coherencia: sin reseñas no hay promedio y con reseñas siempre lo hay</td></tr>
+<tr><td>Posición en una lista</td><td>Debe ser 1 o más</td></tr>
+<tr><td>Sesión válida</td><td>No puede vencer antes de empezar</td></tr>
+<tr><td>Eventos conocidos</td><td>Solo se admiten los seis tipos de evento</td></tr>
+</tbody>
+</table>
+<p>El requerimiento de eliminar la cuenta (RF-04) pedía no dejar rastros sueltos. Se resolvió con el borrado <i>en cascada</i>: al borrar una fila de <code>usuario</code>, la base elimina por sí sola sus reseñas, estados, listas (y con ellas sus elementos), seguimientos en ambos sentidos y sesiones. Las obras siguen la regla contraria: como no existe la baja de obras, la base <i>restringe</i> el borrado de cualquier fila de <code>obra_resumen</code> que tenga actividad.</p>
+<p>La cascada trajo una consecuencia interesante. Si el promedio lo actualizara la aplicación, al borrar una cuenta quedaría mal, porque la base borra esas reseñas sin avisarle. Por eso el promedio lo mantiene un <i>trigger</i>, una instrucción que la base ejecuta automáticamente cuando algo cambia. Se dispara al insertar o borrar una reseña, y al cambiar su calificación u ocultarla. Primero bloquea la fila de la obra y solo después recalcula desde las reseñas visibles; no suma ni resta sobre el valor anterior, para que nunca se desvíe (D-02). El orden importa: si calculara antes de bloquear, dos reseñas simultáneas podrían pisarse el resultado.</p>
+<p>También se anotó con franqueza lo que la base <i>no</i> puede imponer: que solo el administrador modifique el catálogo, que cada quien edite únicamente lo suyo y que la obra exista también en las otras dos bases. Eso quedó en manos de la API y de la verificación entre bases.</p>
+
+<h3>Relacional, paso 3: índices</h3>
+<p>Un <i>índice</i> es, como el de un libro, un atajo para encontrar filas sin revisarlas todas. Acelera las lecturas pero encarece las escrituras, así que se siguió un criterio: solo se crea si una operación del sistema lo usa. Las claves y las unicidades ya traen el suyo; se añadieron seis.</p>
+<table>
+<thead><tr><th style="width:10%">Índice</th><th style="width:42%">Sobre qué</th><th>Qué resuelve</th></tr></thead>
+<tbody>
+<tr><td>I1</td><td>Reseñas por obra y fecha</td><td>Mostrar las de una ficha, de nueva a antigua, y recalcular el promedio</td></tr>
+<tr><td>I2</td><td>Reseñas por usuario y fecha</td><td>Ver las reseñas de un perfil que se sigue</td></tr>
+<tr><td>I4</td><td>Seguimientos por persona seguida</td><td>Saber quién sigue a alguien y borrar en cascada</td></tr>
+<tr><td>I5</td><td>Listas por dueño</td><td>Mostrar las listas de un perfil</td></tr>
+<tr><td>I6</td><td>Eventos pendientes, en orden</td><td>Encontrar lo que falta copiar. Es <i>parcial</i>: solo contiene los pendientes (D-34)</td></tr>
+<tr><td>I7</td><td>Sesiones por usuario</td><td>Cerrar todas al eliminar la cuenta</td></tr>
+</tbody>
+</table>
+<p>La numeración salta de I2 a I4 porque hubo un I3: un índice para filtrar las obras de un usuario por estado. Se descartó al ver que la clave primaria ya encuentra los estados de una persona, que son pocos (D-06). Tampoco se indexaron el promedio, la calificación ni el texto de las reseñas, porque ningún requerimiento los consulta.</p>
+
+<h3>Relacional, paso 4: operaciones</h3>
+<p>El último paso describió lo que el sistema hace con las tablas: qué toca cada operación, si debe ser una <i>transacción</i> (un grupo de cambios que se aplican todos o ninguno) y qué evento deja para las otras bases. El caso que mejor lo muestra es publicar una reseña (RF-13), que ocurre en una sola transacción:</p>
+<ol>
+<li>Se inserta la reseña y el trigger actualiza el promedio y el total.</li>
+<li>Se lee el estado anterior de la obra para esa persona, bloqueando la fila.</li>
+<li>El estado pasa a <code>terminada</code>.</li>
+<li>Si antes no lo estaba, se anota el evento <code>obra_leida</code>.</li>
+<li>Se confirma todo junto. Si algo falla, no queda ni reseña, ni estado, ni promedio, ni evento.</li>
+</ol>
+<p>Marcar un estado sigue la misma lógica: pasar a terminada anota <code>obra_leida</code> y dejar de estarlo, <code>obra_no_leida</code>. Seguir y dejar de seguir anotan su propio evento, y eliminar la cuenta anota <code>usuario_eliminado</code> antes de borrar. Otra operación prepara las recomendaciones: devuelve hasta 20 libros que «le gustaron» a la persona, es decir, terminados y calificados con 4 o más en una reseña visible. Solo esos identificadores viajan al grafo, que así no necesita guardar calificaciones.</p>
+<pre>SELECT e.obra_id
+FROM estado_obra e
+JOIN resena r       ON r.usuario_id = e.usuario_id AND r.obra_id = e.obra_id
+JOIN obra_resumen o ON o.obra_id = e.obra_id
+WHERE e.usuario_id = :sesion AND e.estado = 'terminada'
+  AND o.tipo = 'libro' AND r.calificacion &gt;= 4 AND r.oculta = false
+ORDER BY r.calificacion DESC, r.actualizado_en DESC
+LIMIT :limite;</pre>
+
+<h3>Relacional: del papel al motor</h3>
+<p>Hasta aquí el diseño hablaba de tipos genéricos. Al implementarlo se eligió PostgreSQL (D-33), porque ofrece tal cual lo que el diseño necesitaba, y se concretaron detalles: fechas con zona horaria, el contenido de los eventos en formato JSON binario y un número consecutivo que fija su orden (D-40).</p>
+<p>Entonces vino la sorpresa. La prueba de dos reseñas simultáneas pasaba, pero con ocho personas publicando a la vez sobre la misma obra, seis operaciones fueron canceladas por <i>interbloqueo</i> (cada una esperaba a que otra soltara el candado) y el total quedó en 2 en lugar de 8. La causa: al insertar una reseña, la base ya toma un candado ligero sobre la obra para comprobar la llave foránea, y el candado que pedía el trigger chocaba con él. Se cambió a un modo de bloqueo más preciso (<code>FOR NO KEY UPDATE</code>), que ordena las reseñas una detrás de otra sin atorarse. La ráfaga de ocho terminó con total 8 y el promedio correcto (D-38). La salida del fallo se conservó como evidencia, y la lección quedó clara: un diseño correcto en papel todavía tiene que probarse en el motor.</p>
+<p>La ejecución de pruebas guardada del 26 de noviembre muestra los cinco grupos superados: integridad (rechazo de correos repetidos, calificaciones fuera de rango, auto-seguimiento, obras inexistentes y borrado en cascada), reversión de la transacción, concurrencia del trigger, uso de los índices y consultas representativas.</p>
+
+<h2>La historia de la base documental</h2>
+<p>Una ficha de película reúne datos de muchas formas: varios géneros, varias plataformas, un bloque de datos técnicos y un reparto. Una ficha de libro, en cambio, lleva ediciones. Y una reseña comparativa tiene tantos aspectos como su autor quiera. Para eso se eligió una base <i>documental</i>, que guarda cada cosa como un <i>documento</i> con el formato JSON (pares de nombre y valor que pueden anidarse). El motor es MongoDB (D-09). Su diseño tuvo cinco pasos, documentados en <code>docs/modelado/documental/</code>, y siguió un orden deliberado: primero las preguntas, después la forma.</p>
+
+<h3>Documental, paso 1: patrones de acceso</h3>
+<p>Antes de dibujar un solo documento se escribió una lista de todo lo que el sistema iba a leer y escribir en esta base. Cada renglón es un <i>patrón de acceso</i>: qué se hace, quién lo hace, con qué se busca y qué se necesita de vuelta. Quedaron 30 activos, 13 lecturas y 17 escrituras.</p>
+<table>
+<thead><tr><th style="width:30%">Grupo</th><th>Ejemplos</th></tr></thead>
+<tbody>
+<tr><td>Leer el catálogo</td><td>Ficha completa de un libro o de una película; buscar por título; obtener título, año y portada de varias obras a partir de sus identificadores</td></tr>
+<tr><td>Escribir el catálogo</td><td>Crear la ficha como borrador, publicarla, corregirla, agregar ediciones y plataformas, reemplazar el reparto</td></tr>
+<tr><td>Reseñas comparativas</td><td>Publicar, consultar, listar por adaptación o por autor, editar, eliminar y moderar</td></tr>
+<tr><td>Verificación entre bases</td><td>Listar fichas publicadas, borradores antiguos, repartos y usuarios con comparativas</td></tr>
+</tbody>
+</table>
+<p>Igual de útil fue anotar lo que <i>no</i> se iba a consultar: filtrar por género, listar el catálogo entero, buscar por ISBN o dentro de las sinopsis, o sacar estadísticas de preferencias. Ningún requerimiento lo pedía, así que no se diseñó para ello.</p>
+
+<h3>Documental, paso 2: las relaciones</h3>
+<p>El segundo paso preparó la gran decisión de toda base documental: qué va <i>dentro</i> de un documento (anidado o embebido) y qué va <i>aparte</i> (referenciado por su identificador). Para no decidir por intuición, a cada relación se le hicieron cuatro preguntas: ¿se necesita en la misma lectura?, ¿cambia mucho?, ¿se reutiliza en muchos documentos?, ¿crece sin límite?</p>
+<table>
+<thead><tr><th>Lo que mostraron las respuestas</th><th>Relaciones</th><th>Consecuencia</th></tr></thead>
+<tbody>
+<tr><td>Se lee junto, casi no cambia y no crece</td><td>Ediciones, géneros, plataformas, datos técnicos, veredicto y aspectos</td><td>Candidatos a ir dentro</td></tr>
+<tr><td>Se lee junto, pero se repite mucho</td><td>El reparto: el mismo actor aparece en varias películas</td><td>Tensión aceptada: copia controlada</td></tr>
+<tr><td>Crece sin límite</td><td>Las comparativas de un usuario o de una obra</td><td>Colección propia</td></tr>
+<tr><td>Solo hace falta identificarlo</td><td>El autor de una comparativa y sus dos obras</td><td>Guardar solo el identificador</td></tr>
+<tr><td>Vive en otra base</td><td>Promedio, reseñas individuales, autor, director y adaptación</td><td>No se guarda aquí</td></tr>
+</tbody>
+</table>
+
+<h3>Documental, paso 3: las colecciones</h3>
+<p>Los documentos del mismo tipo se agrupan en <i>colecciones</i>, y quedaron tres: <code>libros</code>, <code>peliculas</code> y <code>resenas_comparativas</code>. Se consideró una sola colección de obras, pero libros y películas tienen campos distintos y habría quedado llena de huecos.</p>
+<p>La primera cuestión fue la identidad. El identificador de cada documento, <code>_id</code>, es directamente el identificador de la obra o de la comparativa, un UUID guardado como texto (D-11). Así el mismo código coincide en las tres bases sin conversiones y las lecturas por identificador no necesitan índice extra. Se descartaron el identificador automático del motor (habría dos por documento) y el formato binario (un error de configuración produciría códigos que no coinciden).</p>
+<p>La segunda fue cómo corregir un elemento anidado. Cada edición recibe su propio identificador, porque el ISBN es opcional (una edición antigua puede no tenerlo) y la posición en la lista cambia al quitar otra. Las plataformas, en cambio, se identifican por su nombre (D-08). En un principio cada plataforma llevaba además un enlace, pero ningún requerimiento lo usaba y la aplicación no reproduce contenido, así que se eliminó (D-26).</p>
+<p>La tercera fueron las imágenes. Una base de datos no es lugar para archivos, así que la ficha guarda solo la dirección de la portada, y la foto de cada persona vive en su nodo del grafo (D-25). Faltaba decidir si la ficha de la película copiaría las fotos de sus actores; se compararon cuatro opciones y ganó copiarlas, porque así la ficha sigue leyéndose de una sola vez (D-27).</p>
+<p>La cuarta fue la comparativa. Los requerimientos definían los aspectos libres, pero no cómo expresar la conclusión. Se descartaron un texto libre (no se puede contar) y una puntuación general (se confundiría con la reseña individual) y se eligió un <i>veredicto</i> con una preferencia obligatoria, libro, película o empate, y un comentario opcional (D-07).</p>
+<p>Los siguientes son ejemplos ilustrativos de la forma de cada documento, con identificadores abreviados.</p>
+<pre>// libros
+{ "_id": "6f1d…6f01", "titulo": "Dune", "sinopsis": "…",
+  "generos": ["ciencia ficción", "aventura"],
+  "anio_publicacion_original": 1965,
+  "ediciones": [
+    { "edicion_id": "2b7e…7f11", "isbn": "9780441172719", "paginas": 535,
+      "editorial": "Ace", "idioma": "inglés", "anio": 2005 },
+    { "edicion_id": "8d4a…2a12", "paginas": 704,
+      "editorial": "Editorial de ejemplo", "idioma": "español", "anio": 1983 } ],
+  "estado_publicacion": "publicada",
+  "creado_en": "…", "actualizado_en": "…" }</pre>
+<p>La segunda edición no tiene ISBN. El documento no lleva autor, adaptaciones ni promedio: la API los reúne desde las otras bases al responder.</p>
+<pre>// peliculas
+{ "_id": "9a8c…2f02", "titulo": "Dune", "sinopsis": "…",
+  "generos": ["ciencia ficción", "aventura"],
+  "anio_estreno": 2021, "duracion_min": 155,
+  "plataformas": [ { "nombre": "Plataforma A" } ],
+  "datos_tecnicos": { "idioma_original": "inglés",
+    "paises": ["Estados Unidos", "Canadá"], "clasificacion": "PG-13" },
+  "reparto": [
+    { "persona_id": "d1e2…1d21", "nombre": "Timothée Chalamet",
+      "personaje": "Paul Atreides", "orden": 1, "foto_url": "https://…" },
+    { "persona_id": "d1e2…1d22", "nombre": "Rebecca Ferguson",
+      "personaje": "Lady Jessica", "orden": 2 } ],
+  "estado_publicacion": "publicada",
+  "creado_en": "…", "actualizado_en": "…" }</pre>
+<p>El reparto es la copia que llega desde el grafo: se reemplaza completo, nunca se edita a mano. Quien no tiene foto simplemente no lleva ese campo.</p>
+<pre>// resenas_comparativas
+{ "_id": "e7b1…9d04", "usuario_id": "c4e2…4b03",
+  "libro_id": "6f1d…6f01", "pelicula_id": "9a8c…2f02",
+  "veredicto": { "preferencia": "libro", "comentario": "…" },
+  "aspectos": [
+    { "nombre": "Fidelidad", "puntuacion": 4, "comentario": "…" },
+    { "nombre": "Ritmo", "puntuacion": 3 },
+    { "nombre": "Final", "comentario": "…" },
+    { "nombre": "Ambientación visual", "puntuacion": 5 } ],
+  "oculta": false, "creado_en": "…", "actualizado_en": "…" }</pre>
+<p>Aquí se ve la ventaja del modelo: «Ambientación visual» es un aspecto que alguien inventó, y la puntuación y el comentario de cada aspecto son opcionales. Nada de eso exige cambiar la base. En una base relacional habría hecho falta una tabla de pares nombre–valor.</p>
+
+<h3>Documental, paso 4: la validación</h3>
+<p>Que los documentos sean flexibles no significa que valga cualquier cosa. Cada colección tiene un <i>validador</i> (<code>$jsonSchema</code>), una lista de condiciones que MongoDB revisa al insertar y al actualizar, en modo estricto: el documento inválido se rechaza en vez de guardarse con un aviso.</p>
+<ul>
+<li>Exige los campos obligatorios y el tipo de cada uno.</li>
+<li>No admite campos desconocidos, ni siquiera dentro de los datos anidados. Un nombre mal escrito no se guarda en silencio.</li>
+<li>Comprueba el formato de los identificadores, que el ISBN tenga 13 dígitos y que las direcciones de imagen empiecen por <code>https://</code>.</li>
+<li>Limita rangos y cantidades: de 1 a 5 géneros sin repetir, hasta 50 ediciones, 30 plataformas, 10 países, 300 personas de reparto y de 1 a 10 aspectos.</li>
+<li>Restringe los valores cerrados: borrador o publicada; libro, película o empate.</li>
+</ul>
+<p>Agregar una edición o una plataforma (RF-09) es añadir un elemento a una lista que el validador ya permite, así que no hay que cambiar el esquema.</p>
+<p>Hay reglas que MongoDB no puede comprobar y que quedaron en la API: que un ISBN o una plataforma no se repitan dentro del mismo documento, que el orden del reparto no se repita, y que una comparativa se haga sobre un libro y una película que existen, están publicados y están unidos por una adaptación (RN-06). Además, esta base se usa sin transacciones de varios documentos, por lo que cada escritura se diseñó para ocurrir sobre un solo documento y poder repetirse.</p>
+
+<h3>Documental, paso 5: índices y un tropiezo</h3>
+<p>Los índices se eligieron con el mismo criterio que en la base relacional: solo si un patrón de acceso o una unicidad lo piden.</p>
+<table>
+<thead><tr><th>Índice</th><th>Sobre qué</th><th>Para qué</th></tr></thead>
+<tbody>
+<tr><td>IX-01 e IX-02</td><td>Título de libros y de películas (texto)</td><td>Buscar por título sin distinguir mayúsculas ni tildes</td></tr>
+<tr><td>IX-03</td><td><code>ediciones.isbn</code>, único</td><td>Que dos libros no compartan ISBN</td></tr>
+<tr><td>IX-04</td><td>Usuario, libro y película, único</td><td>Una comparativa por usuario y pareja (RN-05)</td></tr>
+<tr><td>IX-05</td><td>Libro, película y fecha</td><td>Listar las comparativas de una adaptación, recientes primero</td></tr>
+</tbody>
+</table>
+<p>El tropiezo estuvo en el ISBN. El plan era un índice único <i>parcial</i>, que solo vigila los documentos que cumplen una condición. Al probarlo en MongoDB 9.0.4 falló: la condición se evalúa por documento y no por edición, así que un libro que mezclaba ediciones con y sin ISBN dejaba un «vacío» registrado, y el segundo libro con esa forma era rechazado como duplicado. La solución fue un índice <i>sparse</i> (disperso), que ignora las ediciones que no tienen el campo. La corrección quedó escrita en la propia decisión (D-08).</p>
+<table>
+<thead><tr><th>Índice probado</th><th>Dos libros que mezclan ediciones con y sin ISBN</th><th>El mismo ISBN en dos libros</th></tr></thead>
+<tbody>
+<tr><td>Único parcial (lo previsto)</td><td>Rechaza el segundo, sin razón</td><td>Rechaza</td></tr>
+<tr><td>Único <i>sparse</i> (elegido)</td><td>Los acepta</td><td>Rechaza</td></tr>
+</tbody>
+</table>
+<p>El índice de texto tiene un límite conocido: encuentra palabras completas, no fragmentos. Buscar «dune» halla <i>Dune</i>; buscar «dun» no devuelve nada.</p>
+<p>La ejecución de pruebas guardada del 26 de noviembre muestra superados los tres grupos: validación con documentos válidos e inválidos, índices y planes de consulta, y controles negativos que confirman por qué se eligió cada opción.</p>
+
+<h2>La historia de la base de grafo</h2>
+<p>La pregunta «¿cómo se conecta un autor con un actor?» obliga a saltar de una persona a un libro, del libro a una película y de la película a otra persona, sin saber de antemano cuántos saltos harán falta. Una base de <i>grafo</i> está hecha para eso: guarda <i>nodos</i> (las cosas) y <i>relaciones</i> (líneas con nombre y dirección que los unen). La <i>etiqueta</i> de un nodo dice qué es. El motor es Neo4j (D-14), y su diseño pasó por cinco etapas documentadas en <code>docs/modelado/grafo/</code>.</p>
+
+<h3>Grafo, paso 1: las consultas primero</h3>
+<p>Igual que en la base documental, se empezó por las preguntas. Se numeraron como CG (consulta de grafo) y quedaron 24 activas: 15 lecturas y 9 escrituras.</p>
+<table>
+<thead><tr><th style="width:34%">Grupo</th><th>Ejemplos</th></tr></thead>
+<tbody>
+<tr><td>Explorar y recomendar</td><td>Obras por el nombre de una persona; adaptaciones de un libro; libro de origen de una película; caminos más cortos; autores adaptados por un director; recomendaciones</td></tr>
+<tr><td>Escribir</td><td>Registrar personas y sus relaciones, registrar adaptaciones, crear y borrar usuarios, seguimientos y lecturas</td></tr>
+<tr><td>Reconciliar y regenerar</td><td>Leer repartos, obras, usuarios y relaciones para compararlos con las otras bases</td></tr>
+</tbody>
+</table>
+<p>De esas consultas salieron las únicas cuatro cosas que hacía falta guardar: <code>Persona</code>, <code>Libro</code>, <code>Película</code> y <code>Usuario</code>. Y se hizo una revisión de redundancia que produjo un cambio importante. Al principio los nodos de obra copiaban el título, para mostrar caminos sin otra consulta. Al revisar, resultó que la base documental ya podía entregar los títulos de varias obras a partir de sus identificadores, así que la copia no ahorraba nada y obligaba a mantener un evento de sincronización. Se quitó (D-18), y con ella una operación, un patrón de acceso y una consulta, cuyos números se retiraron sin reutilizarse.</p>
+<p>La segunda gran decisión fue no crear nodos distintos para autor, director y actor. Una misma persona puede ser las tres cosas: con tres nodos separados, un camino que pasara por ella se rompería. Hay un solo nodo <code>Persona</code> y el rol se deduce de sus relaciones (D-15). El costo asumido es que alguien podría registrar dos veces a la misma persona; por eso la aplicación permite buscarla por nombre antes de crearla.</p>
+
+<h3>Grafo, paso 2: las relaciones</h3>
+<p>Cada relación respondió a cuatro preguntas: quién se une con quién, con qué dirección, qué información lleva y para qué consulta existe. Quedaron seis.</p>
+<figure>
+<svg viewBox="0 0 640 330" role="img" aria-label="Nodos y relaciones del grafo">
+<defs><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4a4038"/></marker></defs>
+<g stroke="#4a4038" stroke-width="1.2" fill="none">
+<path d="M275 45L145 125" marker-end="url(#c)"/>
+<path d="M462 128Q445 55 377 47" marker-end="url(#c)"/>
+<path d="M355 74Q380 140 435 140" marker-end="url(#c)"/>
+<path d="M160 155H430" marker-end="url(#c)" stroke-width="2.4"/>
+<path d="M120 250V185" marker-end="url(#c)"/>
+<path d="M155 265C240 240 240 320 155 295" marker-end="url(#c)"/>
+</g>
+<g fill="#efe4cf" stroke="#4a4038">
+<ellipse cx="320" cy="45" rx="55" ry="30"/>
+<ellipse cx="110" cy="155" rx="52" ry="30"/>
+<ellipse cx="490" cy="155" rx="58" ry="30"/>
+<ellipse cx="110" cy="280" rx="52" ry="30"/>
+</g>
+<g fill="#1d1a17" font-size="14" text-anchor="middle">
+<text x="320" y="50">Persona</text>
+<text x="110" y="160">Libro</text>
+<text x="490" y="160">Película</text>
+<text x="110" y="285">Usuario</text>
+</g>
+<g fill="#4a4038" font-size="12">
+<text x="148" y="75">escribió</text>
+<text x="440" y="70">dirigida_por</text>
+<text x="196" y="112">actuó_en {personaje, orden}</text>
+<text x="255" y="175" font-weight="bold">adaptado_a</text>
+<text x="130" y="222">leyó</text>
+<text x="232" y="285">sigue</text>
+</g>
+</svg>
+<figcaption>Las flechas indican la dirección con la que se guarda cada relación.</figcaption>
+</figure>
+<p>Se descartaron varias ideas que parecían cómodas: una relación inversa «basada en», que duplicaría cada adaptación; una relación «vio» para las películas, que ninguna consulta usaba; nodos de género; y guardar la calificación en la relación de lectura. Esta última habría obligado a propagar al grafo cada edición de una reseña, cuando la calificación solo sirve para elegir el libro de partida, algo que la base relacional resuelve sola.</p>
+<p>Por la misma razón, <code>leyó</code> apunta solo a libros (D-16). Y entre dos nodos hay como máximo una relación de cada tipo: si una persona interpreta dos personajes en una película, hay una sola <code>actuó_en</code> cuyo texto recoge ambos (D-19). Con dos relaciones iguales, la búsqueda de caminos habría devuelto el mismo camino repetido.</p>
+<p>La búsqueda de caminos planteó otro detalle: las flechas apuntan en sentidos distintos, así que un recorrido que las respetara no encontraría la ruta de un autor a un actor. Se decidió recorrerlas sin importar la dirección, solo por las cuatro relaciones del catálogo (si pasara por <code>leyó</code>, dos obras quedarían unidas solo porque alguien las leyó), con un máximo provisional de 6 saltos (D-17).</p>
+
+<h3>Grafo, paso 3: las propiedades</h3>
+<p>Una <i>propiedad</i> es un dato guardado en un nodo o en una relación. El criterio fue: va en el nodo si describe a la cosa por sí sola, y en la relación si solo tiene sentido con los dos extremos juntos. El nombre y la foto son de la persona. El personaje, en cambio, depende de la película: si estuviera en la persona, cada actor tendría un único personaje para toda su carrera. Por eso <code>personaje</code> y <code>orden</code> viven en <code>actuó_en</code>.</p>
+<p>El resultado es deliberadamente austero: ocho propiedades en todo el grafo, siete obligatorias y una opcional, la foto. Los nodos de libro, película y usuario llevan solo su identificador. No se guardan el tipo de obra (ya lo dice la etiqueta), las fechas (ninguna consulta las usa) ni el nombre del usuario (vive en la base relacional).</p>
+
+<h3>Grafo, paso 4: las restricciones</h3>
+<p>Aquí apareció la limitación más fuerte. La edición gratuita de Neo4j, llamada Community, solo puede exigir <i>unicidad</i>: no puede obligar a que un dato exista, ni a que sea de cierto tipo, ni limitar cuántas relaciones tiene un nodo. Se eligió aun así esa edición (D-22) y se repartió la responsabilidad: la base impone la unicidad y la API comprueba todo lo demás antes de escribir. Al ejecutarlo, el motor confirmó lo previsto: creó las cuatro restricciones de unicidad y rechazó las de existencia por ser de la edición de pago.</p>
+<p>Quedaba un hueco: libros y películas tienen unicidad por separado, así que el grafo no impediría que ambos usaran el mismo identificador. Se evaluó darles una etiqueta común, pero habría repetido el tipo en dos sitios. Lo resuelve la base relacional, donde ese identificador es clave primaria y se registra antes de crear el nodo (D-21).</p>
+<p>El caso más delicado fue la regla de un solo libro de origen por película (RN-07). La API primero pregunta si la película ya tiene libro y después crea la relación. Si dos administradores lo hicieran a la vez, ambos verían «no tiene» y quedarían dos. La solución fue bloquear el nodo de la película antes de preguntar (D-23). Para bloquearlo sin dejar nada nuevo, se reescribe su identificador con el mismo valor (D-42). Se probó de las dos maneras: con el bloqueo quedó un libro; sin él, quedaron dos.</p>
+<p>Finalmente, faltaba un índice para buscar personas por nombre. Se creó uno de texto completo, de modo que «timothee» encuentra a «Timothée Chalamet», aunque un fragmento como «chala» no devuelve nada (D-41).</p>
+
+<h3>Grafo, paso 5: la cardinalidad y un error corregido</h3>
+<p>La última etapa fijó cuántas relaciones de cada tipo puede o debe tener cada nodo, y destapó un problema. En una primera versión la adaptación era opcional: «una película puede no basarse en ningún libro». Era un error, porque la adaptación es el centro de la aplicación. Además, el proceso de alta publicaba la ficha justo después de crear el nodo, antes de registrar a nadie, así que podía mostrarse una película sin director ni reparto.</p>
+<p>Se corrigió con una regla de publicación (D-24): los mínimos se exigen al <i>publicar</i> la ficha, no al crear el nodo, porque el alta ocurre en pasos. Surgió entonces un acertijo: si un libro necesita una adaptación para publicarse y la película necesita a su libro, ¿quién va primero? La respuesta fue que cuenta que la relación exista, no que el otro extremo esté publicado. Así, el alta de un libro termina en borrador y la de su primera película publica primero al libro y luego a ella.</p>
+<table>
+<thead><tr><th>Relación y dirección</th><th>Cardinalidad esperada</th><th>Quién la impone</th></tr></thead>
+<tbody>
+<tr><td>Persona <code>escribió</code> → Libro</td><td>N a M. Libro publicado: al menos un autor</td><td>API antes de publicar</td></tr>
+<tr><td>Libro <code>adaptado_a</code> → Película</td><td>1 a N. Película publicada: exactamente un libro. Libro publicado: al menos una película</td><td>API, con bloqueo del nodo</td></tr>
+<tr><td>Película <code>dirigida_por</code> → Persona</td><td>N a M. Película publicada: al menos un director</td><td>API antes de publicar</td></tr>
+<tr><td>Persona <code>actuó_en</code> → Película</td><td>N a M. De 1 a 300 por película publicada; una por persona y película</td><td>API</td></tr>
+<tr><td>Usuario <code>sigue</code> → Usuario</td><td>N a M, sin seguirse a sí mismo</td><td>Base relacional, que origina el dato</td></tr>
+<tr><td>Usuario <code>leyó</code> → Libro</td><td>N a M, solo hacia libros</td><td>Sincronización</td></tr>
+</tbody>
+</table>
+<p>Un ejemplo: <i>El hobbit</i> puede tener tres películas, y cada una tiene un solo libro de origen. Un mismo actor puede aparecer en las tres, con una relación por película. Una persona que dirigió y además actuó en la misma película tiene dos relaciones de tipos distintos con ella, y eso está permitido. Como ninguna operación borra autores, directores, reparto ni adaptaciones, una obra publicada nunca baja de su mínimo.</p>
+<p>La ejecución de pruebas guardada del 26 de noviembre muestra superados todos los pasos: 58 de restricciones, 54 de cardinalidad y 25 de consultas, además de la prueba de dos escrituras simultáneas.</p>
+
+<h2>Diccionario de datos</h2>
+<p>El <i>diccionario de datos</i> enumera cada campo con su tipo y significado. «Opc.» marca un dato que puede faltar; todo lo demás es obligatorio. Un UUID es el identificador único ya descrito.</p>
+
+<h3>Diccionario relacional</h3>
+<table>
+<thead><tr><th style="width:24%">Campo</th><th style="width:24%">Tipo</th><th>Significado y condición</th></tr></thead>
+<tbody>
+<tr><th colspan="3">usuario</th></tr>
+<tr><td><code>usuario_id</code></td><td>UUID, PK</td><td>Identificador compartido por las tres bases</td></tr>
+<tr><td><code>correo</code></td><td>VARCHAR(254)</td><td>Único y en minúsculas</td></tr>
+<tr><td><code>password_hash</code></td><td>VARCHAR(255)</td><td>Huella de la contraseña; nunca el texto original</td></tr>
+<tr><td><code>nombre</code></td><td>VARCHAR(100)</td><td>Nombre visible</td></tr>
+<tr><td><code>biografia</code></td><td>VARCHAR(500), opc.</td><td>Descripción breve</td></tr>
+<tr><td><code>rol</code></td><td>enumerado</td><td><code>lector</code> (por defecto) o <code>admin</code></td></tr>
+<tr><td><code>creado_en</code></td><td>TIMESTAMPTZ</td><td>Fecha y hora de registro</td></tr>
+<tr><th colspan="3">obra_resumen</th></tr>
+<tr><td><code>obra_id</code></td><td>UUID, PK</td><td>El mismo de la ficha y del nodo</td></tr>
+<tr><td><code>tipo</code></td><td>enumerado</td><td><code>libro</code> o <code>pelicula</code></td></tr>
+<tr><td><code>promedio</code></td><td>NUMERIC(3,2), opc.</td><td>De 1 a 5; vacío si no hay reseñas visibles</td></tr>
+<tr><td><code>total_resenas</code></td><td>INTEGER</td><td>Reseñas visibles; empieza en 0</td></tr>
+<tr><th colspan="3">resena</th></tr>
+<tr><td><code>resena_id</code></td><td>UUID, PK</td><td>Identificador de la reseña</td></tr>
+<tr><td><code>usuario_id</code>, <code>obra_id</code></td><td>UUID, FK</td><td>Autor y obra; la pareja es única</td></tr>
+<tr><td><code>calificacion</code></td><td>SMALLINT</td><td>De 1 a 5</td></tr>
+<tr><td><code>texto</code></td><td>TEXT, opc.</td><td>Comentario; la API admite hasta 3000 caracteres</td></tr>
+<tr><td><code>oculta</code></td><td>BOOLEAN</td><td>Moderada por el administrador</td></tr>
+<tr><td><code>creado_en</code>, <code>actualizado_en</code></td><td>TIMESTAMPTZ</td><td>Publicación y última edición</td></tr>
+<tr><th colspan="3">estado_obra</th></tr>
+<tr><td><code>usuario_id</code>, <code>obra_id</code></td><td>UUID, PK y FK</td><td>Un estado por usuario y obra</td></tr>
+<tr><td><code>estado</code></td><td>enumerado</td><td><code>pendiente</code>, <code>en_curso</code> o <code>terminada</code></td></tr>
+<tr><td><code>actualizado_en</code></td><td>TIMESTAMPTZ</td><td>Último cambio</td></tr>
+<tr><th colspan="3">lista</th></tr>
+<tr><td><code>lista_id</code></td><td>UUID, PK</td><td>Identificador de la lista</td></tr>
+<tr><td><code>usuario_id</code></td><td>UUID, FK</td><td>Persona dueña de la lista</td></tr>
+<tr><td><code>nombre</code></td><td>VARCHAR(100)</td><td>Nombre de la lista</td></tr>
+<tr><td><code>creado_en</code></td><td>TIMESTAMPTZ</td><td>Creación</td></tr>
+<tr><th colspan="3">elemento_lista</th></tr>
+<tr><td><code>lista_id</code>, <code>obra_id</code></td><td>UUID, PK y FK</td><td>La obra entra una sola vez por lista</td></tr>
+<tr><td><code>posicion</code></td><td>INTEGER</td><td>Lugar en la lista, desde 1</td></tr>
+<tr><td><code>agregado_en</code></td><td>TIMESTAMPTZ</td><td>Cuándo se agregó</td></tr>
+<tr><th colspan="3">seguimiento</th></tr>
+<tr><td><code>seguidor_id</code>, <code>seguido_id</code></td><td>UUID, PK y FK</td><td>Quién sigue a quién; distintos entre sí</td></tr>
+<tr><td><code>creado_en</code></td><td>TIMESTAMPTZ</td><td>Desde cuándo</td></tr>
+<tr><th colspan="3">sesion</th></tr>
+<tr><td><code>token_hash</code></td><td>CHAR(64), PK</td><td>Huella del token de sesión; el token no se guarda</td></tr>
+<tr><td><code>usuario_id</code></td><td>UUID, FK</td><td>Dueño de la sesión</td></tr>
+<tr><td><code>creado_en</code>, <code>expira_en</code></td><td>TIMESTAMPTZ</td><td>El vencimiento es posterior al inicio</td></tr>
+<tr><th colspan="3">sync_outbox</th></tr>
+<tr><td><code>evento_id</code></td><td>BIGINT, PK</td><td>Número consecutivo que fija el orden</td></tr>
+<tr><td><code>tipo_evento</code></td><td>VARCHAR(40)</td><td>Uno de los seis tipos de evento</td></tr>
+<tr><td><code>payload</code></td><td>JSONB</td><td>Identificadores necesarios para aplicarlo</td></tr>
+<tr><td><code>estado</code></td><td>enumerado</td><td><code>pendiente</code>, <code>procesado</code> o <code>fallido</code></td></tr>
+<tr><td><code>intentos</code></td><td>INTEGER</td><td>Veces que falló; empieza en 0</td></tr>
+<tr><td><code>error</code></td><td>TEXT, opc.</td><td>Último error</td></tr>
+<tr><td><code>creado_en</code></td><td>TIMESTAMPTZ</td><td>Cuándo nació el evento</td></tr>
+<tr><td><code>procesado_en</code></td><td>TIMESTAMPTZ, opc.</td><td>Cuándo se aplicó</td></tr>
+</tbody>
+</table>
+
+<h3>Diccionario documental</h3>
+<table>
+<thead><tr><th style="width:30%">Campo</th><th style="width:22%">Tipo</th><th>Significado y condición</th></tr></thead>
+<tbody>
+<tr><th colspan="3">Comunes a libros y peliculas</th></tr>
+<tr><td><code>_id</code></td><td>texto (UUID)</td><td>Identificador de la obra</td></tr>
+<tr><td><code>titulo</code></td><td>texto</td><td>Hasta 200 caracteres</td></tr>
+<tr><td><code>sinopsis</code></td><td>texto</td><td>Hasta 3000 caracteres</td></tr>
+<tr><td><code>portada_url</code></td><td>texto, opc.</td><td>Dirección <code>https://</code> de la imagen</td></tr>
+<tr><td><code>generos</code></td><td>lista de textos</td><td>De 1 a 5, sin repetir</td></tr>
+<tr><td><code>estado_publicacion</code></td><td>texto</td><td><code>borrador</code> o <code>publicada</code></td></tr>
+<tr><td><code>creado_en</code>, <code>actualizado_en</code></td><td>fecha</td><td>En hora universal (UTC)</td></tr>
+<tr><th colspan="3">Solo libros</th></tr>
+<tr><td><code>anio_publicacion_original</code></td><td>entero</td><td>De −3000 a 2100</td></tr>
+<tr><td><code>ediciones[]</code></td><td>lista de objetos</td><td>Hasta 50; puede estar vacía</td></tr>
+<tr><td><code>ediciones[].edicion_id</code></td><td>texto (UUID)</td><td>Identifica la edición</td></tr>
+<tr><td><code>ediciones[].isbn</code></td><td>texto, opc.</td><td>13 dígitos; único entre libros</td></tr>
+<tr><td><code>ediciones[].paginas</code></td><td>entero</td><td>De 1 a 10000</td></tr>
+<tr><td><code>ediciones[].editorial</code></td><td>texto</td><td>Hasta 100 caracteres</td></tr>
+<tr><td><code>ediciones[].idioma</code></td><td>texto</td><td>Hasta 40 caracteres</td></tr>
+<tr><td><code>ediciones[].anio</code></td><td>entero</td><td>De 1 a 2100</td></tr>
+<tr><th colspan="3">Solo peliculas</th></tr>
+<tr><td><code>anio_estreno</code></td><td>entero</td><td>De 1888 a 2100</td></tr>
+<tr><td><code>duracion_min</code></td><td>entero</td><td>De 1 a 1000 minutos</td></tr>
+<tr><td><code>plataformas[].nombre</code></td><td>texto</td><td>Hasta 30 plataformas, sin repetir</td></tr>
+<tr><td><code>datos_tecnicos.idioma_original</code></td><td>texto</td><td>Hasta 40 caracteres</td></tr>
+<tr><td><code>datos_tecnicos.paises</code></td><td>lista de textos</td><td>De 1 a 10</td></tr>
+<tr><td><code>datos_tecnicos.productoras</code></td><td>lista, opc.</td><td>Hasta 20</td></tr>
+<tr><td><code>datos_tecnicos.clasificacion</code></td><td>texto, opc.</td><td>Hasta 20 caracteres</td></tr>
+<tr><td><code>reparto[]</code></td><td>lista de objetos</td><td>Copia del grafo; hasta 300</td></tr>
+<tr><td><code>reparto[].persona_id</code></td><td>texto (UUID)</td><td>El mismo del nodo Persona</td></tr>
+<tr><td><code>reparto[].nombre</code>, <code>personaje</code></td><td>texto</td><td>Hasta 150 caracteres cada uno</td></tr>
+<tr><td><code>reparto[].orden</code></td><td>entero</td><td>Desde 1, sin repetir</td></tr>
+<tr><td><code>reparto[].foto_url</code></td><td>texto, opc.</td><td>Copia de la foto de la persona</td></tr>
+<tr><th colspan="3">resenas_comparativas</th></tr>
+<tr><td><code>_id</code></td><td>texto (UUID)</td><td>Identificador de la comparativa</td></tr>
+<tr><td><code>usuario_id</code>, <code>libro_id</code>, <code>pelicula_id</code></td><td>texto (UUID)</td><td>Referencias; no cambian</td></tr>
+<tr><td><code>veredicto.preferencia</code></td><td>texto</td><td><code>libro</code>, <code>pelicula</code> o <code>empate</code></td></tr>
+<tr><td><code>veredicto.comentario</code></td><td>texto, opc.</td><td>Hasta 2000 caracteres</td></tr>
+<tr><td><code>aspectos[]</code></td><td>lista de objetos</td><td>De 1 a 10</td></tr>
+<tr><td><code>aspectos[].nombre</code></td><td>texto</td><td>Libre, hasta 60 caracteres</td></tr>
+<tr><td><code>aspectos[].puntuacion</code></td><td>entero, opc.</td><td>De 1 a 5</td></tr>
+<tr><td><code>aspectos[].comentario</code></td><td>texto, opc.</td><td>Hasta 1000 caracteres</td></tr>
+<tr><td><code>oculta</code></td><td>booleano</td><td>Moderada por el administrador</td></tr>
+<tr><td><code>creado_en</code>, <code>actualizado_en</code></td><td>fecha</td><td>En UTC</td></tr>
+</tbody>
+</table>
+
+<h3>Diccionario del grafo</h3>
+<table>
+<thead><tr><th style="width:30%">Propiedad</th><th style="width:22%">Tipo</th><th>Significado y condición</th></tr></thead>
+<tbody>
+<tr><td><code>Persona.persona_id</code></td><td>texto (UUID)</td><td>Único</td></tr>
+<tr><td><code>Persona.nombre</code></td><td>texto</td><td>Hasta 150 caracteres; puede haber homónimos</td></tr>
+<tr><td><code>Persona.foto_url</code></td><td>texto, opc.</td><td>Dirección <code>https://</code> de la foto</td></tr>
+<tr><td><code>Libro.obra_id</code></td><td>texto (UUID)</td><td>Único; igual a la ficha</td></tr>
+<tr><td><code>Película.obra_id</code></td><td>texto (UUID)</td><td>Único; igual a la ficha</td></tr>
+<tr><td><code>Usuario.usuario_id</code></td><td>texto (UUID)</td><td>Único; igual a la base relacional</td></tr>
+<tr><td><code>actuó_en.personaje</code></td><td>texto</td><td>Personaje en esa película</td></tr>
+<tr><td><code>actuó_en.orden</code></td><td>entero</td><td>Lugar en el reparto, desde 1</td></tr>
+</tbody>
+</table>
+<p>Las relaciones <code>escribió</code>, <code>adaptado_a</code>, <code>dirigida_por</code>, <code>sigue</code> y <code>leyó</code> no llevan propiedades.</p>
+
+<h2>Reglas del dominio</h2>
+<p>Cada regla tiene un responsable concreto: la base de datos cuando puede imponerla y la API cuando no.</p>
+<table>
+<thead><tr><th style="width:11%">Regla</th><th>Enunciado</th><th style="width:35%">Quién la hace cumplir</th></tr></thead>
+<tbody>
+<tr><td>RN-01</td><td>Una reseña por usuario y obra</td><td>Restricción de unicidad relacional</td></tr>
+<tr><td>RN-02</td><td>Calificación de 1 a 5</td><td>Restricción de rango relacional</td></tr>
+<tr><td>RN-03</td><td>No seguirse a sí mismo ni dos veces a la misma persona</td><td>Restricción y clave primaria relacional</td></tr>
+<tr><td>RN-04</td><td>Una obra una sola vez por lista</td><td>Clave primaria compuesta</td></tr>
+<tr><td>RN-05</td><td>Una comparativa por usuario y pareja</td><td>Índice único documental</td></tr>
+<tr><td>RN-06</td><td>Comparar solo un libro con su adaptación</td><td>API, consultando el grafo antes de guardar</td></tr>
+<tr><td>RN-07</td><td>Cada película tiene un solo libro de origen</td><td>API, con bloqueo en el grafo</td></tr>
+<tr><td>RN-08</td><td>El promedio corresponde a las reseñas vigentes</td><td>Trigger y restricción de coherencia relacional</td></tr>
+<tr><td>RN-09</td><td>Solo el administrador modifica el catálogo</td><td>API, según el rol</td></tr>
+<tr><td>RN-10</td><td>Cada quien edita o borra solo lo suyo (el administrador puede moderar)</td><td>API, según la sesión</td></tr>
+<tr><td>RN-11</td><td>Un libro «le gustó» si lo terminó y lo calificó con 4 o más</td><td>Consulta relacional al recomendar</td></tr>
+</tbody>
+</table>
+<h3>Reglas que completan el modelo</h3>
+<ul>
+<li>Una obra en borrador no se reseña, marca ni lista, y no se compara (D-56).</li>
+<li>El grafo solo registra libros leídos; las películas terminadas no generan relación (D-16).</li>
+<li>No hay baja de obras ni borrado de relaciones del catálogo, así que una obra publicada no pierde su mínimo.</li>
+<li>Las imágenes viven fuera de las bases: solo se guarda su dirección (D-25).</li>
+</ul>
+
+<h2>Un mismo dominio, tres miradas</h2>
+<p>El criterio de este trabajo es que los tres modelos cuenten la misma historia sin contradecirse y que cada uno tenga una responsabilidad propia. La tabla siguiente muestra dónde está cada concepto.</p>
+<table>
+<thead><tr><th>Concepto</th><th>Relacional</th><th>Documental</th><th>Grafo</th></tr></thead>
+<tbody>
+<tr><td>Usuario</td><td><b>usuario</b></td><td>referencia en comparativas</td><td>nodo con id</td></tr>
+<tr><td>Libro o película</td><td>obra_resumen</td><td><b>ficha</b></td><td>nodo con id</td></tr>
+<tr><td>Persona</td><td>—</td><td>copia en reparto (actores)</td><td><b>nodo Persona</b></td></tr>
+<tr><td>Adaptación</td><td>—</td><td>—</td><td><b>adaptado_a</b></td></tr>
+<tr><td>Reseña y estado</td><td><b>resena, estado_obra</b></td><td>—</td><td>leyó (solo libros)</td></tr>
+<tr><td>Lista</td><td><b>lista, elemento_lista</b></td><td>—</td><td>—</td></tr>
+<tr><td>Seguimiento</td><td><b>seguimiento</b></td><td>—</td><td>sigue</td></tr>
+<tr><td>Comparativa</td><td>—</td><td><b>resenas_comparativas</b></td><td>—</td></tr>
+</tbody>
+</table>
+<p>En negritas está la fuente de verdad de cada concepto.</p>
+<h3>Comprobación con los datos de ejemplo</h3>
+<p>La coherencia no se dejó en el papel. El proyecto carga las tres bases desde un solo archivo de datos de ejemplo (la <i>semilla</i>): 8 usuarios, 17 libros, 18 películas, 50 personas, 27 reseñas, 6 comparativas, 10 seguimientos y 3 listas. Un script de verificación hace 13 comprobaciones entre bases, entre ellas que no haya obras huérfanas, que el reparto de las fichas coincida con el grafo y que los promedios coincidan con las reseñas visibles. En la ejecución guardada del 26 de noviembre pasaron las 13.</p>
+
+<h2>Limitaciones</h2>
+<ul>
+<li>La base relacional no puede comprobar que una obra exista también en las otras dos; eso depende del proceso de alta y de la verificación entre bases.</li>
+<li>La reconciliación, que corrige copias desfasadas, está en versión reducida: revisa seguimientos y libros leídos, pero no repara fichas, reparto, promedios, registros huérfanos ni borradores (D-64).</li>
+<li>La API exige un ISBN de 13 dígitos, pero no verifica su dígito de control ni convierte los ISBN de 10 dígitos.</li>
+<li>Algunas operaciones del diseño no se construyeron en la API: corregir una ficha, corregir o quitar ediciones y plataformas, cambiar la foto de una persona y purgar eventos procesados y sesiones vencidas.</li>
+<li>No hay un catálogo cerrado de géneros: se aceptan los textos que escriba el administrador.</li>
+<li>No se rechaza que una comparativa repita el nombre de un aspecto.</li>
+<li>El máximo de 300 personas y la regla de un solo libro por película no los impone el motor de grafo: dependen de que las escrituras pasen por la API.</li>
+</ul>
+
+<h2>Conclusión</h2>
+<p>El modelo parte de una idea sencilla, que la adaptación conecta libros, películas y lectores, y la reparte según lo que cada base hace mejor: la relacional cuida lo que no puede quedar a medias, la documental entrega fichas completas y comparaciones flexibles, y el grafo recorre las conexiones. Un identificador común y una fuente de verdad por dato mantienen a las tres hablando del mismo mundo.</p>
+
+<h2>Archivos del repositorio en los que se basa</h2>
+<ul>
+<li>Póster del proyecto: <code>243741-NadiaGuerraCuessy-Poster.pdf</code></li>
+<li><code>docs/requerimientos/levantamiento-requerimientos.md</code></li>
+<li><code>docs/modelado/matriz-responsabilidades.md</code>, <code>fuente-de-verdad.md</code> y <code>justificacion-tres-bases.md</code></li>
+<li><code>docs/modelado/relacional/</code>, <code>documental/</code> y <code>grafo/</code></li>
+<li><code>docs/decisiones_tomadas.md</code></li>
+<li><code>db/relacional/01-esquema.sql</code>, <code>02-indices.sql</code> y <code>03-trigger.sql</code></li>
+<li><code>db/documental/01-colecciones.js</code> y <code>02-indices.js</code></li>
+<li><code>db/grafo/01-restricciones.cypher</code></li>
+<li><code>shared/src/</code> y <code>backend/src/servicios/</code> (reglas que impone la API)</li>
+<li><code>db/semilla/README.md</code> (cantidades)</li>
+<li><code>db/evidencias/</code> (pruebas de cada base, hallazgo del interbloqueo y coherencia)</li>
+</ul>

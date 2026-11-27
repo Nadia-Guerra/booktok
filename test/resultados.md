@@ -9,7 +9,7 @@ El plan está en [plan-de-pruebas.md](plan-de-pruebas.md). Aquí solo se anota l
 | 3 | Unitarias del backend | **Hecha (2026-11-26)** |
 | 4 | Reconciliación reducida | **Hecha (2026-11-26)** |
 | 5 | Instalación limpia y documentación | **Hecha (2026-11-26)** |
-| 6 | Funcionales en el teléfono | Pendiente |
+| 6 | Funcionales en el teléfono | **Hecha en parte (2026-11-27), con Expo Go** |
 
 ## Condiciones
 
@@ -326,4 +326,32 @@ Cargan en el navegador de la computadora. La app se identifica con un nombre pro
 
 - Las pruebas de cada base por separado y la reconstrucción desde cero, porque borran las bases. Las que hay son de la semilla anterior.
 - La instalación desde una copia limpia, que no depende de los datos.
-- Las imágenes y los casos funcionales en el teléfono.
+- Las imágenes y los casos funcionales en el teléfono, que se hicieron el día siguiente: ver [Etapa 6](#etapa-6-funcionales-en-el-teléfono-2026-11-27).
+
+## Etapa 6: funcionales en el teléfono (2026-11-27)
+
+Teléfono Android real con **Expo Go** (no el APK), API y bases en el equipo, túnel rápido, semilla ampliada, una cuenta de prueba nueva y la de administrador. Capturas en [docs/reportes/capturas](../docs/reportes/capturas/), con la dirección del túnel tapada.
+
+| Caso | Resultado | Evidencia o lo que falta |
+|---|---|---|
+| CF-01 | Correcto | cf-01-a, cf-01-b |
+| CF-02 | Correcto | cf-02 |
+| CF-03 | Sin evidencia | Sin captura |
+| CF-04 | Parcial | cf-04, cf-05 y cf-10-a: publicada y terminada. Falta el promedio nuevo |
+| CF-05 | Correcto | cf-05 |
+| CF-06 | Correcto | cf-06-a, b y c |
+| CF-07 | Correcto | cf-07 |
+| CF-08 | Parcial | cf-08-a y b: creada. Faltan la edición y el segundo intento |
+| CF-09 | Parcial | cf-09: lista con una obra. Faltan ordenar y borrar |
+| CF-10 | Correcto | cf-10-a y b; sin sesión, por HTTP ([salida](evidencias/telefono-api.txt)) |
+| CF-11 | Correcto | cf-02 (perfil sin Administración) |
+| CF-12 | Sin evidencia | Sin captura |
+| CF-13 | Sin evidencia | Sin captura; la cuenta de prueba sigue existiendo |
+
+Además, como administrador se registraron desde el teléfono personas, un libro y su película; ambas obras quedaron publicadas ([salida](evidencias/telefono-api.txt)).
+
+Después del recorrido: coherencia **13 de 13** ([salida](evidencias/telefono-coherencia.txt)) y 16 eventos de sincronización procesados, ninguno pendiente ni fallido.
+
+**Falla encontrada:** en el teléfono no cargan los pósteres de película ni las fotos de personas (Wikimedia); las portadas de libro sí. Desde el equipo, la misma dirección responde 200 con el identificador que envía la app y 403 con el que Android usa por defecto. La causa en el teléfono no se ha determinado.
+
+Los datos creados (cuenta de prueba, su reseña oculta, comparativa, lista, y el libro y la película nuevos) siguen en las bases: la semilla ya no está limpia.

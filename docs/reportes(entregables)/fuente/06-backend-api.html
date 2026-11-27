@@ -1,0 +1,217 @@
+<!-- nombre: Backend y API -->
+<h1>DuoBook: el intermediario que coordina las tres bases</h1>
+
+<h2>Preámbulo</h2>
+<p><b>DuoBook</b> es una aplicación móvil para registrar, reseñar y comparar libros y sus adaptaciones al cine, y para descubrir obras por las conexiones entre autores, directores, actores y lectores. Entre las pantallas y las tres bases de datos hay una pieza que no se ve y sin la cual nada funcionaría: el <i>backend</i>, el programa que recibe las peticiones, aplica las reglas y decide qué base consultar.</p>
+<p>Su puerta de entrada es la <i>API</i>, el conjunto de operaciones que la aplicación puede pedirle. Este documento cuenta qué estilo de API se eligió, cómo está organizado el código, cómo se conecta con las bases, cómo valida, autoriza y responde a los errores, dónde guarda sus credenciales y cómo se documenta y se prueba.</p>
+<p>Se llama <i>obra</i> a un libro o a una película. RF identifica un requerimiento funcional; RN, una regla de negocio, y D, una decisión de diseño.</p>
+
+<h2>La decisión: una API REST</h2>
+<p>Una API <i>REST</i> organiza sus operaciones como direcciones web: se pide una ficha con <code>GET /obras/{id}</code>, se publica una reseña con <code>PUT</code> y se elimina con <code>DELETE</code>. Los datos viajan en <i>JSON</i>, un formato de texto con nombres y valores. Todas las direcciones empiezan por <code>/api/v1</code>, de modo que una versión futura no rompa las aplicaciones instaladas.</p>
+<p>La alternativa era <i>GraphQL</i>, donde el cliente compone sus propias consultas. Se descartó (D-52): hay un solo cliente y un conjunto de operaciones conocido; habría añadido librerías en ambos lados, el riesgo de encadenar consultas a tres bases sin control y una forma distinta de manejar errores. La autorización, además, se aplica con naturalidad operación por operación.</p>
+<p>Está escrita en TypeScript sobre Node 24 con Express 5 (D-32, D-60). Es un solo programa, ordenado en módulos, que lleva dentro el sincronizador que copia cambios entre bases (D-29).</p>
+
+<h2>Cómo está organizado</h2>
+<p>El código se divide en tres carpetas: <code>backend/</code> (la API), <code>frontend/</code> (la app) y <code>shared/</code>, con las definiciones de datos que usan las dos (D-53). Dentro del backend, tres capas separan responsabilidades.</p>
+<table>
+<thead><tr><th style="width:22%">Capa</th><th>Qué hace</th><th style="width:34%">Qué tiene prohibido</th></tr></thead>
+<tbody>
+<tr><td><b>Rutas</b> (controladores)</td><td>Reciben la petición, comprueban sesión, rol y formato, y llaman a un servicio</td><td>Reglas de negocio y consultas</td></tr>
+<tr><td><b>Servicios</b></td><td>Aplican las reglas, ordenan los pasos y combinan bases</td><td>Escribir consultas</td></tr>
+<tr><td><b>Repositorios</b></td><td>Ejecutan las consultas de una sola base</td><td>Reglas y llamarse entre sí</td></tr>
+</tbody>
+</table>
+<p>Hay nueve archivos de rutas, un servicio por área (cuentas, catálogo, reseñas, listas, social, comparativas, descubrimiento, administración, sincronización y reconciliación) y tres carpetas de repositorios: relacional, documental y grafo. En el código, cada consulta anota el identificador del catálogo de operaciones (por ejemplo <code>O7</code> o <code>AP-18</code>), para poder rastrearla.</p>
+<p>La ruta de publicar una reseña muestra lo delgada que es la primera capa: valida los datos, llama al servicio y elige el código de respuesta.</p>
+<pre>rutasResenas.put('/obras/:obra_id/resena', exigirSesion, async (req, res) =&gt; {
+  const { obra_id } = parametrosObra.parse(req.params);
+  const entrada = resenaEntrada.parse(req.body ?? {});
+  const { creada, ...cuerpo } = await resenas.publicar(sesionDe(res), obra_id, entrada);
+  res.status(creada ? 201 : 200).json(cuerpo);
+});</pre>
+
+<h2>Conexión con las bases</h2>
+<p>Cada motor se usa con su <i>controlador oficial</i>, la librería que el propio fabricante o su comunidad mantienen: <code>pg</code> para PostgreSQL, <code>mongodb</code> para MongoDB y <code>neo4j-driver</code> para Neo4j. No se usan capas que generen consultas automáticamente (ORM u ODM): así se ve exactamente qué se ejecuta. La conexión con cada base vive en un módulo propio.</p>
+<table class="junto">
+<thead><tr><th>Ajuste</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>Conexiones simultáneas a PostgreSQL</td><td>Hasta 10 (la base admite 20)</td></tr>
+<tr><td>Tiempo para conectar a PostgreSQL</td><td>3 segundos</td></tr>
+<tr><td>Tiempo para conectar a Neo4j</td><td>5 segundos</td></tr>
+<tr><td>Límite de una escritura en Neo4j</td><td>30 segundos</td></tr>
+</tbody>
+</table>
+<p>Para saber si las tres responden existe <code>GET /salud</code>. Responde con el estado de la API y de cada base; si una falla, dice <code>degradado</code> y la marca como caída, sin detalles internos.</p>
+<pre>{ "estado": "ok", "api": "ok",
+  "bases": { "postgres": "ok", "mongo": "ok", "neo4j": "ok" } }</pre>
+
+<h2>Las operaciones de la API</h2>
+<p>La API construida tiene <b>41 operaciones</b>. La columna «Acceso» indica quién puede llamarlas: <i>público</i> (sin sesión), <i>sesión</i> (cualquier usuario identificado) o <i>admin</i>.</p>
+<h3>Cuentas y catálogo</h3>
+<table>
+<thead><tr><th style="width:45%">Operación</th><th>Para qué</th><th style="width:16%">Acceso</th></tr></thead>
+<tbody>
+<tr><td><code>GET /salud</code></td><td>Estado de la API y las bases</td><td>Público</td></tr>
+<tr><td><code>POST /auth/registro</code></td><td>Registrarse</td><td>Público</td></tr>
+<tr><td><code>POST /auth/sesion</code></td><td>Iniciar sesión</td><td>Público</td></tr>
+<tr><td><code>DELETE /auth/sesion</code></td><td>Cerrar sesión</td><td>Sesión</td></tr>
+<tr><td><code>GET</code>, <code>PATCH</code>, <code>DELETE /me</code></td><td>Ver, editar y eliminar mi cuenta</td><td>Sesión</td></tr>
+<tr><td><code>GET /obras</code></td><td>Buscar por título o por persona</td><td>Público</td></tr>
+<tr><td><code>GET /obras/{id}</code></td><td>Ficha de un libro o una película</td><td>Público</td></tr>
+</tbody>
+</table>
+<h3>Reseñas, estados y red social</h3>
+<table>
+<thead><tr><th style="width:45%">Operación</th><th>Para qué</th><th style="width:16%">Acceso</th></tr></thead>
+<tbody>
+<tr><td><code>GET /resenas</code></td><td>Reseñas de una obra o de una persona</td><td>Público*</td></tr>
+<tr><td><code>PUT /obras/{id}/resena</code></td><td>Publicar o editar la propia</td><td>Sesión</td></tr>
+<tr><td><code>PATCH /resenas/{id}</code></td><td>Ocultar o mostrar</td><td>Admin</td></tr>
+<tr><td><code>DELETE /resenas/{id}</code></td><td>Eliminar la propia o moderar</td><td>Sesión</td></tr>
+<tr><td><code>PUT /me/estados/{id}</code>, <code>GET /me/estados</code></td><td>Pendiente, en curso, terminada</td><td>Sesión</td></tr>
+<tr><td><code>POST /me/seguidos</code>, <code>DELETE /me/seguidos/{id}</code></td><td>Seguir y dejar de seguir</td><td>Sesión</td></tr>
+<tr><td><code>GET /me/seguimientos</code></td><td>A quién sigo y quién me sigue</td><td>Sesión</td></tr>
+<tr><td><code>GET /usuarios/{id}</code></td><td>Perfil de otra persona</td><td>Sesión</td></tr>
+</tbody>
+</table>
+<p>* Las reseñas de una obra son públicas; el historial de una persona solo lo ven quienes la siguen y el administrador (D-54).</p>
+<h3>Descubrimiento, comparativas y listas</h3>
+<table>
+<thead><tr><th style="width:45%">Operación</th><th>Para qué</th><th style="width:16%">Acceso</th></tr></thead>
+<tbody>
+<tr><td><code>GET /exploracion/caminos</code></td><td>Caminos entre dos personas u obras</td><td>Sesión</td></tr>
+<tr><td><code>GET /personas/{id}/autores-relacionados</code></td><td>Autores que adaptó un director</td><td>Sesión</td></tr>
+<tr><td><code>GET /me/recomendaciones</code></td><td>Libros y películas recomendados</td><td>Sesión</td></tr>
+<tr><td><code>GET /comparativas</code></td><td>De una adaptación o de una persona</td><td>Público*</td></tr>
+<tr><td><code>POST /comparativas</code>, <code>PUT</code> y <code>DELETE /comparativas/{id}</code></td><td>Publicar, editar y eliminar</td><td>Sesión</td></tr>
+<tr><td><code>PATCH /comparativas/{id}</code></td><td>Ocultar o mostrar</td><td>Admin</td></tr>
+<tr><td><code>GET</code> y <code>POST /me/listas</code></td><td>Mis listas</td><td>Sesión</td></tr>
+<tr><td><code>GET</code>, <code>PATCH</code>, <code>DELETE /listas/{id}</code></td><td>Ver, renombrar, ordenar y borrar</td><td>Sesión</td></tr>
+<tr><td><code>POST /listas/{id}/obras</code>, <code>DELETE …/obras/{obra}</code></td><td>Agregar y quitar obras</td><td>Sesión</td></tr>
+</tbody>
+</table>
+<h3>Administración</h3>
+<table>
+<thead><tr><th style="width:45%">Operación</th><th>Para qué</th><th style="width:16%">Acceso</th></tr></thead>
+<tbody>
+<tr><td><code>GET</code> y <code>POST /admin/personas</code></td><td>Buscar y registrar personas</td><td>Admin</td></tr>
+<tr><td><code>POST /admin/libros</code></td><td>Alta de un libro</td><td>Admin</td></tr>
+<tr><td><code>POST /admin/peliculas</code></td><td>Alta de una adaptación</td><td>Admin</td></tr>
+<tr><td><code>POST /admin/obras/{id}/publicacion</code></td><td>Completar un alta interrumpida</td><td>Admin</td></tr>
+<tr><td><code>POST /admin/libros/{id}/ediciones</code></td><td>Agregar una edición</td><td>Admin</td></tr>
+<tr><td><code>POST /admin/peliculas/{id}/plataformas</code></td><td>Agregar una plataforma</td><td>Admin</td></tr>
+</tbody>
+</table>
+<p>El diseño propuso 51 operaciones y se decidió construirlas por prioridad (D-59). Se llegó a 41; las diez restantes se listan en las limitaciones.</p>
+
+<h2>Validación de entradas</h2>
+<p>Todo lo que llega se revisa antes de tocar una base, con <i>Zod</i>, una librería que describe cómo debe ser cada dato. Las definiciones están en <code>shared/</code> y las usa también la aplicación, de modo que el formulario avisa pronto y la API vuelve a comprobar: nunca se confía en el teléfono (D-37).</p>
+<pre>export const resenaEntrada = z.object({
+  calificacion: z.number('La calificación es un número del 1 al 5')
+    .int('La calificación es un número entero')
+    .min(1, 'La calificación mínima es 1')
+    .max(5, 'La calificación máxima es 5'),
+  texto: z.string() ...   // hasta 3000 caracteres
+});</pre>
+<p>Entre otras cosas se exige: identificadores y correos en minúsculas, contraseñas de al menos 8 caracteres, calificaciones de 1 a 5, imágenes con <code>https://</code>, repartos sin personas ni posiciones repetidas y un máximo de 100 KB por petición. Los listados largos se entregan en páginas de 20 (hasta 50) con un <i>cursor</i>, una marca de por dónde seguir; el cursor se valida y conserva la hora con precisión de millonésimas de segundo para no saltarse filas.</p>
+
+<h2>Autorización: quién puede qué</h2>
+<p>Al iniciar sesión, la API entrega un <i>token</i>, un código aleatorio que la aplicación presenta en cada petición. En la base solo se guarda su huella, así que aun leyendo la base no se podría usar. Vence a los 30 días y cerrar sesión lo elimina (D-35). El rol se consulta en cada petición, por lo que un cambio surte efecto de inmediato.</p>
+<pre>export const exigirAdmin: RequestHandler = async (req, res, next) =&gt; {
+  const sesion = await sesionDeLaCabecera(req);          // 401 sin sesión
+  if (sesion.rol !== 'admin')
+    throw new ErrorApi('sin_permiso', 'Solo el administrador puede hacer esto');
+  res.locals.sesion = sesion;
+  next();
+};</pre>
+<p>Además del rol, está la <i>propiedad</i> (RN-10): al editar o borrar, la consulta incluye el identificador de quien tiene la sesión, así que nadie toca lo ajeno. El administrador sí puede moderar. Las contraseñas se guardan con <i>bcrypt</i>, deliberadamente lento (D-61). Si el correo no existe o la contraseña falla, la respuesta es idéntica y tarda parecido: se compara contra una huella señuelo, para no revelar qué correos están registrados.</p>
+
+<h2>Manejo de errores</h2>
+<p>Un solo manejador convierte cualquier fallo en una respuesta con la misma forma: un código, un mensaje en español y, si aplica, qué campo está mal. Nunca incluye trazas ni mensajes crudos de un motor.</p>
+<pre>{ "error": { "codigo": "entrada_invalida",
+             "mensaje": "Revisa los datos enviados",
+             "campos": { "calificacion": "La calificación máxima es 5" } } }</pre>
+<table>
+<thead><tr><th style="width:14%">Estado</th><th style="width:30%">Código</th><th>Cuándo</th></tr></thead>
+<tbody>
+<tr><td>400</td><td><code>entrada_invalida</code></td><td>Datos mal formados</td></tr>
+<tr><td>401</td><td><code>sin_sesion</code></td><td>Sin sesión o vencida</td></tr>
+<tr><td>403</td><td><code>sin_permiso</code></td><td>El rol no alcanza</td></tr>
+<tr><td>404</td><td><code>no_encontrado</code></td><td>No existe, o es un borrador</td></tr>
+<tr><td>409</td><td><code>conflicto</code></td><td>Duplicado o regla incumplida, como comparar obras que no son adaptación</td></tr>
+<tr><td>413</td><td><code>demasiado_grande</code></td><td>Petición demasiado grande</td></tr>
+<tr><td>503</td><td><code>base_no_disponible</code></td><td>Una base no responde; se puede reintentar</td></tr>
+<tr><td>500</td><td><code>error_interno</code></td><td>Algo inesperado</td></tr>
+</tbody>
+</table>
+<p>La API distingue un fallo de la petición de un fallo de la base: reconoce errores de red, bases que están arrancando y esperas agotadas, y los responde como 503. Los registros anotan método, ruta, estado y duración; nunca cuerpos, cabeceras ni parámetros de búsqueda.</p>
+
+<h2>Consultas parametrizadas</h2>
+<p>Una consulta <i>parametrizada</i> envía por separado la instrucción y los datos, de modo que un texto escrito por alguien nunca se interpreta como parte de la orden. Así se evita la <i>inyección</i>. Las tres bases lo hacen:</p>
+<pre>// PostgreSQL: los valores van en $1, $2
+cliente.query('SELECT resena_id FROM resena
+               WHERE usuario_id = $1 AND obra_id = $2 FOR UPDATE', [usuario, obra]);
+
+// MongoDB: filtros construidos solo con datos ya validados
+{ $match: { $text: { $search: texto }, estado_publicacion: 'publicada' } }
+
+// Neo4j: parámetros con nombre
+leerGrafo(CG01, { texto: consulta });</pre>
+<p>Hay dos cuidados propios. En MongoDB, validar primero los tipos impide que alguien envíe un operador como <code>$ne</code> en lugar de un texto. En Neo4j, la búsqueda por nombre interpreta ciertos símbolos como órdenes, así que se eliminan antes de enviarla, y si no queda nada no se consulta (D-41).</p>
+
+<h2>Configuración y credenciales</h2>
+<p>La API lee su configuración de <i>variables de entorno</i>, valores que se le pasan desde fuera del código: puertos, nombres de las bases, usuarios y contraseñas. Se toman de un archivo <code>.env</code> que no se guarda en el repositorio, y hay un <code>.env.example</code> con la lista. Al arrancar se comprueba que estén todas; si falta alguna, el programa se detiene y nombra la variable, nunca su valor.</p>
+
+<h2>La API como coordinadora</h2>
+<p>El valor del backend está en las operaciones que cruzan bases y en las reglas que ninguna base puede imponer sola.</p>
+<h3>Publicar una reseña</h3>
+<p>El servicio comprueba que la obra esté publicada, pide a PostgreSQL una sola transacción (reseña, estado «terminada» y evento) y avisa al sincronizador. El promedio lo calcula la base. Si la persona ya tenía una reseña de esa obra, la misma operación la edita.</p>
+<h3>Comparar un libro con su película</h3>
+<p>Antes de guardar, el servicio pide las dos fichas a MongoDB y pregunta al grafo si la película es adaptación del libro (RN-06). Si no lo es, responde 409; si el grafo no responde, no guarda nada.</p>
+<h3>Recomendar</h3>
+<p>PostgreSQL entrega los libros que gustaron; Neo4j busca otros por el mismo director y los de las personas seguidas; MongoDB completa títulos y portadas.</p>
+<h3>Dar de alta una obra</h3>
+<p>No hay una transacción que abarque tres bases, así que el servicio sigue un orden: ficha como borrador, registro en PostgreSQL, nodo y relaciones, copia del reparto, comprobación del mínimo y publicación. Si falla después de crear la ficha, responde 503 <b>con el identificador</b> para completar la publicación sin duplicar (D-58). La respuesta nunca dice que todo salió bien si no fue así.</p>
+<h3>Copiar los cambios</h3>
+<p>El sincronizador toma los eventos pendientes en orden, los aplica de forma repetible, espera si una base está caída y aparta como fallido el que falla cinco veces por sí mismo. Un comando de reconciliación revisa seguimientos y libros leídos contra el grafo (D-64).</p>
+
+<h2>Documentación del contrato</h2>
+<p>El contrato está en <code>docs/api/openapi.yaml</code>, en formato <i>OpenAPI</i>: un archivo estándar que describe cada operación, lo que recibe, lo que responde y sus errores, y que herramientas habituales pueden leer. Describe las 41 operaciones construidas. El documento <code>docs/api/endpoints.md</code> conserva la propuesta completa de 51. La interfaz no contiene credenciales ni conexiones a bases: solo conoce este contrato.</p>
+
+<h2>Pruebas del backend</h2>
+<p>La suite completa se ejecutó sobre las tres bases reales con la semilla ampliada: <b>119 de 119 pruebas correctas</b> en 3 minutos (26 de noviembre).</p>
+<table>
+<thead><tr><th style="width:24%">Qué demuestra</th><th>Cómo</th></tr></thead>
+<tbody>
+<tr><td>Conectividad</td><td>Salud responde con las tres bases; una caída da 503</td></tr>
+<tr><td>Casos de uso</td><td>Cuentas, catálogo, reseñas, social, listas, comparativas, descubrimiento y administración, por HTTP</td></tr>
+<tr><td>Integridad</td><td>Una reseña y una comparativa por pareja; el promedio no se descuadra con peticiones simultáneas</td></tr>
+<tr><td>Integración</td><td>Reseñar y seguir cambia las recomendaciones; eliminar una cuenta la borra en las tres bases</td></tr>
+<tr><td>Consistencia</td><td>Repetir un evento no duplica; los eventos respetan el orden; la reconciliación detecta y corrige</td></tr>
+<tr><td>Errores</td><td>400, 401, 403, 404, 409 y 503; transacción a medias; destino caído sin perder eventos; alta a medias</td></tr>
+<tr><td>Reglas sin bases</td><td>16 pruebas unitarias de formatos, cursor, errores y limpieza de la búsqueda</td></tr>
+</tbody>
+</table>
+
+<h2>Limitaciones</h2>
+<ul>
+<li>De las 51 operaciones propuestas, diez no se construyeron: consultar una comparativa suelta, cambiar la foto de una persona, corregir una obra, corregir o quitar ediciones y plataformas, agregar relaciones o el libro de origen a una obra ya creada, y consultar el estado de la sincronización.</li>
+<li>No hay límite de intentos de inicio de sesión ni de peticiones.</li>
+<li>Solo puede ejecutarse una copia de la API.</li>
+<li>La reconciliación es reducida y no se purgan eventos procesados ni sesiones vencidas.</li>
+<li>La validación del ISBN no comprueba su dígito de control.</li>
+<li>El contrato OpenAPI se mantiene a mano junto al código.</li>
+</ul>
+
+<h2>Conclusión</h2>
+<p>El backend de DuoBook cumple su papel de intermediario: la aplicación pide en un solo idioma y recibe una sola respuesta, aunque detrás intervengan tres bases distintas. Las reglas viven en un lugar, las consultas en otro y los errores se cuentan de una sola manera.</p>
+
+<h2>Archivos del repositorio en los que se basa</h2>
+<ul>
+<li><code>backend/src/</code>, <code>backend/test/</code> y <code>backend/package.json</code></li>
+<li><code>shared/src/</code></li>
+<li><code>docs/api/openapi.yaml</code> y <code>endpoints.md</code></li>
+<li><code>docs/decisiones_tomadas.md</code></li>
+<li><code>test/resultados.md</code></li>
+<li><code>.env.example</code> (solo nombres)</li>
+</ul>
