@@ -5,6 +5,9 @@ import { clases } from './clases';
 
 const FONDOS = ['bg-portada-1', 'bg-portada-2', 'bg-portada-3', 'bg-portada-4'];
 
+// Wikimedia rechaza (403) el identificador que Android manda por defecto y pide uno propio.
+const CABECERAS = { 'User-Agent': 'app-de-resenas/1.0 (proyecto escolar)' };
+
 /** El mismo texto da siempre el mismo color. */
 function fondoPara(texto: string): string {
   let suma = 0;
@@ -32,7 +35,11 @@ export function Imagen({ url, nombre, className, reemplazo }: Props) {
     >
       {reemplazo}
       {visible ? (
-        <Image source={{ uri: url }} onError={() => setFallo(url)} className="absolute inset-0 h-full w-full" />
+        <Image
+          source={{ uri: url, headers: CABECERAS }}
+          onError={() => setFallo(url)}
+          className="absolute inset-0 h-full w-full"
+        />
       ) : null}
     </View>
   );
