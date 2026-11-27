@@ -355,3 +355,22 @@ Después del recorrido: coherencia **13 de 13** ([salida](evidencias/telefono-co
 **Falla encontrada:** en el teléfono no cargan los pósteres de película ni las fotos de personas (Wikimedia); las portadas de libro sí. Desde el equipo, la misma dirección responde 200 con el identificador que envía la app y 403 con el que Android usa por defecto. Causa probable, hallada después: Wikimedia limita las peticiones seguidas (429). Después se agregaron reintentos con esperas crecientes; simulado desde el equipo, cargan 65 de 65 (la última a los 89 s). **No comprobado en el teléfono.**
 
 Los datos creados (cuenta de prueba, su reseña oculta, comparativa, lista, y el libro y la película nuevos) siguen en las bases: la semilla ya no está limpia.
+
+## Instalación desde una copia limpia, repetida (2026-11-27)
+
+Copia nueva del repositorio con el código final (el mismo de `master`), con `.env` copiado de `.env.example`.
+
+| Paso | Resultado |
+|---|---|
+| `npm ci` | Correcto: 644 paquetes en unos 2 minutos |
+| `npm run typecheck` | Sin errores |
+| Unitarias de la app y del backend | 8 de 8 y 16 de 16 |
+| Definición de contenedores (`docker compose config`) | Válida |
+| Imagen de la API | Construida |
+| Empaquetado de la app para Android | Correcto, 1516 módulos |
+
+No se crearon las bases en esta repetición.
+
+## Segunda prueba en el teléfono (2026-11-27)
+
+Con Expo Go y el código final (nombre DuoBook, Expo 58.1 y reintento de imágenes), probado por la usuaria sin guardar capturas: **algunas imágenes siguen sin cargar** y se deja así. Causa probable, no confirmada en el teléfono: dependen de sitios de terceros (Wikimedia, Open Library) que limitan las peticiones seguidas. Los pósteres tienen derechos de autor, así que no se copian al proyecto; solo se guarda su dirección.
