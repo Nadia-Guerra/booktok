@@ -1,0 +1,23 @@
+Fecha: 2026-11-27T03:22:05.610Z
+Equipo: Windows_NT 10.0.26200, AMD Ryzen 5 3550H with Radeon Vega Mobile Gfx (8 hilos)
+Memoria: 5.9 GB, libre al empezar 0.6 GB
+Node v24.14.0. Llamadas a http://127.0.0.1:3000/api/v1, una a la vez.
+
+50 llamadas por flujo, despues de 5 de calentamiento
+
+| Flujo | Minimo | Mediana | p95 | Maximo | Objetivo p95 | Cumple |
+|---|---|---|---|---|---|---|
+| Salud (EP-01) | 6 ms | 9 ms | 21 ms | 36 ms | 1000 ms | si |
+| Iniciar sesion (EP-03) | 63 ms | 66 ms | 124 ms | 226 ms | 1000 ms | si |
+| Buscar por titulo (EP-08) | 4 ms | 5 ms | 7 ms | 8 ms | 1000 ms | si |
+| Buscar por persona (EP-08) | 12 ms | 16 ms | 42 ms | 82 ms | 2000 ms | si |
+| Ficha de libro (EP-09) | 19 ms | 25 ms | 53 ms | 59 ms | 1000 ms | si |
+| Ficha de pelicula (EP-09) | 20 ms | 24 ms | 42 ms | 52 ms | 1000 ms | si |
+| Resenas de una obra (EP-10) | 7 ms | 8 ms | 11 ms | 16 ms | 1000 ms | si |
+| Publicar una resena (EP-11) | 11 ms | 14 ms | 68 ms | 80 ms | 1000 ms | si |
+| Recomendaciones de libros (EP-18) | 17 ms | 25 ms | 55 ms | 72 ms | 2000 ms | si |
+| Recomendaciones de peliculas (EP-18) | 13 ms | 16 ms | 27 ms | 39 ms | 2000 ms | si |
+| Caminos entre dos personas (EP-16) | 15 ms | 19 ms | 27 ms | 29 ms | 2000 ms | si |
+| Autores de un director (EP-17) | 12 ms | 15 ms | 23 ms | 90 ms | 2000 ms | si |
+
+Flujos que no cumplen su objetivo: 0 de 12

@@ -1,6 +1,6 @@
-Coherencia entre bases - 2026-11-26 21:02:52
+Coherencia entre bases - 2026-11-26 21:26:10
 
-Lectura: PostgreSQL 1.4 s, MongoDB 7.6 s, Neo4j 0.9 s
+Lectura: PostgreSQL 1.3 s, MongoDB 5.1 s, Neo4j 1.1 s
 
 PASA   C-01  ids UUID en minusculas en las tres bases
          -> 14 columnas UUID en PostgreSQL; 35 fichas y 6 comparativas en MongoDB; 93 nodos en Neo4j
@@ -29,4 +29,4 @@ PASA   C-12  ISBN sin repetir entre libros y mezcla de libros con y sin ISBN
 PASA   C-13  existe al menos un administrador
          -> 1 administrador(es)
 
-Todo cuadra: 13 de 13 comprobaciones pasan.  (11 s)
+Todo cuadra: 13 de 13 comprobaciones pasan.  (8 s)

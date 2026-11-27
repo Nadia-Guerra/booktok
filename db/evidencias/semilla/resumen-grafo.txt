@@ -1,4 +1,4 @@
-Consultas del grafo sobre la semilla - 2026-11-26 21:02:50
+Consultas del grafo sobre la semilla - 2026-11-26 21:26:09
 Neo4j 5.26.34 Community
 
-PASA   01-consultas       52 de 52 pasos  (13.2 s)
+PASA   01-consultas       52 de 52 pasos  (26.2 s)

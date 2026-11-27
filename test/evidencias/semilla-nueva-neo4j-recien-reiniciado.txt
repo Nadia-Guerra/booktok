@@ -1,0 +1,30 @@
+== reinicio 1
+Fecha: 2026-11-27T03:23:09.188Z
+Equipo: Windows_NT 10.0.26200, AMD Ryzen 5 3550H with Radeon Vega Mobile Gfx (8 hilos)
+Memoria: 5.9 GB, libre al empezar 0.5 GB
+Node v24.14.0. Llamadas a http://127.0.0.1:3000/api/v1, una a la vez.
+
+Primera llamada al grafo y la siguiente (ejecutar justo despues de reiniciar Neo4j)
+
+| Flujo | Primera | Segunda |
+|---|---|---|
+| Recomendaciones de libros (EP-18) | 11489 ms | 159 ms |
+| Caminos entre dos personas (EP-16) | 3458 ms | 56 ms |
+| Autores de un director (EP-17) | 914 ms | 43 ms |
+| Buscar por persona (EP-08) | 1459 ms | 28 ms |
+
+== reinicio 2
+Fecha: 2026-11-27T03:23:56.345Z
+Equipo: Windows_NT 10.0.26200, AMD Ryzen 5 3550H with Radeon Vega Mobile Gfx (8 hilos)
+Memoria: 5.9 GB, libre al empezar 0.7 GB
+Node v24.14.0. Llamadas a http://127.0.0.1:3000/api/v1, una a la vez.
+
+Primera llamada al grafo y la siguiente (ejecutar justo despues de reiniciar Neo4j)
+
+| Flujo | Primera | Segunda |
+|---|---|---|
+| Recomendaciones de libros (EP-18) | 4202 ms | 40 ms |
+| Caminos entre dos personas (EP-16) | 1229 ms | 31 ms |
+| Autores de un director (EP-17) | 315 ms | 24 ms |
+| Buscar por persona (EP-08) | 547 ms | 33 ms |
+

@@ -1,4 +1,4 @@
-Pruebas del grafo: 01-consultas  (2026-11-26 21:02:37)
+Pruebas del grafo: 01-consultas  (2026-11-26 21:25:43)
 
 PASA   S-01.1    CG-01 sobre la semilla / Villeneuve dirigió 3 películas (Dune 2021, Dune parte dos y La llegada)
              -> valor 3|3|dirigida_por
@@ -105,4 +105,4 @@ PASA   S-10.9    CG-21, CG-22 y CG-23 sobre la semilla / CG-23: Ana sigue a Pedr
 PASA   S-10.10   CG-21, CG-22 y CG-23 sobre la semilla / CG-23: el administrador no tiene relaciones sigue ni leyó
              -> valor 0|0
 
-Pasan 52 de 52, fallan 0.  (13.2 s)
+Pasan 52 de 52, fallan 0.  (26.2 s)

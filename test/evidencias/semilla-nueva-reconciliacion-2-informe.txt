@@ -1,0 +1,21 @@
+
+> @dlbp/backend@0.1.0 reconciliar
+> node --env-file=../.env src/reconciliar.ts
+
+Reconciliación - 2026-11-27T03:24:40.492Z - solo informe
+
+Estado encontrado
+  Eventos sin aplicar: 0 pendientes y 0 fallidos
+  sigue: 11 en PostgreSQL, faltan 1 y sobran 0 en el grafo
+    falta  64b4fb6a-3fa0-49ff-8614-5fcd2cefe482 -> 568019fb-075e-4e12-8034-de37af7c3998
+  leyó: 15 en PostgreSQL, faltan 1 y sobran 0 en el grafo
+    falta  64b4fb6a-3fa0-49ff-8614-5fcd2cefe482 -> b1000000-0000-4000-8000-000000000001
+
+Resultado: hay diferencias. Para corregirlas, repite con --corregir.
+npm error Lifecycle script `reconciliar` failed with error:
+npm error code 1
+npm error path D:\dev\Proyecto Final BD\backend
+npm error workspace @dlbp/backend@0.1.0
+npm error location D:\dev\Proyecto Final BD\backend
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c node --env-file=../.env src/reconciliar.ts

@@ -260,15 +260,70 @@ Las pruebas tardan según la memoria libre: en las etapas anteriores, cada mitad
 
 ## Semilla ampliada (2026-11-26)
 
-La semilla pasó a 17 libros, 18 películas, 50 personas, 27 reseñas y 6 comparativas, con direcciones de imagen reales (`db/semilla/README.md`). Solo se agregaron datos, así que los escenarios de recomendaciones y caminos no cambiaron. Se actualizaron los resultados esperados que dependen de los conteos y de las fichas sin imagen.
+**Estas son las cifras vigentes.** La semilla pasó a 17 libros, 18 películas, 50 personas (93 nodos en el grafo), 8 usuarios, 27 reseñas y 6 comparativas, con direcciones de imagen reales (`db/semilla/README.md`). Solo se agregaron datos, así que los escenarios de recomendaciones y caminos no cambiaron. Se actualizaron los resultados esperados que dependen de los conteos y de las fichas sin imagen.
+
+### Pruebas
 
 | Prueba | Resultado | Evidencia |
 |---|---|---|
-| `npm test`, la suite completa | **119 de 119** en 4 min 28 s | [salida](evidencias/semilla-nueva-npm-test.txt) |
-| Consultas representativas de las tres bases y coherencia | Todo pasa, 13 de 13 | [resumen](../db/evidencias/semilla/resumen.txt) |
-| Tipos y unitarias de la app, con el cambio de las imágenes | Sin errores, 8 de 8 | |
-| Imágenes en el navegador de la computadora | Cargan | |
+| Coherencia entre bases, antes | 13 de 13 | [antes](evidencias/semilla-nueva-coherencia-antes.txt) |
+| Tipos de `shared`, `backend` y `frontend` | Sin errores | [salida](evidencias/semilla-nueva-tipos-y-unitarias.txt) |
+| Unitarias de la app y del backend | 8 de 8 y 16 de 16 | [salida](evidencias/semilla-nueva-tipos-y-unitarias.txt) |
+| `npm test`, la suite completa | **119 de 119** en 3 min 3 s | [salida](evidencias/semilla-nueva-npm-test.txt) |
+| Consultas representativas de las tres bases | Todo pasa | [resumen](../db/evidencias/semilla/resumen.txt) |
+| Coherencia entre bases, al terminar todo | 13 de 13 | [después](evidencias/semilla-nueva-coherencia-despues.txt) |
 
-La app se identifica con un nombre propio al pedir las imágenes, porque Wikimedia responde 403 al que Android usa por defecto.
+### Rendimiento
 
-**No se comprobó** que las imágenes se vean en el teléfono, ni se repitieron el rendimiento y la reconstrucción desde cero con la semilla nueva.
+Mismo equipo y método que en la [etapa 2](#etapa-2-rendimiento-2026-11-26): 50 llamadas por flujo después de 5 de calentamiento, una a la vez, con 0,5 a 0,7 GB de RAM libres. Dos corridas seguidas.
+
+| Flujo | Mediana (1.ª / 2.ª) | p95 (1.ª / 2.ª) | Meta | Cumple |
+|---|---|---|---|---|
+| Salud (EP-01) | 6 / 9 ms | 10 / 21 ms | 1 s | Sí |
+| Iniciar sesión (EP-03) | 67 / 66 ms | 117 / 124 ms | 1 s | Sí |
+| Buscar por título (EP-08) | 8 / 5 ms | 12 / 7 ms | 1 s | Sí |
+| Buscar por persona (EP-08) | 19 / 16 ms | 27 / 42 ms | 2 s | Sí |
+| Ficha de libro (EP-09) | 27 / 25 ms | 38 / 53 ms | 1 s | Sí |
+| Ficha de película (EP-09) | 27 / 24 ms | 37 / 42 ms | 1 s | Sí |
+| Reseñas de una obra (EP-10) | 9 / 8 ms | 16 / 11 ms | 1 s | Sí |
+| Publicar una reseña (EP-11) | 13 / 14 ms | 20 / 68 ms | 1 s | Sí |
+| Recomendaciones de libros (EP-18) | 28 / 25 ms | 48 / 55 ms | 2 s | Sí |
+| Recomendaciones de películas (EP-18) | 18 / 16 ms | 43 / 27 ms | 2 s | Sí |
+| Caminos entre dos personas (EP-16) | 18 / 19 ms | 26 / 27 ms | 2 s | Sí |
+| Autores de un director (EP-17) | 16 / 15 ms | 34 / 23 ms | 2 s | Sí |
+
+Salidas: [primera](evidencias/semilla-nueva-rendimiento.txt) y [segunda](evidencias/semilla-nueva-rendimiento-repeticion.txt).
+
+Primera llamada tras reiniciar Neo4j ([salida](evidencias/semilla-nueva-neo4j-recien-reiniciado.txt)):
+
+| Flujo | Primera (dos reinicios) | Segunda |
+|---|---|---|
+| Recomendaciones de libros | 11,5 y 4,2 s | 159 y 40 ms |
+| Caminos entre dos personas | 3,5 y 1,2 s | 56 y 31 ms |
+| Autores de un director | 0,9 y 0,3 s | 43 y 24 ms |
+| Buscar por persona | 1,5 y 0,5 s | 28 y 33 ms |
+
+**La primera consulta al grafo tras reiniciar puede no cumplir la meta de 2 s** (hasta 11,5 s en las recomendaciones). Antes de la demostración conviene abrir una vez las recomendaciones y los caminos.
+
+### Reconciliación
+
+Con dos lectores de prueba, borrando sus relaciones **solo en Neo4j**.
+
+| Paso | Resultado | Evidencia |
+|---|---|---|
+| 1. `coherencia.ps1` | 2 de 13 fallan: C-06 y C-07 | [detecta](evidencias/semilla-nueva-reconciliacion-1-detecta.txt) |
+| 2. Reconciliar sin corregir | Faltan 1 `sigue` y 1 `leyó` | [informe](evidencias/semilla-nueva-reconciliacion-2-informe.txt) |
+| 3. Reconciliar con `--corregir` | 0 diferencias | [corrección](evidencias/semilla-nueva-reconciliacion-3-corregir.txt) |
+| 4. `coherencia.ps1` | 13 de 13 | [después](evidencias/semilla-nueva-reconciliacion-4-despues.txt) |
+
+Los dos lectores se eliminaron al final.
+
+### Imágenes
+
+Cargan en el navegador de la computadora. La app se identifica con un nombre propio al pedirlas, porque Wikimedia responde 403 al que Android usa por defecto.
+
+### Qué no se repitió con la semilla nueva
+
+- Las pruebas de cada base por separado y la reconstrucción desde cero, porque borran las bases. Las que hay son de la semilla anterior.
+- La instalación desde una copia limpia, que no depende de los datos.
+- Las imágenes y los casos funcionales en el teléfono.

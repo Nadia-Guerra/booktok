@@ -1,0 +1,19 @@
+
+> @dlbp/backend@0.1.0 reconciliar
+> node --env-file=../.env src/reconciliar.ts --corregir
+
+Reconciliación - 2026-11-27T03:24:42.890Z - con corrección
+
+Estado encontrado
+  Eventos sin aplicar: 0 pendientes y 0 fallidos
+  sigue: 11 en PostgreSQL, faltan 1 y sobran 0 en el grafo
+    falta  64b4fb6a-3fa0-49ff-8614-5fcd2cefe482 -> 568019fb-075e-4e12-8034-de37af7c3998
+  leyó: 15 en PostgreSQL, faltan 1 y sobran 0 en el grafo
+    falta  64b4fb6a-3fa0-49ff-8614-5fcd2cefe482 -> b1000000-0000-4000-8000-000000000001
+
+Después de corregir
+  Eventos sin aplicar: 0 pendientes y 0 fallidos
+  sigue: 11 en PostgreSQL, faltan 0 y sobran 0 en el grafo
+  leyó: 15 en PostgreSQL, faltan 0 y sobran 0 en el grafo
+
+Resultado: el grafo coincide con PostgreSQL.

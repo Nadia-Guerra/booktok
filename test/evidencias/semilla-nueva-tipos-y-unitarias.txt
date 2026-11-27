@@ -1,0 +1,60 @@
+== tipos (shared, backend, frontend)
+shared: sin errores
+backend: sin errores
+frontend: sin errores
+
+== unitarias de la app
+
+> @dlbp/frontend@0.1.0 test
+> node --import ./test/resolver.mjs --test "test/**/*.test.mjs"
+
+(node:20224) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/dev/Proyecto%20Final%20BD/frontend/src/core/formularios.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\dev\Proyecto Final BD\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ la dirección de la API se limpia al pegarla (3.6895ms)
+✔ números y listas escritos a mano (5.0434ms)
+✔ alta de libro: ids de autores, géneros en lista y sin portada vacía (10.987ms)
+✔ alta de película: el reparto toma el orden en que se agregó (6.8171ms)
+✔ un formulario vacío señala cada campo que falta (3.1729ms)
+✔ edición: el ISBN vacío se omite y uno corto se rechaza (3.6617ms)
+✔ comparativa: sin estrellas no se envía puntuación (2.6455ms)
+✔ comparativa: hay que elegir cuál gustó más (1.1891ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4271.5709
+
+== unitarias del backend
+
+> @dlbp/backend@0.1.0 test:unitarias
+> node --test "test/unitarias/**/*.test.ts"
+
+✔ paginación: con una fila de más hay cursor, y el cursor devuelve fecha e id exactos (15.412ms)
+✔ paginación: sin más filas no hay cursor (1.1264ms)
+✔ paginación: un cursor alterado es una entrada inválida (12.0201ms)
+✔ errores: distingue una base caída de un fallo de la propia petición (3.2833ms)
+✔ búsqueda por persona: quita la sintaxis de Lucene (D-41) (1.8502ms)
+✔ los identificadores entran en minúsculas (D-11, D-40) (4.4061ms)
+✔ el correo se limpia y pasa a minúsculas (D-03) (7.6651ms)
+✔ registro: contraseña de 8 o más, correo válido y nombre obligatorio (D-57) (6.1208ms)
+✔ la calificación es un entero del 1 al 5 (4.8764ms)
+✔ reseña: el texto vacío queda nulo y no pasa de 3000 caracteres (1.9254ms)
+✔ las reseñas se piden por obra o por usuario, no por ambos ni por ninguno (5.3012ms)
+✔ las imágenes solo se aceptan por https (D-31) (2.7542ms)
+✔ búsqueda: por título si no se dice otra cosa, y con algo que buscar (9.6147ms)
+✔ libro: no admite dos ediciones con el mismo ISBN (D-08) (12.69ms)
+✔ película: ni persona ni orden repetidos en el reparto (D-22) (13.2682ms)
+✔ comparativa: de 1 a 10 aspectos y preferencia conocida (9.4944ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13094.3414

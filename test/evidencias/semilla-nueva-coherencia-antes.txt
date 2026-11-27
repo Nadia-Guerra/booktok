@@ -1,0 +1,32 @@
+Coherencia entre bases - 2026-11-26 21:15:53
+
+Lectura: PostgreSQL 1.5 s, MongoDB 13.1 s, Neo4j 4.2 s
+
+PASA   C-01  ids UUID en minusculas en las tres bases
+         -> 14 columnas UUID en PostgreSQL; 35 fichas y 6 comparativas en MongoDB; 93 nodos en Neo4j
+PASA   C-02  cada ficha publicada existe en obra_resumen y como nodo, con el mismo tipo
+         -> 33 fichas publicadas (16 libros y 17 peliculas)
+PASA   C-03  sin huerfanos: toda ficha, obra_resumen y nodo de obra existe en las tres bases
+         -> 35 fichas, 35 filas de obra_resumen, 35 nodos de obra
+PASA   C-04  cada ficha publicada tiene sus relaciones minimas de D-24 en el grafo
+         -> 33 fichas publicadas cumplen; 1 borrador(es) por debajo del minimo, como se espera (Neuromante)
+PASA   C-05  el reparto de cada ficha de pelicula coincide con actuo_en (nombre, personaje, orden y foto_url)
+         -> 28 personas de reparto comparadas en 18 peliculas
+PASA   C-06  sigue coincide con seguimiento
+         -> 10 pares en cada base
+PASA   C-07  leyo coincide con los estados terminada de LIBROS (las peliculas terminadas no cuentan)
+         -> 14 pares en cada base
+PASA   C-08  los usuarios del grafo son los del relacional
+         -> 8 usuarios en cada base
+PASA   C-09  promedio y total_resenas coinciden con las resenas no ocultas (RN-08)
+         -> 35 obras revisadas, 20 con resenas visibles
+PASA   C-10  cada comparativa une usuario, libro y pelicula existentes y unidos por adaptado_a
+         -> 6 comparativas sobre 5 parejas distintas
+PASA   C-11  hay fichas en borrador y no tienen resenas, estados ni lugar en listas
+         -> 2 borradores: libro Neuromante, pelicula Neuromante
+PASA   C-12  ISBN sin repetir entre libros y mezcla de libros con y sin ISBN
+         -> 14 libros con ISBN (14 ISBN distintos) y 3 sin ISBN
+PASA   C-13  existe al menos un administrador
+         -> 1 administrador(es)
+
+Todo cuadra: 13 de 13 comprobaciones pasan.  (19.7 s)
