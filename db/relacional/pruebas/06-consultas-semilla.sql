@@ -29,7 +29,7 @@ $$ SELECT left($1::text, 1) || right($1::text, 2) $$;
 -- ---------------------------------------------------------------- la semilla está cargada
 SELECT pg_temp.registrar('S-00a', 'Hay 8 usuarios, con un solo administrador (el primero se crea en la semilla)', '8 usuarios, 1 admin',
     (SELECT count(*) || ' usuarios, ' || count(*) FILTER (WHERE rol = 'admin') || ' admin' FROM usuario));
-SELECT pg_temp.registrar('S-00b', 'Las 23 obras (11 libros y 12 películas) tienen su referencia en obra_resumen', '11 libros, 12 películas',
+SELECT pg_temp.registrar('S-00b', 'Las 35 obras (17 libros y 18 películas) tienen su referencia en obra_resumen', '17 libros, 18 películas',
     (SELECT count(*) FILTER (WHERE tipo = 'libro') || ' libros, ' || count(*) FILTER (WHERE tipo = 'pelicula') || ' películas' FROM obra_resumen));
 SELECT pg_temp.registrar('S-00c', 'Las contraseñas son hashes bcrypt de 60 caracteres, no texto', '8',
     (SELECT count(*)::text FROM usuario WHERE length(password_hash) = 60 AND password_hash LIKE '$2a$10$%'));
@@ -118,7 +118,7 @@ $$;
 
 SELECT pg_temp.registrar('S-O20a', 'O20: con los datos cargados por el trigger (RN-08) no hay obras con promedio incorrecto', '0',
     (SELECT count(*)::text FROM pg_temp.obras_con_promedio_incorrecto()));
-SELECT pg_temp.registrar('S-O20b', 'O20: el promedio guardado coincide con el recalculado para cada obra con reseñas visibles (12 obras)', '12',
+SELECT pg_temp.registrar('S-O20b', 'O20: el promedio guardado coincide con el recalculado para cada obra con reseñas visibles (20 obras)', '20',
     (SELECT count(*)::text FROM obra_resumen o
       WHERE o.total_resenas > 0
         AND pg_temp.resumen(o.obra_id) = pg_temp.recalculo(o.obra_id)));

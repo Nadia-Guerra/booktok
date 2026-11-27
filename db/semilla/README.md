@@ -66,16 +66,16 @@ UUID en minúsculas, **legibles**: el prefijo dice el tipo y el final es un núm
 
 | Tipo | Cantidad | Detalle |
 |---|---|---|
-| Libros | 11 (10 publicados + 1 borrador) | 10 con una adaptación real y *Neuromante* en borrador |
-| Películas | 12 (11 publicadas + 1 borrador) | *Dune* tiene dos adaptaciones; *El Hobbit* y *La Comunidad del Anillo* comparten reparto |
-| Personas | 29 | 10 autores, 6 directores, 13 actores; Branagh **dirige y actúa** en la misma película |
+| Libros | 17 (16 publicados + 1 borrador) | 16 con una adaptación real y *Neuromante* en borrador |
+| Películas | 18 (17 publicadas + 1 borrador) | *Dune* tiene dos adaptaciones; *El Hobbit* y *La Comunidad del Anillo* comparten reparto |
+| Personas | 50 | 16 autores, 11 directores, 23 actores; Branagh **dirige y actúa** en la misma película |
 | Usuarios | 8 | 1 administrador y 7 lectores |
-| Reseñas | 18 | Una **oculta** (la de Ana sobre *Expiación*) |
-| Estados de lectura | 25 | Pendiente, en curso y terminada, en libros y en películas |
+| Reseñas | 27 | Una **oculta** (la de Ana sobre *Expiación*) |
+| Estados de lectura | 36 | Pendiente, en curso y terminada, en libros y en películas |
 | Seguimientos | 10 | |
-| Listas | 2 | 6 obras en total |
-| Comparativas | 5 | Sobre 4 parejas unidas por `adaptado_a`; una **oculta** |
-| ISBN | 8 libros con ISBN, 3 sin él | *Dune* mezcla una edición con ISBN y otra sin él; *Neuromante* no tiene ediciones |
+| Listas | 3 | 9 obras en total |
+| Comparativas | 6 | Sobre 5 parejas unidas por `adaptado_a`; una **oculta** |
+| ISBN | 14 libros con ISBN, 3 sin él | *Dune* mezcla una edición con ISBN y otra sin él; *Neuromante* no tiene ediciones |
 
 Lo que **no** se escribe a mano:
 
@@ -85,6 +85,20 @@ Lo que **no** se escribe a mano:
 - `obra_resumen` y los nodos de obra salen de los libros y películas, incluidos los borradores.
 
 La semilla **no** carga sesiones ni eventos del *outbox*: las bases se cargan directamente y ya están sincronizadas.
+
+## Imágenes
+
+Las portadas y fotos son direcciones reales; el repositorio no guarda ningún archivo de imagen (D-31).
+
+| Qué | De dónde | Licencia |
+|---|---|---|
+| Portadas de libros | Open Library (`covers.openlibrary.org`) | Con derechos de autor; solo se enlazan |
+| Pósters de películas | Wikipedia en inglés (`upload.wikimedia.org/wikipedia/en/`) | Uso no libre; solo se enlazan, para la demostración del curso |
+| Fotos de personas | Wikimedia Commons | Libre, según la ficha de cada archivo |
+
+Quedan **sin imagen** *Neuromante* (borrador), Thomas Harris y Ted Levine: sirven para ver la imagen genérica.
+
+Wikimedia responde **403** al identificador que Android usa por defecto (`okhttp`): quien pida estas imágenes debe identificarse con un nombre propio en `User-Agent`.
 
 ## Escenarios que permite demostrar
 
@@ -102,11 +116,11 @@ La semilla **no** carga sesiones ni eventos del *outbox*: las bases se cargan di
 | **RF-27** usuario que sigue a ≥ 2 lectores de un libro con adaptación | `CG-09` de **Sofía** (`c…0006`), que sigue a Ana, Pedro y Diego | 7 películas; las de *Dune* (2) y *El marciano* las alcanzan 2 seguidos. *Dune* (2021) sale aunque ya la vio (D-20) |
 | | Negativos | Luis (sigue a uno): cuenta 1 en cada película; Pedro y el administrador no siguen a nadie |
 | **RF-13 y RN-08** promedio consistente con las reseñas | `O17`, `O20` | *Dune*: 5, 4 y 4 → 4,33 con 3 reseñas. *Expiación*: la reseña de 5 está oculta → 2,00 con 1 reseña (no 3,50) |
-| **D-24** ficha publicada con sus relaciones mínimas | `CG-22`, comprobación C-04 | Las 21 publicadas cumplen; solo la película en borrador está por debajo |
+| **D-24** ficha publicada con sus relaciones mínimas | `CG-22`, comprobación C-04 | Las 33 publicadas cumplen; solo la película en borrador está por debajo |
 | Reseña oculta | `O17`, `O18`, `AP-21` | No cuenta en el promedio, ni como "le gustó", ni se lista a un lector |
 | Fichas en borrador | `AP-03`, `AP-05`, C-11 | *Neuromante* (libro y película): un visitante no las encuentra; no tienen reseñas, estados ni listas |
-| ISBN mezclados | `AP-01`, índice IX-03 (*sparse*) | 8 libros con ISBN y 3 sin él, sin chocar entre sí |
-| Comparativas solo sobre parejas con `adaptado_a` | `AP-21`, `AP-23`, C-10 | 5 comparativas sobre *Dune*–*Dune* (2021) ×2, *Dune*–*Parte dos*, *El marciano* y *Expiación* (oculta) |
+| ISBN mezclados | `AP-01`, índice IX-03 (*sparse*) | 14 libros con ISBN y 3 sin él, sin chocar entre sí |
+| Comparativas solo sobre parejas con `adaptado_a` | `AP-21`, `AP-23`, C-10 | 6 comparativas sobre *Dune*–*Dune* (2021) ×2, *Dune*–*Parte dos*, *El marciano*, *Expiación* (oculta) y *El club de la lucha* |
 
 ## Cómo añadir o cambiar datos
 
