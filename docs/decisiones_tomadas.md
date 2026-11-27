@@ -1062,7 +1062,7 @@ Termina con código 1 si falló algún paso. `-SinPruebas` omite el paso 4.
 ## D-65. El despliegue es una sola máquina de AWS, con Caddy para el HTTPS
 
 **Contexto.** D-30 y D-62 preveían mostrar la aplicación con un túnel hacia el equipo de desarrollo. Con el proyecto terminado se pide desplegarlo, y Android exige HTTPS.
-**Decisión.** Una instancia EC2 corre el mismo Docker Compose (tres bases y una copia de la API) más Caddy, que obtiene el certificado y es lo único accesible desde internet. Las claves se generan en el servidor y, al cargar la semilla, se cambia la contraseña de todos sus usuarios, porque la del repositorio es pública. Vive en la rama `deploy`. El túnel de D-62 sigue valiendo para desarrollar.
+**Decisión.** Una instancia EC2 (`t3.small`, plan gratuito por créditos) en su propia red, creada con `deploy/aws.yml`, corre el mismo Docker Compose (tres bases y una copia de la API) más Caddy, que obtiene el certificado y es lo único accesible desde internet. Las bases no publican puertos y están en una red interna. No hay SSH ni bastión: se administra con Session Manager. Los topes de memoria del servidor son menores que los de D-36 (en total 1728 MB). Las claves se generan en el servidor y, al cargar la semilla, se cambia la contraseña de todos sus usuarios, porque la del repositorio es pública. Vive en la rama `deploy`. El túnel de D-62 sigue valiendo para desarrollar.
 **Alternativa descartada.** Servicios administrados para cada base (cambian el diseño y cuestan más) y un túnel en el servidor (la dirección cambia en cada arranque y el APK quedaría apuntando a una vieja).
 **Costo que se acepta.** Una sola máquina, sin copias de seguridad ni límite de intentos de inicio de sesión, y una pieza nueva (Caddy).
 **Dónde.** `deploy/`.

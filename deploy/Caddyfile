@@ -1,5 +1,16 @@
-# Caddy pide y renueva solo el certificado de DOMINIO y pasa las peticiones a la API.
+# Caddy pide y renueva solo el certificado de DOMINIO, redirige HTTP a HTTPS y pasa las peticiones a la API.
 {$DOMINIO} {
 	encode gzip
+
+	request_body {
+		max_size 200KB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
 	reverse_proxy api:3000
 }

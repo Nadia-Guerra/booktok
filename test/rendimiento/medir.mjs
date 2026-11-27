@@ -5,7 +5,7 @@
 //   node test/rendimiento/medir.mjs --frio   solo la primera y la segunda llamada al grafo
 //
 // Escribe unicamente con un lector de prueba que registra al empezar y elimina al terminar.
-// Variables opcionales: API_URL (por defecto http://127.0.0.1:3000) y REPETICIONES.
+// Variables opcionales: API_URL (por defecto http://127.0.0.1:3000), REPETICIONES y CLAVE_SEMILLA.
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import os from 'node:os';
@@ -24,6 +24,8 @@ const CHALAMET = 'a1000000-0000-4000-8000-000000000017';
 
 /** La clave de prueba solo vive en el README de la semilla: se lee de ahi y no se imprime. */
 function claveSemilla() {
+  // En un servidor la clave es otra (deploy/): se pasa en la variable CLAVE_SEMILLA.
+  if (process.env.CLAVE_SEMILLA) return process.env.CLAVE_SEMILLA;
   const readme = readFileSync(new URL('../../db/semilla/README.md', import.meta.url), 'utf8');
   const clave = readme.split('## Usuarios de prueba')[1]?.match(/```\r?\n(.+?)\r?\n```/)?.[1];
   if (!clave) throw new Error('no se encontro la clave de prueba en db/semilla/README.md');

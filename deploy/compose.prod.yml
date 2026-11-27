@@ -1,11 +1,58 @@
-# Lo que se suma al docker-compose.yml en el servidor: HTTPS delante de la API (D-65).
-# Se activa solo con la variable COMPOSE_FILE que deja deploy/generar-env.sh en el .env.
-# Las rutas relativas se resuelven desde la carpeta del primer archivo (la raiz del repositorio).
+# Lo que cambia respecto de docker-compose.yml en el servidor (D-65). Se activa con la variable
+# COMPOSE_FILE que deja deploy/generar-env.sh en el .env. Las rutas relativas se resuelven desde la
+# carpeta del primer archivo (la raiz del repositorio).
 #
-# Las bases y la API siguen escuchando en 127.0.0.1: desde internet solo se llega a Caddy.
+# Seguridad: ninguna base ni la API publican puertos; desde internet solo se llega a Caddy.
+#   internet -> caddy --(red web)--> api --(red datos, sin salida a internet)--> bases
+#
+# Memoria: ajustada para una t3.small (2 GB). Los topes suman 1728 MB; el uso medido con la semilla,
+# unos 1150 MB. deploy/preparar-servidor.sh agrega 2 GB de intercambio.
+
+x-comun: &comun
+  security_opt: ["no-new-privileges:true"]
+  logging:                                  # sin esto, los registros crecen hasta llenar el disco
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
 
 services:
+  postgres:
+    <<: *comun
+    ports: !reset []
+    networks: [datos]
+    mem_limit: 192m
+    memswap_limit: 192m
+
+  mongo:
+    <<: *comun
+    ports: !reset []
+    networks: [datos]
+    mem_limit: 384m
+    memswap_limit: 384m
+
+  neo4j:
+    <<: *comun
+    ports: !reset []
+    networks: [datos]
+    environment:
+      NEO4J_server_memory_heap_initial__size: 384m
+      NEO4J_server_memory_heap_max__size: 384m
+      NEO4J_server_memory_pagecache_size: 64m
+    mem_limit: 896m             # medido: usa unos 760 MB
+    memswap_limit: 1536m        # ante un pico usa intercambio en vez de que lo maten
+
+  api:
+    <<: *comun
+    ports: !reset []
+    networks: [web, datos]
+    command: ["node", "--max-old-space-size=128", "backend/src/servidor.ts"]
+    mem_limit: 192m
+    memswap_limit: 192m
+
+  neo4j-cliente:
+    networks: [datos]
+
   caddy:
+    <<: *comun
     image: caddy:${CADDY_VERSION:-2.11.9}-alpine
     container_name: dlbp-caddy
     profiles: ["todas"]
@@ -15,13 +62,20 @@ services:
     ports:
       - "${PUERTO_HTTP:-80}:80"
       - "${PUERTO_HTTPS:-443}:443"
+    networks: [web]
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data        # certificados: sin este volumen se piden de nuevo en cada arranque
       - caddy_config:/config
-    mem_limit: 128m
+    mem_limit: 64m
+    memswap_limit: 64m
     depends_on:
       api: { condition: service_healthy, required: false }
+
+networks:
+  web:
+  datos:
+    internal: true
 
 volumes:
   caddy_data:

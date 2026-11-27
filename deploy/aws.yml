@@ -1,0 +1,139 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  DuoBook. Una instancia EC2 en su propia red; solo entran HTTP y HTTPS (sin SSH ni bastion) y se
+  administra con Systems Manager Session Manager. Borrar la pila elimina todo, datos incluidos.
+
+Parameters:
+  TipoInstancia:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.small, c7i-flex.large, m7i-flex.large]
+    Description: t3.small (2 GB) es la mas barata en la que cabe todo; c7i-flex.large da 4 GB.
+  ImagenUbuntu:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+
+Conditions:
+  EsT3: !Equals [!Ref TipoInstancia, t3.small]
+
+Resources:
+  Red:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.20.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [{Key: Name, Value: duobook}]
+
+  Internet:
+    Type: AWS::EC2::InternetGateway
+
+  UnionInternet:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Red
+      InternetGatewayId: !Ref Internet
+
+  Subred:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Red
+      CidrBlock: 10.20.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags: [{Key: Name, Value: duobook}]
+
+  Rutas:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Red
+
+  RutaSalida:
+    Type: AWS::EC2::Route
+    DependsOn: UnionInternet
+    Properties:
+      RouteTableId: !Ref Rutas
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref Internet
+
+  RutasDeSubred:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subred
+      RouteTableId: !Ref Rutas
+
+  # Solo lo que la aplicacion necesita. El 80 sirve para el certificado y para redirigir a HTTPS.
+  Cortafuegos:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: DuoBook, solo HTTP y HTTPS
+      VpcId: !Ref Red
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0}
+        - {IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
+
+  # Unico permiso de la maquina: dejarse administrar por Session Manager.
+  Rol:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: ec2.amazonaws.com}
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  Perfil:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref Rol]
+
+  Direccion:
+    Type: AWS::EC2::EIP
+    DependsOn: UnionInternet
+    Properties:
+      Domain: vpc
+
+  Instancia:
+    Type: AWS::EC2::Instance
+    DependsOn: [RutaSalida, RutasDeSubred]
+    Properties:
+      ImageId: !Ref ImagenUbuntu
+      InstanceType: !Ref TipoInstancia
+      IamInstanceProfile: !Ref Perfil
+      SubnetId: !Ref Subred
+      SecurityGroupIds: [!Ref Cortafuegos]
+      # Sin esto una t3 cobra aparte los picos de CPU sostenidos.
+      CreditSpecification: !If [EsT3, {CPUCredits: standard}, !Ref 'AWS::NoValue']
+      # IMDSv2 obligatorio y a un solo salto: los contenedores no pueden leer las credenciales.
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+        HttpPutResponseHopLimit: 1
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs: {VolumeSize: 20, VolumeType: gp3, Encrypted: true, DeleteOnTermination: true}
+      Tags: [{Key: Name, Value: duobook}]
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          exec > /var/log/preparar.log 2>&1
+          set -eux
+          apt-get update
+          apt-get install -y git
+          git clone -b deploy https://github.com/Nadia-Guerra/booktok.git /opt/duobook
+          sh /opt/duobook/deploy/preparar-servidor.sh
+
+  DireccionDeInstancia:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt Direccion.AllocationId
+      InstanceId: !Ref Instancia
+
+Outputs:
+  IdInstancia:
+    Value: !Ref Instancia
+  Dominio:
+    Description: Nombre para generar-env.sh y para la app
+    Value: !Join ['', [!Join ['-', !Split ['.', !Ref Direccion]], .sslip.io]]

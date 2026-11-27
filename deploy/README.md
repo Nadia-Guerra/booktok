@@ -1,58 +1,90 @@
 # Desplegar DuoBook en AWS
 
-Rama `deploy`. Todo corre en **una sola máquina** (EC2) con Docker Compose: las tres bases, una copia de la API y Caddy, que pone el HTTPS (D-65).
+Rama `deploy`. El servidor (API y las tres bases) corre en **una instancia EC2** con Docker Compose. La aplicación móvil **no se despliega en AWS**: es un APK que se instala en el teléfono y habla con la API por HTTPS (D-65).
 
 ```
-teléfono --HTTPS--> Caddy (80 y 443) --> API :3000 --> PostgreSQL | MongoDB | Neo4j
+internet --HTTPS--> Caddy --(red web)--> API --(red datos, sin internet)--> PostgreSQL | MongoDB | Neo4j
+                    \__________________________ una sola instancia EC2 __________________________/
 ```
+
+## Seguridad
+
+| Riesgo | Medida |
+|---|---|
+| Bases expuestas | Ninguna publica puertos; viven en una red de Docker interna, sin salida a internet. Caddy tampoco llega a ellas |
+| Acceso a la máquina | Sin SSH, sin llaves y **sin bastión**: se entra con Systems Manager Session Manager desde la consola de AWS. El puerto 22 está cerrado |
+| Puertos abiertos | Solo 80 (redirige) y 443 |
+| Tráfico en claro | HTTPS con certificado de Let's Encrypt y cabecera HSTS |
+| Robo de credenciales de la máquina | IMDSv2 obligatorio y a un salto: los contenedores no las alcanzan. El rol solo permite Session Manager |
+| Disco | Cifrado |
+| Contraseñas | Se generan en el servidor; la de los usuarios de ejemplo se cambia al cargar, porque la del repositorio es pública |
+| Parches | Actualizaciones de seguridad automáticas de Ubuntu |
+| Contenedores | `no-new-privileges`, tope de memoria y registros con rotación; la API no corre como root |
+
+**Por qué no un bastión.** Un bastión es una máquina de salto para llegar a una base en una red privada (por ejemplo, RDS). Aquí las bases no tienen dirección propia: solo existen dentro de Docker en la misma máquina. Session Manager es la forma de entrar sin abrir puertos ni pagar una segunda instancia.
+
+**Lo que no se hace** (por costo o alcance): balanceador, NAT, WAF, copias de seguridad y límite de intentos de inicio de sesión.
 
 ## Qué está probado y qué no
 
 | Probado en el equipo de desarrollo (2026-11-27) | Sin probar |
 |---|---|
-| `generar-env.sh`, `levantar.sh` y `cargar-datos.sh` en un proyecto de Docker vacío | `preparar-servidor.sh` (necesita Ubuntu) |
-| HTTPS por Caddy con certificado local | El certificado público de un dominio real |
-| La contraseña pública de la semilla ya no entra; la nueva sí | Todo lo de AWS |
+| `generar-env.sh`, `levantar.sh` y `cargar-datos.sh` en un proyecto de Docker vacío | La plantilla `aws.yml` (AWS la valida al subirla) |
+| Con los topes de memoria del servidor: 12 flujos en meta, sin reinicios | La memoria en una `t3.small` real y la construcción de la imagen ahí |
+| Desde Caddy no se alcanza ninguna base; las bases no salen a internet | `preparar-servidor.sh` (necesita Ubuntu) |
+| HTTPS por Caddy (certificado local) y redirección desde HTTP | El certificado público |
 | La app se empaqueta con Expo 58.1 | La compilación del APK |
 
-## 1. Crear la máquina (consola de AWS)
+## Costo
 
-| Ajuste | Valor |
+Precios aproximados en `us-east-1`; confírmalos en la página de precios de AWS.
+
+| Concepto | Por mes encendida |
 |---|---|
-| Sistema | Ubuntu Server 24.04 LTS (x86) |
-| Tipo | `t3.medium` (4 GB). Con menos de 4 GB no caben las tres bases |
-| Disco | 30 GB gp3 |
-| Entrada permitida | 22 solo desde tu IP; 80 y 443 desde cualquier lugar |
-| IP | Una IP elástica, para que no cambie al apagar |
+| `t3.small` (0.0208 USD/h) | unos 15 USD |
+| IPv4 pública (0.005 USD/h, también apagada) | unos 3.6 USD |
+| Disco de 20 GB | unos 1.6 USD |
 
-La máquina cobra por hora encendida y la IP elástica también puede cobrar: revisa el precio y lo que cubre tu cuenta, y detenla cuando no la uses.
+En el plan gratuito por créditos esto se descuenta de los créditos.
 
-**Dominio.** Caddy necesita un nombre, no una IP. Sin dominio propio sirve `sslip.io`: para la IP `3.90.1.2` el nombre es `3-90-1-2.sslip.io`.
+**Memoria.** Con la semilla, los contenedores usan unos 1.2 GB de los 2 GB: cabe, con poco margen y con Neo4j cerca de su tope. Si falla, la misma plantilla permite `c7i-flex.large` (4 GB, unas cuatro veces el precio por hora).
 
-## 2. Instalar
+## 1. Antes de empezar
 
-Conéctate por SSH y ejecuta:
+- Usa un usuario de IAM propio del proyecto, con verificación en dos pasos. No uses la cuenta raíz ni las llaves de otro proyecto. Sus permisos: la política [politica-iam.json](politica-iam.json) (solo lo que crea `aws.yml`) y la administrada `SignInLocalDevelopmentAccess`, para `aws login`.
+- En **Billing → Budgets** crea una alerta de gasto.
+- Elige la región **N. Virginia (us-east-1)**.
+
+## 2. Crear todo
+
+**CloudFormation → Create stack → Upload a template file** → [aws.yml](aws.yml). Nombre `duobook`, tipo `t3.small`, y acepta la casilla de que crea recursos de IAM. Tarda unos minutos.
+
+En la pestaña **Outputs** copia `Dominio` (algo como `3-90-1-2.sslip.io`).
+
+La máquina termina de prepararse sola unos minutos después (instala Docker y descarga esta rama en `/opt/duobook`).
+
+## 3. Levantar
+
+**EC2 → Instances → duobook → Connect → Session Manager → Connect.** En esa terminal:
 
 ```sh
-git clone -b deploy https://github.com/Nadia-Guerra/booktok.git
-cd booktok
-sudo sh deploy/preparar-servidor.sh
-exit
+sudo -i
+tail -n 3 /var/log/preparar.log
 ```
 
-Vuelve a conectarte (para usar Docker sin `sudo`) y, con tu dominio:
+Debe terminar en `Listo.`. Si aún no, espera un poco. Después, con tu dominio:
 
 ```sh
-cd booktok
+cd /opt/duobook
 sh deploy/generar-env.sh 3-90-1-2.sslip.io
 sh deploy/levantar.sh
 sh deploy/cargar-datos.sh
 curl https://3-90-1-2.sslip.io/api/v1/salud
 ```
 
-La última línea debe responder que las tres bases están bien. Si falla el certificado: `docker compose --profile todas logs caddy` (casi siempre es el puerto 80 cerrado o el dominio mal escrito).
+La última línea debe responder que las tres bases están bien. Si falla el certificado: `docker compose --profile todas logs caddy`.
 
-**Contraseñas.** `generar-env.sh` crea claves nuevas en el `.env` del servidor. Para entrar con los usuarios de ejemplo (`admin@ejemplo.test` y los demás), usa:
+Para entrar con los usuarios de ejemplo (`admin@ejemplo.test` y los demás):
 
 ```sh
 grep CLAVE_SEMILLA .env
@@ -60,9 +92,9 @@ grep CLAVE_SEMILLA .env
 
 No copies ese `.env` al repositorio ni a un reporte.
 
-## 3. Compilar el APK
+## 4. Compilar el APK
 
-En tu computadora, en la rama `deploy`, agrega la dirección del servidor al perfil `demo` de `frontend/eas.json`:
+En tu computadora, rama `deploy`, agrega la dirección al perfil `demo` de `frontend/eas.json`:
 
 ```json
 "demo": {
@@ -79,24 +111,20 @@ Y desde `frontend/`:
 eas build --platform android --profile demo
 ```
 
-La primera vez pregunta si crea el proyecto en tu cuenta de Expo y la clave de firma: acepta. Esa creación escribe un identificador en `app.json`; haz commit de ese cambio. Al terminar da un enlace para descargar el APK en el teléfono.
+La primera vez pregunta si crea el proyecto en tu cuenta de Expo y la clave de firma: acepta. Escribe un identificador en `app.json`; haz commit de ese cambio. Al terminar da un enlace para descargar el APK.
 
-Si la dirección cambia, no hace falta compilar otra vez: se escribe en la app, en **Perfil → Conexión con la API**.
+## 5. Actualizar, apagar y borrar
 
-## 4. Actualizar o apagar
+Actualizar (no toca los datos):
 
 ```sh
-git pull
-sh deploy/levantar.sh
+cd /opt/duobook && git pull && sh deploy/levantar.sh
 ```
 
-`levantar.sh` no toca los datos. `cargar-datos.sh` sí: los borra y vuelve a cargar los de ejemplo.
+**Apagar** sin perder datos: EC2 → Stop. Deja de cobrar la máquina, pero siguen el disco y la IP. Al encender, entra y ejecuta `sh deploy/levantar.sh`, y revisa `/api/v1/salud`.
 
-Para apagar sin perder datos: `docker compose --profile todas stop`, y después detén la instancia en AWS.
+**Borrar todo** al terminar el curso: CloudFormation → pila `duobook` → Delete. Elimina máquina, datos, IP y red, y deja de gastar.
 
-## Límites conocidos
+Nunca levantes dos copias de la API: lleva dentro el sincronizador. `cargar-datos.sh` **borra** las bases y vuelve a cargar los datos de ejemplo.
 
-- Una sola máquina y sin copias de seguridad.
-- El inicio de sesión no limita los intentos.
-- Las imágenes vienen de Wikimedia y Open Library. Wikimedia limita las peticiones seguidas: la app reintenta y algunas pueden tardar en aparecer.
-- Nunca levantes dos copias de la API: lleva dentro el sincronizador.
+Las imágenes vienen de Wikimedia y Open Library. Wikimedia limita las peticiones seguidas: la app reintenta y algunas pueden tardar en aparecer.
