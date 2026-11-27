@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Del Libro a la Pantalla",
-    "slug": "del-libro-a-la-pantalla",
+    "name": "DuoBook",
+    "slug": "duobook",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,6 +10,7 @@
       "android"
     ],
     "android": {
+      "package": "com.duobook.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

@@ -13,7 +13,7 @@ BEGIN;
 TRUNCATE sesion, sync_outbox, seguimiento, elemento_lista, lista, estado_obra, resena, obra_resumen, usuario RESTART IDENTITY;
 
 INSERT INTO usuario (usuario_id, correo, password_hash, nombre, biografia, rol, creado_en) VALUES
-    ('c1000000-0000-4000-8000-000000000001', 'admin@ejemplo.test', '$2a$10$ZgQX7/O3K1jEyYBWWd4PH.9yYkkwBOJdX.8x7bly2rv6BBm4TSRXW', 'Administrador', 'Administra el catálogo de Del Libro a la Pantalla.', 'admin', '2026-10-20T09:00:00Z'),
+    ('c1000000-0000-4000-8000-000000000001', 'admin@ejemplo.test', '$2a$10$ZgQX7/O3K1jEyYBWWd4PH.9yYkkwBOJdX.8x7bly2rv6BBm4TSRXW', 'Administrador', 'Administra el catálogo de DuoBook.', 'admin', '2026-10-20T09:00:00Z'),
     ('c1000000-0000-4000-8000-000000000002', 'ana@ejemplo.test', '$2a$10$TX7l44UA2uXOcpFM8112m..q1iW.ZmqCeT8jLN.olO.qoGSM2./lG', 'Ana Lectora', 'Lee mucha ciencia ficción y compara cada libro con su película.', 'lector', '2026-10-21T10:00:00Z'),
     ('c1000000-0000-4000-8000-000000000003', 'luis@ejemplo.test', '$2a$10$4HavEQcl4brLhmpjyzESCesfek04b1uDhniLGZq456bEloEpY2guO', 'Luis Prado', 'Cinéfilo de fin de semana.', 'lector', '2026-10-21T11:00:00Z'),
     ('c1000000-0000-4000-8000-000000000004', 'marta@ejemplo.test', '$2a$10$1VlofKlbK2HPMFjbjBhqaOnZepob5c7Qf7ChaoEjQRiJBjOhrqGJm', 'Marta Solís', 'Le gustan los clásicos y sus versiones en el cine.', 'lector', '2026-10-22T09:30:00Z'),

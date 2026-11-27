@@ -131,7 +131,7 @@
 <figure><img alt="Búsqueda de Dune sin sesión" src="../capturas/cf-01-a-busqueda.jpg"><figcaption>CF-01. Buscar «Dune» sin sesión</figcaption></figure>
 <figure><img alt="Ficha de Dune sin sesión" src="../capturas/cf-01-b-ficha.jpg"><figcaption>CF-01. La ficha abre y ofrece entrar para reseñar</figcaption></figure>
 <figure><img alt="Perfil de la cuenta de prueba" src="../capturas/cf-02-perfil-lector.jpg"><figcaption>CF-02 y CF-11. Cuenta creada, sin opciones de administración</figcaption></figure>
-<figure><div class="hueco">Sin captura</div><figcaption>CF-03. Contraseña equivocada</figcaption></figure>
+<figure><div class="hueco"></div><figcaption>CF-03. Contraseña equivocada</figcaption></figure>
 </div>
 </div>
 
@@ -140,7 +140,7 @@
 <div class="capturas">
 <figure><img alt="Formulario de reseña" src="../capturas/cf-04-escribir-resena.jpg"><figcaption>CF-04. Escribir la reseña</figcaption></figure>
 <figure><img alt="Biblioteca con dos obras" src="../capturas/cf-05-biblioteca.jpg"><figcaption>CF-04 y CF-05. <i>Dune</i> terminada y <i>El marciano</i> en curso</figcaption></figure>
-<figure><div class="hueco">Sin captura</div><figcaption>CF-04. Promedio después de publicar</figcaption></figure>
+<figure><div class="hueco"></div><figcaption>CF-04. Promedio después de publicar</figcaption></figure>
 </div>
 </div>
 
@@ -160,9 +160,9 @@
 <figure><img alt="Camino entre Frank Herbert y Denis Villeneuve" src="../capturas/cf-07-camino.jpg"><figcaption>CF-07. Camino de Herbert a Villeneuve</figcaption></figure>
 <figure><img alt="Formulario de comparativa" src="../capturas/cf-08-a-formulario.jpg"><figcaption>CF-08. Escribir la comparativa</figcaption></figure>
 <figure><img alt="Comparativa en la biblioteca" src="../capturas/cf-08-b-publicada.jpg"><figcaption>CF-08. Publicada y visible en Biblioteca</figcaption></figure>
-<figure><div class="hueco">Sin captura</div><figcaption>CF-08. Edición y segundo intento</figcaption></figure>
+<figure><div class="hueco"></div><figcaption>CF-08. Edición y segundo intento</figcaption></figure>
 <figure><img alt="Lista con una obra" src="../capturas/cf-09-lista.jpg"><figcaption>CF-09. Lista creada con una obra</figcaption></figure>
-<figure><div class="hueco">Sin captura</div><figcaption>CF-09. Ordenar y borrar</figcaption></figure>
+<figure><div class="hueco"></div><figcaption>CF-09. Ordenar y borrar</figcaption></figure>
 </div>
 </div>
 
@@ -171,8 +171,8 @@
 <div class="capturas">
 <figure><img alt="Reseñas con botones de moderación" src="../capturas/cf-10-a-moderar.jpg"><figcaption>CF-10. El administrador ve Ocultar y Eliminar</figcaption></figure>
 <figure><img alt="Reseña oculta por moderación" src="../capturas/cf-10-b-oculta.jpg"><figcaption>CF-10. Reseña oculta</figcaption></figure>
-<figure><div class="hueco">Sin captura</div><figcaption>CF-12. Error sin túnel y reintento</figcaption></figure>
-<figure><div class="hueco">Sin captura</div><figcaption>CF-13. Cuenta eliminada</figcaption></figure>
+<figure><div class="hueco"></div><figcaption>CF-12. Error sin túnel y reintento</figcaption></figure>
+<figure><div class="hueco"></div><figcaption>CF-13. Cuenta eliminada</figcaption></figure>
 </div>
 </div>
 
@@ -202,7 +202,7 @@
 </div>
 
 <h3>Lo que no salió como se esperaba</h3>
-<p><b>En el teléfono no cargaron los pósteres de las películas ni las fotos de las personas</b>; las portadas de los libros sí. En su lugar se ve el reemplazo previsto, con el título o las iniciales, y la aplicación sigue funcionando. Esas direcciones son de Wikimedia, que rechaza a quien no se identifica; la aplicación ya envía un nombre propio y desde el equipo la misma petición responde bien, pero en el teléfono no bastó. La causa no se ha determinado.</p>
+<p><b>En el teléfono no cargaron los pósteres de las películas ni las fotos de las personas</b>; las portadas de los libros sí. En su lugar se ve el reemplazo previsto, con el título o las iniciales, y la aplicación sigue funcionando. Esas direcciones son de Wikimedia, que además de pedir que la aplicación se identifique limita las peticiones seguidas: al pedir desde el equipo varias imágenes a la vez, respondió «demasiadas peticiones» (código 429) a la mayoría. Después de las capturas se añadió que la aplicación reintente cada vez más tarde; en una simulación desde el equipo cargaron las 65 imágenes de Wikimedia, la última a los 89 segundos. <b>Falta comprobarlo en el teléfono.</b></p>
 <p>Las pantallas todavía muestran el nombre de trabajo del proyecto, «Del Libro a la Pantalla», en lugar de DuoBook.</p>
 
 <h2>Rendimiento</h2>
@@ -324,7 +324,7 @@ node test/rendimiento/medir.mjs</pre>
 <ul>
 <li><b>Compilar el APK</b>, el archivo instalable de la aplicación para Android.</li>
 <li><b>Pruebas funcionales con el APK instalado</b>, incluidos los casos que quedaron parciales o sin evidencia.</li>
-<li><b>Corregir las imágenes</b> que no cargan en el teléfono.</li>
+<li><b>Comprobar en el teléfono</b> la corrección de las imágenes que no cargaban.</li>
 <li><b>Despliegue</b> y demostración con la aplicación instalada.</li>
 </ul>
 
@@ -339,12 +339,12 @@ node test/rendimiento/medir.mjs</pre>
 </ul>
 
 <h2>Conclusión</h2>
-<p>Lo que se probó del servidor y de las bases responde como se diseñó: 119 pruebas automáticas correctas, las tres bases coherentes y los flujos principales muy por debajo de su meta de tiempo, con una excepción conocida en la primera consulta al grafo. La instalación está documentada y se ensayó desde una copia limpia. En un teléfono real, con Expo Go, los flujos principales funcionaron, con las imágenes de películas y personas como falla conocida. Falta corregirla, llevar la aplicación al teléfono como APK, probarla ahí y desplegarla.</p>
+<p>Lo que se probó del servidor y de las bases responde como se diseñó: 119 pruebas automáticas correctas, las tres bases coherentes y los flujos principales muy por debajo de su meta de tiempo, con una excepción conocida en la primera consulta al grafo. La instalación está documentada y se ensayó desde una copia limpia. En un teléfono real, con Expo Go, los flujos principales funcionaron, con las imágenes de películas y personas como falla conocida. Falta comprobar su corrección, llevar la aplicación al teléfono como APK, probarla ahí y desplegarla.</p>
 
 <h2>Archivos del repositorio en los que se basa</h2>
 <ul>
 <li><code>test/plan-de-pruebas.md</code>, <code>test/resultados.md</code>, <code>test/evidencias/</code> y <code>test/rendimiento/medir.mjs</code></li>
-<li><code>docs/reportes/capturas/</code> (capturas del teléfono)</li>
+<li><code>docs/reportes(entregables)/capturas/</code> (capturas del teléfono)</li>
 <li><code>backend/test/</code> y <code>frontend/test/</code></li>
 <li><code>db/*/pruebas/</code> y <code>db/evidencias/</code></li>
 <li><code>README.md</code>, <code>db/README.md</code> y <code>.env.example</code> (solo nombres)</li>

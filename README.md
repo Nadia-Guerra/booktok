@@ -1,4 +1,4 @@
-# Del Libro a la Pantalla
+# DuoBook
 
 Reseñas de libros y de sus adaptaciones al cine. App Android, API REST y tres bases de datos (PostgreSQL, MongoDB y Neo4j). El diseño está en `docs/`, las bases en `db/` (ver `db/README.md`) y las pruebas en `test/`.
 
@@ -111,6 +111,10 @@ npm run app
 ```
 
 En la app, entra en **Perfil → Conexión con la API**, pega la dirección del túnel y toca **Guardar y probar**.
+
+## Despliegue
+
+El proyecto se despliega en local: los pasos de arriba levantan las tres bases y la API en Docker, y la app se abre desde un teléfono.
 
 ## Pruebas
 
