@@ -15,7 +15,7 @@ Copy-Item .env.example .env          # una sola vez; cambia las claves si quiere
 
 `reconstruir.ps1` pide confirmación porque **borra los volúmenes** de las tres bases (solo los del proyecto `dlbp`; no toca contenedores de otros proyectos). `-Forzar` no pregunta; `-SinPruebas` omite las pruebas y deja las bases construidas y con la semilla. Termina con código 0 si todo pasa y 1 si algo falla, y deja su salida en [`evidencias/reconstruccion/`](evidencias/reconstruccion/).
 
-Al terminar, las tres bases quedan **levantadas y con la semilla cargada** (8 usuarios, 11 libros, 12 películas, 29 personas…; ver [`semilla/README.md`](semilla/README.md), con los usuarios de prueba).
+Al terminar, las tres bases quedan **levantadas y con la semilla cargada** (8 usuarios, 17 libros, 18 películas, 50 personas…; ver [`semilla/README.md`](semilla/README.md), con los usuarios de prueba).
 
 ## Qué hace la reconstrucción, paso a paso
 

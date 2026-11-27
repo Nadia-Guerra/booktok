@@ -13,6 +13,7 @@ coverage/
 *.apk
 *.aab
 
+
 # Datos de Docker y de las bases en local
 db/volumenes/
 data/
@@ -29,7 +30,9 @@ Thumbs.db
 
 # Guía del curso: no es parte del código del proyecto
 Guia_Proyecto_Final_Bases_Datos.pdf
-INSTRUCCIONES POSTER.pdf
-Plantilla póster.pdf
 AGENTS.md
 CLAUDE.md
+docs/reportes/fuente/
+
+# Herramientas locales del asistente
+.claude/
