@@ -1,7 +1,7 @@
-PASA   01-integridad    Integridad: pruebas 1, 1b, 2 a 13, 16, 17 y extras  (0.6 s, codigo 0)
-PASA   02-transaccion   Transaccion RF-13: prueba 14 (rollback)  (0.5 s, codigo 0)
-PASA   03-concurrencia  Concurrencia del trigger: prueba 15  (17.3 s, codigo 0)
-PASA   04-indices       Indices: EXPLAIN de las consultas documentadas  (2 s, codigo 0)
-PASA   05-consultas     Consultas representativas O17, O18, O20, O22  (0.4 s, codigo 0)
+PASA   01-integridad    Integridad: pruebas 1, 1b, 2 a 13, 16, 17 y extras  (1.6 s, codigo 0)
+PASA   02-transaccion   Transaccion RF-13: prueba 14 (rollback)  (0.9 s, codigo 0)
+PASA   03-concurrencia  Concurrencia del trigger: prueba 15  (18.2 s, codigo 0)
+PASA   04-indices       Indices: EXPLAIN de las consultas documentadas  (3.7 s, codigo 0)
+PASA   05-consultas     Consultas representativas O17, O18, O20, O22  (0.5 s, codigo 0)
 
 Todas las pruebas relacionales pasan. Evidencias en D:\dev\Proyecto Final BD\db\evidencias\relacional

@@ -8,7 +8,7 @@ El plan está en [plan-de-pruebas.md](plan-de-pruebas.md). Aquí solo se anota l
 | 2 | Rendimiento | **Hecha (2026-11-26)** |
 | 3 | Unitarias del backend | **Hecha (2026-11-26)** |
 | 4 | Reconciliación reducida | **Hecha (2026-11-26)** |
-| 5 | Instalación limpia y documentación | **Hecha (2026-11-26)**, salvo crear las bases desde cero |
+| 5 | Instalación limpia y documentación | **Hecha (2026-11-26)** |
 | 6 | Funcionales en el teléfono | Pendiente |
 
 ## Condiciones
@@ -61,7 +61,7 @@ Se corrió en dos tandas para no agotar la memoria; `npm test` ejecuta lo mismo 
 
 ### Qué no se hizo en esta etapa
 
-- No se repitieron las pruebas de cada base. Valen las de `db/evidencias/` del 2026-11-24, anteriores a los cambios de `docker-compose.yml` del día 25. Se decide al final si repetirlas, porque la del grafo obliga a recargar la semilla.
+- No se repitieron las pruebas de cada base en esta etapa. Se repitieron después, con la [reconstrucción desde cero](#bases-desde-cero-y-pruebas-de-cada-base).
 - Las pantallas no tienen pruebas automáticas: se cubren en la etapa 6.
 
 ## Etapa 2: rendimiento (2026-11-26)
@@ -224,7 +224,21 @@ Hallazgos:
 - Con `npm ci --prefer-offline` la instalación **falla** si la caché local es antigua. A `package-lock.json` le faltan la dirección y la suma de comprobación de 550 de sus paquetes. Con `npm ci` normal, que es lo que dice el `README.md`, funciona. No se regeneró el archivo para no mover versiones a un día de la entrega.
 - El `README.md` no decía cómo clonar, remitía a otros documentos para crear las bases y no avisaba del permiso para ejecutar scripts. Se reescribió.
 
-**No se comprobó** crear las tres bases desde cero con la instrucción nueva (`reconstruir.ps1 -SinPruebas`), porque borra los datos actuales. La última reconstrucción completa registrada es la del 2026-11-24 (`db/evidencias/reconstruccion/`). Tampoco se probó en otra computadora.
+**No se probó** en otra computadora.
+
+### Bases desde cero y pruebas de cada base
+
+Se borraron los volúmenes del proyecto y se reconstruyó todo con `.\db\scripts\reconstruir.ps1 -Forzar`: **13 de 13 pasos** en 3,9 minutos ([resumen](../db/evidencias/reconstruccion/resumen.txt)). Después se levantó la API como dice el `README.md` y `/salud` respondió `ok` con las tres bases.
+
+| Prueba | Resultado | Evidencia |
+|---|---|---|
+| Relacional: integridad, transacción, concurrencia, índices y consultas | 5 de 5 grupos | [resumen](../db/evidencias/relacional/resumen.txt) |
+| Documental: validadores, índices y controles negativos | 3 de 3 grupos | [resumen](../db/evidencias/documental/resumen.txt) |
+| Grafo: restricciones, cardinalidad y consultas | 58, 54 y 25 pasos, todos | [resumen](../db/evidencias/grafo/resumen.txt) |
+| Grafo: concurrencia de D-23 | Pasa | [salida](../db/evidencias/grafo/04-concurrencia-d23.txt) |
+| Semilla: consultas representativas y coherencia | 13 de 13 | [coherencia](../db/evidencias/semilla/coherencia.txt) |
+
+Se hizo en la carpeta de trabajo, con su `.env`, y con las pruebas de cada base. El `README.md` propone `-SinPruebas`, que ejecuta los mismos pasos sin ellas.
 
 ### Documentación
 

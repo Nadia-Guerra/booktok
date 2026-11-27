@@ -2,7 +2,7 @@ al dia     db\relacional\04-semilla.sql
 al dia     db\documental\03-semilla.js
 al dia     db\grafo\02-semilla.cypher
 Fuente valida: 8 usuarios, 29 personas, 11 libros, 12 peliculas, 18 resenas, 25 estados, 10 seguimientos, 2 listas, 5 comparativas.
-CARGADO  relacional  PostgreSQL: 04-semilla.sql  (0.7 s, codigo 0)
-CARGADO  documental  MongoDB: 03-semilla.js  (4.8 s, codigo 0)
-CARGADO  grafo       Neo4j: 02-semilla.cypher (cliente efimero)  (13.4 s, codigo 0)
-Total: 19 s. Salida completa en D:\dev\Proyecto Final BD\db\evidencias\semilla\carga.txt
+CARGADO  relacional  PostgreSQL: 04-semilla.sql  (0.6 s, codigo 0)
+CARGADO  documental  MongoDB: 03-semilla.js  (4.5 s, codigo 0)
+CARGADO  grafo       Neo4j: 02-semilla.cypher (cliente efimero)  (11.1 s, codigo 0)
+Total: 16.2 s. Salida completa en D:\dev\Proyecto Final BD\db\evidencias\semilla\carga.txt

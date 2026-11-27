@@ -1,4 +1,4 @@
-Pruebas del grafo: 02-cardinalidad  (2026-11-24 04:30:53)
+Pruebas del grafo: 02-cardinalidad  (2026-11-26 18:12:56)
 
 PASA   K-01.1    Ejemplo de 05, sección 3.1: El hobbit tiene tres películas y cada una un solo libro de origen
              -> ok

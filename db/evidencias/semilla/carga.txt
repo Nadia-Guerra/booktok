@@ -1,4 +1,4 @@
-Carga de la semilla - 2026-11-24 04:31:13
+Carga de la semilla - 2026-11-26 18:13:16
 
 === relacional: PostgreSQL: 04-semilla.sql
 SET
@@ -23,15 +23,15 @@ COMMIT
  elemento_lista |     6
 (7 rows)
 
--> CARGADO  relacional  PostgreSQL: 04-semilla.sql  (0.7 s, codigo 0)
+-> CARGADO  relacional  PostgreSQL: 04-semilla.sql  (0.6 s, codigo 0)
 
 === documental: MongoDB: 03-semilla.js
 Semilla cargada en la base 'dlbp': 11 libros, 12 peliculas, 5 comparativas.
--> CARGADO  documental  MongoDB: 03-semilla.js  (4.8 s, codigo 0)
+-> CARGADO  documental  MongoDB: 03-semilla.js  (4.5 s, codigo 0)
 
 === grafo: Neo4j: 02-semilla.cypher (cliente efimero)
- Container dlbp-neo4j-cliente-run-247830483878 Creating 
- Container dlbp-neo4j-cliente-run-247830483878 Created 
+ Container dlbp-neo4j-cliente-run-6323734516e4 Creating 
+ Container dlbp-neo4j-cliente-run-6323734516e4 Created 
 nodos, total
 "Libro", 11
 "Película", 12
@@ -44,6 +44,6 @@ relacion, total
 "escribió", 11
 "leyó", 12
 "sigue", 10
--> CARGADO  grafo       Neo4j: 02-semilla.cypher (cliente efimero)  (13.4 s, codigo 0)
+-> CARGADO  grafo       Neo4j: 02-semilla.cypher (cliente efimero)  (11.1 s, codigo 0)
 
-Total: 19 s
+Total: 16.2 s
