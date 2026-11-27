@@ -119,7 +119,8 @@ test('EP-09: la ficha de una película trae reparto, directores y libro de orige
 });
 
 test('EP-09: una película sin portada ni plataformas se devuelve con nulos y listas vacías', async () => {
-  const f = soloPelicula(await verFicha(pelicula(3))); // Blade Runner
+  // Neuromante: la ficha en borrador es la única película de la semilla sin imagen, y la ve el administrador.
+  const f = soloPelicula(await verFicha(pelicula(12), admin));
   assert.equal(f.portada_url, null);
   assert.deepEqual(f.plataformas, []);
 });
