@@ -112,6 +112,10 @@ npm run app
 
 En la app, entra en **Perfil → Conexión con la API**, pega la dirección del túnel y toca **Guardar y probar**.
 
+## Desplegar
+
+Para ponerlo en un servidor de AWS con HTTPS y compilar el APK: [deploy/README.md](deploy/README.md).
+
 ## Pruebas
 
 El plan y los resultados están en [test/plan-de-pruebas.md](test/plan-de-pruebas.md) y [test/resultados.md](test/resultados.md).

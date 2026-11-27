@@ -1,0 +1,28 @@
+# Lo que se suma al docker-compose.yml en el servidor: HTTPS delante de la API (D-65).
+# Se activa solo con la variable COMPOSE_FILE que deja deploy/generar-env.sh en el .env.
+# Las rutas relativas se resuelven desde la carpeta del primer archivo (la raiz del repositorio).
+#
+# Las bases y la API siguen escuchando en 127.0.0.1: desde internet solo se llega a Caddy.
+
+services:
+  caddy:
+    image: caddy:${CADDY_VERSION:-2.11.9}-alpine
+    container_name: dlbp-caddy
+    profiles: ["todas"]
+    restart: unless-stopped
+    environment:
+      DOMINIO: ${DOMINIO:?falta DOMINIO en .env}
+    ports:
+      - "${PUERTO_HTTP:-80}:80"
+      - "${PUERTO_HTTPS:-443}:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # certificados: sin este volumen se piden de nuevo en cada arranque
+      - caddy_config:/config
+    mem_limit: 128m
+    depends_on:
+      api: { condition: service_healthy, required: false }
+
+volumes:
+  caddy_data:
+  caddy_config:

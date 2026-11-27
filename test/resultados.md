@@ -330,7 +330,7 @@ Cargan en el navegador de la computadora. La app se identifica con un nombre pro
 
 ## Etapa 6: funcionales en el teléfono (2026-11-27)
 
-Teléfono Android real con **Expo Go** (no el APK), API y bases en el equipo, túnel rápido, semilla ampliada, una cuenta de prueba nueva y la de administrador. Capturas en [docs/reportes/capturas](../docs/reportes/capturas/), con la dirección del túnel tapada.
+Teléfono Android real con **Expo Go** (no el APK), API y bases en el equipo, túnel rápido, semilla ampliada, una cuenta de prueba nueva y la de administrador. Capturas en [docs/reportes(entregables)/capturas](<../docs/reportes(entregables)/capturas/>), con la dirección del túnel tapada.
 
 | Caso | Resultado | Evidencia o lo que falta |
 |---|---|---|
@@ -352,6 +352,6 @@ Además, como administrador se registraron desde el teléfono personas, un libro
 
 Después del recorrido: coherencia **13 de 13** ([salida](evidencias/telefono-coherencia.txt)) y 16 eventos de sincronización procesados, ninguno pendiente ni fallido.
 
-**Falla encontrada:** en el teléfono no cargan los pósteres de película ni las fotos de personas (Wikimedia); las portadas de libro sí. Desde el equipo, la misma dirección responde 200 con el identificador que envía la app y 403 con el que Android usa por defecto. La causa en el teléfono no se ha determinado.
+**Falla encontrada:** en el teléfono no cargan los pósteres de película ni las fotos de personas (Wikimedia); las portadas de libro sí. Desde el equipo, la misma dirección responde 200 con el identificador que envía la app y 403 con el que Android usa por defecto. Causa probable, hallada después: Wikimedia limita las peticiones seguidas (429). La rama `deploy` agrega reintentos con esperas crecientes; simulado desde el equipo, cargan 65 de 65 (la última a los 89 s). **No comprobado en el teléfono.**
 
 Los datos creados (cuenta de prueba, su reseña oculta, comparativa, lista, y el libro y la película nuevos) siguen en las bases: la semilla ya no está limpia.

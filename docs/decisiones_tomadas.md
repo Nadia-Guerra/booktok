@@ -67,6 +67,8 @@ Registro de las decisiones de diseño que surgieron durante el planteamiento. So
 | D-61 | Las contraseñas se guardan con bcrypt | 2026-11-24 |
 | D-62 | El HTTPS de desarrollo y de la demo es un túnel rápido de Cloudflare | 2026-11-24 |
 | D-63 | Librerías y diseño base de la app: NativeWind, Poppins, React Navigation y TanStack Query | 2026-11-25 |
+| D-64 | La reconciliación se construye en versión reducida | 2026-11-26 |
+| D-65 | El despliegue es una sola máquina de AWS, con Caddy para el HTTPS | 2026-11-27 |
 
 ---
 
@@ -1056,3 +1058,11 @@ Termina con código 1 si falló algún paso. `-SinPruebas` omite el paso 4.
 **Alternativa descartada.** No construirlo y dejar solo la detección (`coherencia.ps1`).
 **Costo que se acepta.** No repara fichas, `obra_resumen`, reparto, promedios, huérfanos ni borradores antiguos.
 **Dónde.** `backend/src/reconciliar.ts` y `servicios/reconciliacion.ts`; prueba en `backend/test/reconciliacion.test.ts`.
+
+## D-65. El despliegue es una sola máquina de AWS, con Caddy para el HTTPS
+
+**Contexto.** D-30 y D-62 preveían mostrar la aplicación con un túnel hacia el equipo de desarrollo. Con el proyecto terminado se pide desplegarlo, y Android exige HTTPS.
+**Decisión.** Una instancia EC2 corre el mismo Docker Compose (tres bases y una copia de la API) más Caddy, que obtiene el certificado y es lo único accesible desde internet. Las claves se generan en el servidor y, al cargar la semilla, se cambia la contraseña de todos sus usuarios, porque la del repositorio es pública. Vive en la rama `deploy`. El túnel de D-62 sigue valiendo para desarrollar.
+**Alternativa descartada.** Servicios administrados para cada base (cambian el diseño y cuestan más) y un túnel en el servidor (la dirección cambia en cada arranque y el APK quedaría apuntando a una vieja).
+**Costo que se acepta.** Una sola máquina, sin copias de seguridad ni límite de intentos de inicio de sesión, y una pieza nueva (Caddy).
+**Dónde.** `deploy/`.

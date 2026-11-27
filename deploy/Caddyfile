@@ -1,0 +1,5 @@
+# Caddy pide y renueva solo el certificado de DOMINIO y pasa las peticiones a la API.
+{$DOMINIO} {
+	encode gzip
+	reverse_proxy api:3000
+}

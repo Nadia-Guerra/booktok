@@ -35,7 +35,7 @@ export function InicioVista() {
   const sinConfigurar = busqueda.error instanceof ErrorApi && busqueda.error.codigo === 'sin_configurar';
 
   return (
-    <Pantalla titulo="Del Libro a la Pantalla">
+    <Pantalla titulo="DuoBook">
       <Texto tono="suave">Reseña libros, sus películas y compáralos.</Texto>
       <CampoTexto
         etiqueta="Buscar"
