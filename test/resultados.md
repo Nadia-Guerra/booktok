@@ -330,7 +330,7 @@ Cargan en el navegador de la computadora. La app se identifica con un nombre pro
 
 ## Etapa 6: funcionales en el teléfono (2026-11-27)
 
-Teléfono Android real con **Expo Go** (no el APK), API y bases en el equipo, túnel rápido, semilla ampliada, una cuenta de prueba nueva y la de administrador. Capturas en [docs/reportes(entregables)/capturas](<../docs/reportes(entregables)/capturas/>), con la dirección del túnel tapada.
+Teléfono Android real con **Expo Go** (no el APK), API y bases en el equipo, túnel rápido, semilla ampliada, una cuenta de prueba nueva y la de administrador. Las capturas están en el [reporte 8](<../docs/reportes(entregables)/08-pruebas-documentacion-despliegue.pdf>), con la dirección del túnel tapada.
 
 | Caso | Resultado | Evidencia o lo que falta |
 |---|---|---|
@@ -374,3 +374,16 @@ No se crearon las bases en esta repetición.
 ## Segunda prueba en el teléfono (2026-11-27)
 
 Con Expo Go y el código final (nombre DuoBook, Expo 58.1 y reintento de imágenes), probado por la usuaria sin guardar capturas: **algunas imágenes siguen sin cargar** y se deja así. Causa probable, no confirmada en el teléfono: dependen de sitios de terceros (Wikimedia, Open Library) que limitan las peticiones seguidas. Los pósteres tienen derechos de autor, así que no se copian al proyecto; solo se guarda su dirección.
+
+## Bases desde cero con el código final (2026-11-27)
+
+Pasos 1.6 a 1.8 del `README.md`, sobre la carpeta de trabajo (commit `e98e6e5`) y con el `.env` ya existente. Borra los volúmenes del proyecto `dlbp`; los datos creados en las pruebas del teléfono ya no están.
+
+| Paso | Resultado |
+|---|---|
+| `reconstruir.ps1 -Forzar -SinPruebas` | Correcto: 9 de 9 pasos en 165 s |
+| `docker compose --profile api up -d --wait --build` | Contenedores sanos (la imagen salió de la caché de Docker) |
+| `GET /api/v1/salud` | `ok` en la API y en las tres bases, igual que muestra el README |
+| `coherencia.ps1` | 13 de 13 |
+
+No se ejecutaron las pruebas de cada base (`-SinPruebas`) ni se probó en otra computadora.

@@ -124,7 +124,7 @@ Tarda unos minutos. Termina con un mensaje como `added 644 packages`.
 
 El script avisa que **borra lo que hubiera en las bases de este proyecto** (no toca otros contenedores de Docker). Escribe `SI`, en mayúsculas, y pulsa `Enter`.
 
-La primera vez descarga PostgreSQL, MongoDB y Neo4j, así que tarda bastante. Al final debe decir:
+La primera vez descarga PostgreSQL, MongoDB y Neo4j, así que tarda bastante (con ellas ya descargadas, unos 3 minutos). El script guarda además sus registros en `db/evidencias/`, así que Git mostrará archivos cambiados ahí: es normal y no afecta al funcionamiento. Al final debe decir:
 
 ```
 Reconstruccion completa. Las tres bases quedan levantadas y con la semilla cargada.
